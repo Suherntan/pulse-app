@@ -1,0 +1,425 @@
+
+// --- Date Functions ---
+function updateDateDisplay() {
+    var now = new Date();
+    var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+}
+
+function updateWeekRange() {
+    var now = new Date();
+    var weekNum = getWeekNumber(now);
+    document.getElementById('current-week-range').textContent = 'Week ' + weekNum + ' of ' + now.getFullYear();
+}
+
+function getWeekNumber(date) {
+    var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function formatDateInput(date) {
+    var y = date.getFullYear();
+    var m = String(date.getMonth() + 1).padStart(2, '0');
+    var d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+}
+
+function parseDate(dateStr) {
+    if (!dateStr) return null;
+    var parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr);
+}
+
+function isSameDay(date1, date2) {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+}
+
+function isThisWeek(date) {
+    var now = new Date();
+    var startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1);
+    startOfWeek.setHours(0, 0, 0, 0);
+    var endOfWeek = new Date(now);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    return date >= startOfWeek && date <= endOfWeek;
+}
+
+function isThisMonth(date) {
+    var now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}
+// --- Data Loading ---
+async function loadAllData() {
+    try {
+        await Promise.all([loadTodayData(), loadTrackerData(), loadClientsData()]);
+    } catch (error) {
+        console.error('Load all data error:', error);
+    }
+}
+
+async function loadTodayData() {
+    try {
+        var data = await API.fetchAllData();
+        if (data) {
+            renderTodayReminders(data);
+            renderTodayStats(data);
+        }
+    } catch (error) {
+        console.error('Load today data error:', error);
+        document.getElementById('birthdays-list').innerHTML = '<p class="placeholder">Failed to load</p>';
+        document.getElementById('payments-list').innerHTML = '<p class="placeholder">Failed to load</p>';
+        document.getElementById('followups-list').innerHTML = '<p class="placeholder">Failed to load</p>';
+    }
+}
+
+async function loadTrackerData() {
+    try {
+        var data = await API.fetchWeeklyStats();
+        if (data) renderWeeklyTracker(data);
+        var monthData = await API.fetchMonthlyStats();
+        if (monthData) renderMonthlyStats(monthData);
+    } catch (error) {
+        console.error('Load tracker data error:', error);
+    }
+}
+
+async function loadClientsData() {
+    try {
+        var data = await API.fetchAllData();
+        if (data) renderClientsList(data);
+    } catch (error) {
+        console.error('Load clients data error:', error);
+    }
+}
+// --- Rendering Today Reminders ---
+function renderTodayReminders(data) {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var closingData = data.closing || [];
+    
+    // Birthdays from CLOSING tab (Column M = index 12)
+    var todayBirthdays = closingData.filter(function(row) {
+        if (!row[12]) return false;
+        var birthDate = parseDate(row[12]);
+        if (!birthDate) return false;
+        return birthDate.getMonth() === today.getMonth() && birthDate.getDate() === today.getDate();
+    });
+
+    var birthdayEl = document.getElementById('birthdays-list');
+    if (todayBirthdays.length > 0) {
+        birthdayEl.innerHTML = todayBirthdays.map(function(row) {
+            return '<div class="reminder-item"><span class="name">' + (row[4] || 'Unknown') + '</span><span class="detail">Birthday today!</span></div>';
+        }).join('');
+    } else {
+        birthdayEl.innerHTML = '<p class="placeholder">No birthdays today</p>';
+    }
+
+    // Payment due dates from CLOSING tab (Column N = index 13)
+    var todayPayments = closingData.filter(function(row) {
+        if (!row[13]) return false;
+        var payDate = parseDate(row[13]);
+        if (!payDate) return false;
+        return isSameDay(payDate, today);
+    });
+
+    var paymentEl = document.getElementById('payments-list');
+    if (todayPayments.length > 0) {
+        paymentEl.innerHTML = todayPayments.map(function(row) {
+            return '<div class="reminder-item"><span class="name">' + (row[4] || 'Unknown') + '</span><span class="detail">Payment due today!</span></div>';
+        }).join('');
+    } else {
+        paymentEl.innerHTML = '<p class="placeholder">No payments due today</p>';
+    }
+
+    // Follow-ups from all tabs (Column K = index 10)
+    var allActivities = [].concat(data.approach || [], data.presentation || [], data.closing || [], data.sr || []);
+    var todayFollowups = allActivities.filter(function(row) {
+        if (!row[10]) return false;
+        var fuDate = parseDate(row[10]);
+        if (!fuDate) return false;
+        return isSameDay(fuDate, today);
+    });
+
+    var followupEl = document.getElementById('followups-list');
+    if (todayFollowups.length > 0) {
+        followupEl.innerHTML = todayFollowups.map(function(row) {
+            var remarks = row[11] ? ' -- ' + row[11] : '';
+            return '<div class="reminder-item"><div><span class="name">' + (row[4] || 'Unknown') + '</span><span class="detail">' + remarks + '</span></div></div>';
+        }).join('');
+    } else {
+        followupEl.innerHTML = '<p class="placeholder">No follow-ups today</p>';
+    }
+}
+// --- Rendering Today Stats ---
+function renderTodayStats(data) {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var allActivities = [].concat(data.approach || [], data.presentation || [], data.closing || [], data.sr || []);
+    var todayApproaches = allActivities.filter(function(row) {
+        if (!row[3]) return false;
+        var actDate = parseDate(row[3]);
+        return actDate && isSameDay(actDate, today) && row[0] === 'APPROACH';
+    }).length;
+    var todayPresentations = allActivities.filter(function(row) {
+        if (!row[3]) return false;
+        var actDate = parseDate(row[3]);
+        return actDate && isSameDay(actDate, today) && row[0] === 'PRESENTATION';
+    }).length;
+    var todayClosings = allActivities.filter(function(row) {
+        if (!row[3]) return false;
+        var actDate = parseDate(row[3]);
+        return actDate && isSameDay(actDate, today) && row[0] === 'CLOSING';
+    }).length;
+    document.getElementById('today-approaches').textContent = todayApproaches;
+    document.getElementById('today-presentations').textContent = todayPresentations;
+    document.getElementById('today-closings').textContent = todayClosings;
+}
+
+// --- Rendering Weekly Tracker ---
+function renderWeeklyTracker(data) {
+    var weekApproaches = (data.approach || []).filter(function(row) {
+        if (!row[3]) return false;
+        var actDate = parseDate(row[3]);
+        return actDate && isThisWeek(actDate);
+    });
+    var weekPresentations = (data.presentation || []).filter(function(row) {
+        if (!row[3]) return false;
+        var actDate = parseDate(row[3]);
+        return actDate && isThisWeek(actDate);
+    });
+    var approachCount = weekApproaches.length;
+    var presentationCount = weekPresentations.length;
+    document.getElementById('approach-count').textContent = approachCount + ' / 90';
+    var approachPercent = Math.min((approachCount / 90) * 100, 100);
+    var approachBar = document.getElementById('approach-progress');
+    approachBar.style.width = approachPercent + '%';
+    if (approachPercent >= 100) approachBar.classList.add('complete');
+    else approachBar.classList.remove('complete');
+    document.getElementById('approach-detail').textContent = approachCount + ' approaches this week';
+    document.getElementById('presentation-count').textContent = presentationCount + ' / 10';
+    var presentationPercent = Math.min((presentationCount / 10) * 100, 100);
+    var presentationBar = document.getElementById('presentation-progress');
+    presentationBar.style.width = presentationPercent + '%';
+    if (presentationPercent >= 100) presentationBar.classList.add('complete');
+    else presentationBar.classList.remove('complete');
+    document.getElementById('presentation-detail').textContent = presentationCount + ' presentations this week';
+    var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    var tbody = document.getElementById('weekly-body');
+    days.forEach(function(day) {
+        var dayApproaches = weekApproaches.filter(function(r) { return r[2] === day; }).length;
+        var dayPresentations = weekPresentations.filter(function(r) { return r[2] === day; }).length;
+        var dayClosings = (data.closing || []).filter(function(r) { return r[2] === day; }).length;
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + day + '</td><td>' + dayApproaches + '</td><td>' + dayPresentations + '</td><td>' + dayClosings + '</td>';
+        tbody.appendChild(tr);
+    });
+}
+// --- Rendering Monthly Stats ---
+function renderMonthlyStats(data) {
+    var monthApproaches = (data.approach || []).filter(function(row) {
+        if (!row[3]) return false;
+        return isThisMonth(parseDate(row[3]));
+    }).length;
+    var monthPresentations = (data.presentation || []).filter(function(row) {
+        if (!row[3]) return false;
+        return isThisMonth(parseDate(row[3]));
+    }).length;
+    var monthClosings = (data.closing || []).filter(function(row) {
+        if (!row[3]) return false;
+        return isThisMonth(parseDate(row[3]));
+    }).length;
+    document.getElementById('month-approaches').textContent = monthApproaches;
+    document.getElementById('month-presentations').textContent = monthPresentations;
+    document.getElementById('month-closings').textContent = monthClosings;
+}
+
+// --- Rendering Clients List ---
+function renderClientsList(data) {
+    var closingData = data.closing || [];
+    var srData = data.sr || [];
+    var allClients = closingData.map(function(row) { return Object.assign({}, row, {source: 'CLOSING'}); })
+        .concat(srData.map(function(row) { return Object.assign({}, row, {source: 'SR'}); }));
+    var listEl = document.getElementById('clients-list');
+    if (allClients.length === 0) {
+        listEl.innerHTML = '<p class="placeholder">No closed clients yet</p>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < allClients.length; i++) {
+        var row = allClients[i];
+        var name = row[4] || 'Unknown';
+        var contact = row[5] || '';
+        var policy = row[11] || '';
+        var birthday = row[12] || '';
+        var payment = row[13] || '';
+        var product = row[7] || '';
+        var badges = '';
+        if (policy) badges += '<span class="client-badge badge-policy">' + policy + '</span>';
+        if (birthday) badges += '<span class="client-badge badge-birthday">Birthday</span>';
+        if (payment) badges += '<span class="client-badge badge-payment">Payment</span>';
+        html += '<div class="client-card" data-name="' + name.toLowerCase() + '" data-policy="' + (policy || '').toLowerCase() + '">';
+        html += '<div class="client-name">' + name + '</div>';
+        html += '<div class="client-info"><span>' + (contact ? 'Phone: ' + contact : '') + '</span><span>' + (product ? 'Product: ' + product : '') + '</span></div>';
+        html += '<div style="margin-top:8px;">' + badges + '</div></div>';
+    }
+    listEl.innerHTML = html;
+}
+// --- Search & Filter ---
+function filterClients() {
+    var query = document.getElementById('client-search').value.toLowerCase();
+    var cards = document.querySelectorAll('.client-card');
+    for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var name = card.dataset.name;
+        var policy = card.dataset.policy;
+        var match = name.indexOf(query) !== -1 || policy.indexOf(query) !== -1;
+        card.style.display = match ? 'block' : 'none';
+    }
+}
+
+function filterByType(type) {
+    document.querySelectorAll('.filter-btn').forEach(function(btn) { btn.classList.remove('active'); });
+    var activeBtn = document.querySelector(".filter-btn[data-filter='" + type + "']");
+    if (activeBtn) activeBtn.classList.add('active');
+    var cards = document.querySelectorAll('.client-card');
+    for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        if (type === 'all') {
+            card.style.display = 'block';
+        } else {
+            var hasBadge = card.querySelector('.badge-' + type);
+            card.style.display = hasBadge ? 'block' : 'none';
+        }
+    }
+}
+
+// --- Form Handling ---
+function toggleClientFields() {
+    var type = document.getElementById('activity-type').value;
+    var closingFields = document.getElementById('closing-fields');
+    if (type === 'CLOSING') {
+        closingFields.classList.remove('hidden');
+    } else {
+        closingFields.classList.add('hidden');
+    }
+}
+
+async function submitActivity(event) {
+    event.preventDefault();
+    var activityType = document.getElementById('activity-type').value;
+    var dateVal = document.getElementById('activity-date').value;
+    var name = document.getElementById('client-name').value;
+    var contact = document.getElementById('client-contact').value;
+    var nature = document.getElementById('client-nature').value;
+    var followUpDate = document.getElementById('follow-up-date').value;
+    var remarks = document.getElementById('follow-up-remarks').value;
+    var record = {
+        activityType: activityType,
+        date: formatDateInput(new Date(dateVal)),
+        name: name,
+        contact: contact,
+        nature: nature
+    };
+    if (activityType === 'CLOSING') {
+        record.policyNumber = document.getElementById('policy-number').value;
+        record.productProposed = document.getElementById('product-proposed').value;
+        record.apeProposed = document.getElementById('ape-proposed').value;
+        record.clientBirthday = document.getElementById('client-birthday').value;
+        record.paymentDue = document.getElementById('payment-due').value;
+    }
+    if (followUpDate) record.followUpDate = formatDateInput(new Date(followUpDate));
+    if (remarks) record.remarks = remarks;
+    var msgEl = document.getElementById('form-message');
+    msgEl.className = 'form-message';
+    msgEl.textContent = 'Submitting...';
+    msgEl.style.display = 'block';
+    try {
+        if (activityType === 'CLOSING' && record.policyNumber) {
+            await API.addClientDetails({ name: name, policyNumber: record.policyNumber, birthday: record.clientBirthday, paymentDue: record.paymentDue, product: record.productProposed });
+        } else {
+            await API.addActivity(record);
+        }
+        msgEl.className = 'form-message success';
+        msgEl.textContent = 'Activity added successfully!';
+        showToast('Saved!');
+        document.getElementById('activity-form').reset();
+        document.getElementById('activity-date').value = formatDateInput(new Date());
+        toggleClientFields();
+        await loadAllData();
+    } catch (error) {
+        msgEl.className = 'form-message error';
+        msgEl.textContent = 'Error: ' + error.message;
+        showToast('Failed to save', 'error');
+    }
+}
+// --- Settings & Utility ---
+function showSettings() {
+    document.getElementById('settings-modal').classList.remove('hidden');
+    document.getElementById('settings-api-url').value = API.getApiUrl() || '';
+    document.getElementById('settings-sheet-id').value = API.getSheetId() || '';
+}
+
+function hideSettings() {
+    document.getElementById('settings-modal').classList.add('hidden');
+}
+
+function saveApiUrl() {
+    var url = document.getElementById('api-url').value.trim();
+    if (!url) {
+        document.getElementById('setup-error').textContent = 'Please enter a valid URL.';
+        return;
+    }
+    API.saveApiUrl(url);
+    document.getElementById('setup-error').textContent = '';
+    showScreen('dashboard');
+    initApp();
+}
+
+async function updateApiUrl() {
+    var url = document.getElementById('settings-api-url').value.trim();
+    if (!url) { showToast('Please enter a URL', 'error'); return; }
+    API.saveApiUrl(url);
+    showToast('API URL updated!');
+    hideSettings();
+    await loadAllData();
+}
+
+function updateSheetId() {
+    var id = document.getElementById('settings-sheet-id').value.trim();
+    if (!id) { showToast('Please enter a Sheet ID', 'error'); return; }
+    API.saveSheetId(id);
+    showToast('Sheet ID updated!');
+}
+
+async function refreshData() {
+    API.clearCache();
+    hideSettings();
+    showLoading(true);
+    await loadAllData();
+    showLoading(false);
+    showToast('Data refreshed!');
+}
+
+function clearCache() {
+    API.clearCache();
+    showToast('Cache cleared!');
+    hideSettings();
+}
+
+function showToast(message, type) {
+    type = type || 'success';
+    var toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast';
+    void toast.offsetWidth;
+    setTimeout(function() { toast.classList.add('hidden'); }, 3000);
+}

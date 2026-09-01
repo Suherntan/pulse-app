@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s --max-time 3 http://localhost:9222/json/version)",
+      "Bash(grep -n \"Client Name \\(Policy Owner\\)\" \"C:\\\\Users\\\\User\\\\.claude\\\\skills\\\\manulife-client-extractor\\\\SKILL.md\")",
+      "Bash(python3 -m py_compile \"C:\\\\Users\\\\User\\\\.claude\\\\skills\\\\manulife-client-extractor\\\\scripts\\\\extract_clients.py\")",
+      "Bash(curl -s --max-time 5 http://localhost:9222/json/list)",
+      "Read(//c/Users/User/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/12392d68-5752-468f-bf34-18d57dbee14a/d94e8444-fabd-49ae-9264-39c38cbe93ef/skills/skill-creator/**)",
+      "Bash(python -m scripts.package_skill \"C:\\\\Users\\\\User\\\\.claude\\\\skills\\\\manulife-client-extractor\")",
+      "Bash(PYTHONIOENCODING=utf-8 python -m scripts.package_skill \"C:\\\\Users\\\\User\\\\.claude\\\\skills\\\\manulife-client-extractor\")"
+    ]
+  }
+}

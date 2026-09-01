@@ -1,0 +1,1 @@
+{"version":2,"routes":[{"src":"/css/(.*)","headers":{"Content-Type":"text/css"},"dest":"/css/$1"},{"src":"/js/(.*)","headers":{"Content-Type":"application/javascript"},"dest":"/js/$1"},{"src":"/icons/(.*)","headers":{"Content-Type":"image/svg+xml"},"dest":"/icons/$1"},{"src":"/","dest":"/index.html"}]}

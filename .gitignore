@@ -1,0 +1,4 @@
+node_modules/
+clients_export*.csv
+clients_export*.xlsx
+*.lock
