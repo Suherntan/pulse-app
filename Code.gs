@@ -973,11 +973,11 @@ var BIRTHDAY_MESSAGE_TEMPLATE =
 
 // The CLOSE-UP reminder — due today, within PREMIUM_REMINDER_DAYS_BEFORE days, or up to REMINDER_CATCHUP_DAYS overdue.
 var PREMIUM_REMINDER_MESSAGE_TEMPLATE =
-  "Hi {name}, a gentle reminder on your Manulife policy premium due on {dueDate}. Please disregard this message if payment had been made. Thank you!{policyLine}";
+  "Hi {name}, a gentle reminder on your Manulife policy{policyLine} premium due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
 
 // The ADVANCE reminder — fires earlier (see PREMIUM_ADVANCE_REMINDER_DAYS_BEFORE), purely informational.
 var PREMIUM_ADVANCE_REMINDER_MESSAGE_TEMPLATE =
-  "Hi {name}, a reminder on your Manulife policy premium will due on {dueDate}. Please disregard this message if payment had been made. Thank you!{policyLine}";
+  "Hi {name}, a reminder on your Manulife policy{policyLine} premium will due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
 
 var COUNTRY_CODE = "60"; // Default/fallback only -- overridden per-sheet by SETTINGS!B3 if you fill that in (see getAgentSettings_).
 var PREMIUM_REMINDER_DAYS_BEFORE = 3;
@@ -1153,6 +1153,10 @@ function buildTodayReminders() {
       var premiumDue = cols.paymentDue > -1 ? row[cols.paymentDue] : null;
       var paymentMode = cols.paymentMode > -1 ? row[cols.paymentMode] : null;
       var policyNumber = cols.policyNumber > -1 ? cellToString_(row[cols.policyNumber]) : "";
+      // Multiple policy numbers are stored together separated by "/" (e.g.
+      // "739760-0/739758-0") -- too ambiguous to name just one in the
+      // message, so leave the policy number out of it entirely.
+      if (policyNumber.indexOf("/") > -1) policyNumber = "";
       var phoneKey = normalizePhone(contact);
 
       if (birthday instanceof Date) {
@@ -1294,7 +1298,13 @@ function markReminderSent_(reminderSheet, row) {
 function makeReminderRow(type, tabName, name, contact, relevantDate, template, overdueDays, policyNumber) {
   var phone = normalizePhone(contact);
   var dateText = Utilities.formatDate(relevantDate, Session.getScriptTimeZone(), "dd MMM yyyy");
-  var policyLine = policyNumber ? (" (Policy No: " + policyNumber + ")") : "";
+  // Birthday keeps the policy line trailing the message (with its own
+  // leading space); the premium templates insert it right after the word
+  // "policy" with no leading space, e.g. "...Manulife policy(Policy No: X) premium...".
+  var policyLine = "";
+  if (policyNumber) {
+    policyLine = type === "Birthday" ? (" (Policy No: " + policyNumber + ")") : ("(Policy No: " + policyNumber + ")");
+  }
   var message = template.replace("{name}", name).replace("{dueDate}", dateText).replace("{policyLine}", policyLine);
   var link = phone ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(message)) : "";
   var dateColumnText = dateText;
