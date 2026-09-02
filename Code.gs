@@ -288,7 +288,7 @@ function onEdit(e) {
   // fully controlled by our own writeReminderSheet(), so its column
   // position is intentionally kept fixed rather than header-looked-up.
   if (sheetName === REMINDER_SHEET_NAME) {
-    if (column === REMINDER_MARK_SENT_COL && row > 1 && value === true) {
+    if (column === REMINDER_COL_MARK_SENT && row > 1 && value === true) {
       markReminderSent_(sheet, row);
     }
     return;
@@ -965,16 +965,19 @@ function getWeekNumber_(d) {
 // from SETTINGS at send time.
 var AGENT_SETTINGS_SHEET_NAME = "SETTINGS";
 
+// {policyLine} is filled in by makeReminderRow() -- it becomes a line like
+// "(Policy No: 12345)" when the client's row has a policy number, or an
+// empty string when it doesn't, so the message never reads oddly either way.
 var BIRTHDAY_MESSAGE_TEMPLATE =
-  "Hi {name}! Wishing you a very Happy Birthday! Wishing you good health and happiness always. - {agent}";
+  "Hi {name}! Wishing you a very Happy Birthday! Wishing you good health and happiness always. - {agent}{policyLine}";
 
 // The CLOSE-UP reminder — due today, within PREMIUM_REMINDER_DAYS_BEFORE days, or up to REMINDER_CATCHUP_DAYS overdue.
 var PREMIUM_REMINDER_MESSAGE_TEMPLATE =
-  "Hi {name}, a gentle reminder on your Manulife policy premium due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
+  "Hi {name}, a gentle reminder on your Manulife policy{policyLine} premium due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
 
 // The ADVANCE reminder — fires earlier (see PREMIUM_ADVANCE_REMINDER_DAYS_BEFORE), purely informational.
 var PREMIUM_ADVANCE_REMINDER_MESSAGE_TEMPLATE =
-  "Hi {name}, a reminder on your Manulife policy premium will due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
+  "Hi {name}, a reminder on your Manulife policy{policyLine} premium will due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
 
 var COUNTRY_CODE = "60"; // Default/fallback only -- overridden per-sheet by SETTINGS!B3 if you fill that in (see getAgentSettings_).
 var PREMIUM_REMINDER_DAYS_BEFORE = 3;
@@ -982,7 +985,31 @@ var PREMIUM_ADVANCE_REMINDER_DAYS_BEFORE = 14; // advance tier window: from PREM
 var REMINDER_CATCHUP_DAYS = 7; // keep resurfacing an unsent close-up reminder for this many days after it's overdue
 var TRACKING_SHEETS = ["APPROACH", "PRESENTATION", "CLOSING"];
 var REMINDER_SHEET_NAME = "TODAY - SEND REMINDERS";
-var REMINDER_MARK_SENT_COL = 9; // column I on the (script-owned) reminders sheet
+
+// Column layout of the script-owned "TODAY - SEND REMINDERS" sheet (1-based).
+// Everything that reads/writes that sheet uses these constants instead of
+// raw numbers -- change the order here (e.g. to move a column) and every
+// function below follows automatically. The two action columns are kept
+// first/leftmost on purpose, so they're visible without scrolling past the
+// message preview.
+var REMINDER_COL_WHATSAPP_LINK = 1; // "Click to Open WhatsApp"
+var REMINDER_COL_MARK_SENT = 2;     // "Mark Sent (tick to remove)"
+var REMINDER_COL_TYPE = 3;
+var REMINDER_COL_FROM_TAB = 4;
+var REMINDER_COL_NAME = 5;
+var REMINDER_COL_PHONE_ENTERED = 6;
+var REMINDER_COL_PHONE_LINK = 7;
+var REMINDER_COL_DATE = 8;
+var REMINDER_COL_MESSAGE = 9;
+var REMINDER_SHEET_NUM_COLS = 9;
+
+// Row highlight colour per reminder type, so birthdays/payments/advance
+// notices are easy to tell apart at a glance on the reminders sheet.
+var REMINDER_TYPE_COLORS = {
+  "Birthday": "#fff3cd",
+  "Premium Due": "#d4edda",
+  "Premium Due (Advance Notice)": "#d1ecf1"
+};
 
 var BIRTHDAY_VOUCHER_DAYS_BEFORE = 30;
 var VOUCHER_REDEEM_MESSAGE_TO_AGENT =
@@ -1125,6 +1152,11 @@ function buildTodayReminders() {
       var birthday = cols.birthday > -1 ? row[cols.birthday] : null;
       var premiumDue = cols.paymentDue > -1 ? row[cols.paymentDue] : null;
       var paymentMode = cols.paymentMode > -1 ? row[cols.paymentMode] : null;
+      var policyNumber = cols.policyNumber > -1 ? cellToString_(row[cols.policyNumber]) : "";
+      // Multiple policy numbers are stored together separated by "/" (e.g.
+      // "739760-0/739758-0") -- too ambiguous to name just one in the
+      // message, so leave the policy number out of it entirely.
+      if (policyNumber.indexOf("/") > -1) policyNumber = "";
       var phoneKey = normalizePhone(contact);
 
       if (birthday instanceof Date) {
@@ -1138,7 +1170,7 @@ function buildTodayReminders() {
           var birthdayKey = "Birthday|" + phoneKey;
           if (phoneKey && !seen[birthdayKey]) {
             seen[birthdayKey] = true;
-            reminderRows.push(makeReminderRow("Birthday", tabName, name, contact, birthThisYear, birthdayMessage, daysSinceBirthday));
+            reminderRows.push(makeReminderRow("Birthday", tabName, name, contact, birthThisYear, birthdayMessage, daysSinceBirthday, policyNumber));
           }
         }
       }
@@ -1162,7 +1194,7 @@ function buildTodayReminders() {
           var premiumKey = "Premium Due|" + phoneKey;
           if (phoneKey && !seen[premiumKey]) {
             seen[premiumKey] = true;
-            reminderRows.push(makeReminderRow("Premium Due", tabName, name, contact, effectiveDue, PREMIUM_REMINDER_MESSAGE_TEMPLATE, diffDays < 0 ? -diffDays : 0));
+            reminderRows.push(makeReminderRow("Premium Due", tabName, name, contact, effectiveDue, PREMIUM_REMINDER_MESSAGE_TEMPLATE, diffDays < 0 ? -diffDays : 0, policyNumber));
           }
         }
 
@@ -1175,7 +1207,7 @@ function buildTodayReminders() {
           var advanceKey = "Premium Due (Advance Notice)|" + phoneKey;
           if (phoneKey && !seen[advanceKey]) {
             seen[advanceKey] = true;
-            reminderRows.push(makeReminderRow("Premium Due (Advance Notice)", tabName, name, contact, effectiveDue, PREMIUM_ADVANCE_REMINDER_MESSAGE_TEMPLATE, 0));
+            reminderRows.push(makeReminderRow("Premium Due (Advance Notice)", tabName, name, contact, effectiveDue, PREMIUM_ADVANCE_REMINDER_MESSAGE_TEMPLATE, 0, policyNumber));
           }
         }
       }
@@ -1222,10 +1254,10 @@ function paymentModeToMonths_(rawMode) {
 
 // Called from onEdit() when the agent ticks "Mark Sent" on a reminder row.
 function markReminderSent_(reminderSheet, row) {
-  var rowValues = reminderSheet.getRange(row, 1, 1, 3).getValues()[0];
-  var type = rowValues[0];
-  var fromTab = rowValues[1];
-  var clientName = rowValues[2];
+  var rowValues = reminderSheet.getRange(row, 1, 1, REMINDER_SHEET_NUM_COLS).getValues()[0];
+  var type = rowValues[REMINDER_COL_TYPE - 1];
+  var fromTab = rowValues[REMINDER_COL_FROM_TAB - 1];
+  var clientName = rowValues[REMINDER_COL_NAME - 1];
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sourceSheet = ss.getSheetByName(fromTab);
@@ -1263,10 +1295,17 @@ function markReminderSent_(reminderSheet, row) {
   reminderSheet.deleteRow(row);
 }
 
-function makeReminderRow(type, tabName, name, contact, relevantDate, template, overdueDays) {
+function makeReminderRow(type, tabName, name, contact, relevantDate, template, overdueDays, policyNumber) {
   var phone = normalizePhone(contact);
   var dateText = Utilities.formatDate(relevantDate, Session.getScriptTimeZone(), "dd MMM yyyy");
-  var message = template.replace("{name}", name).replace("{dueDate}", dateText);
+  // Birthday keeps the policy line trailing the message (with its own
+  // leading space); the premium templates insert it right after the word
+  // "policy" with no leading space, e.g. "...Manulife policy(Policy No: X) premium...".
+  var policyLine = "";
+  if (policyNumber) {
+    policyLine = type === "Birthday" ? (" (Policy No: " + policyNumber + ")") : ("(Policy No: " + policyNumber + ")");
+  }
+  var message = template.replace("{name}", name).replace("{dueDate}", dateText).replace("{policyLine}", policyLine);
   var link = phone ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(message)) : "";
   var dateColumnText = dateText;
   if (overdueDays && overdueDays > 0) {
@@ -1304,13 +1343,24 @@ function readExistingReminderRows_(ss) {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
 
-  var values = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
-  var formulas = sheet.getRange(2, 8, lastRow - 1, 1).getFormulas();
+  var values = sheet.getRange(2, 1, lastRow - 1, REMINDER_SHEET_NUM_COLS).getValues();
+  var formulas = sheet.getRange(2, REMINDER_COL_WHATSAPP_LINK, lastRow - 1, 1).getFormulas();
   var rows = [];
   for (var i = 0; i < values.length; i++) {
     var r = values[i];
-    if (!r[0] || !r[2]) continue; // skip blanks / the placeholder row
-    rows.push([r[0], r[1], r[2], r[3], r[4], r[5], r[6], extractHyperlinkUrl_(formulas[i][0])]);
+    var type = r[REMINDER_COL_TYPE - 1];
+    var name = r[REMINDER_COL_NAME - 1];
+    if (!type || !name) continue; // skip blanks / the placeholder row
+    rows.push([
+      type,
+      r[REMINDER_COL_FROM_TAB - 1],
+      name,
+      r[REMINDER_COL_PHONE_ENTERED - 1],
+      r[REMINDER_COL_PHONE_LINK - 1],
+      r[REMINDER_COL_DATE - 1],
+      r[REMINDER_COL_MESSAGE - 1],
+      extractHyperlinkUrl_(formulas[i][0])
+    ]);
   }
   return rows;
 }
@@ -1329,7 +1379,19 @@ function writeReminderSheet(ss, reminderRows) {
   }
   sheet.clear();
 
-  var headers = ["Type", "From Tab", "Name", "Phone (as entered)", "Phone (used for link)", "Date", "Message Preview", "Click to Open WhatsApp", "Mark Sent (tick to remove)"];
+  // Built from the REMINDER_COL_* constants above rather than a literal
+  // array, so the two action columns stay in sync with wherever those
+  // constants say they are (currently: front/leftmost).
+  var headers = [];
+  headers[REMINDER_COL_WHATSAPP_LINK - 1] = "Click to Open WhatsApp";
+  headers[REMINDER_COL_MARK_SENT - 1] = "Mark Sent (tick to remove)";
+  headers[REMINDER_COL_TYPE - 1] = "Type";
+  headers[REMINDER_COL_FROM_TAB - 1] = "From Tab";
+  headers[REMINDER_COL_NAME - 1] = "Name";
+  headers[REMINDER_COL_PHONE_ENTERED - 1] = "Phone (as entered)";
+  headers[REMINDER_COL_PHONE_LINK - 1] = "Phone (used for link)";
+  headers[REMINDER_COL_DATE - 1] = "Date";
+  headers[REMINDER_COL_MESSAGE - 1] = "Message Preview";
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
 
   if (reminderRows.length === 0) {
@@ -1338,19 +1400,37 @@ function writeReminderSheet(ss, reminderRows) {
     return;
   }
 
+  // reminderRows entries are [type, tabName, name, contact, phone, dateColumnText, message, link].
   var displayRows = reminderRows.map(function (r) {
-    return [r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], false];
+    var row = [];
+    row[REMINDER_COL_WHATSAPP_LINK - 1] = ""; // filled in below via HYPERLINK formula
+    row[REMINDER_COL_MARK_SENT - 1] = false;
+    row[REMINDER_COL_TYPE - 1] = r[0];
+    row[REMINDER_COL_FROM_TAB - 1] = r[1];
+    row[REMINDER_COL_NAME - 1] = r[2];
+    row[REMINDER_COL_PHONE_ENTERED - 1] = r[3];
+    row[REMINDER_COL_PHONE_LINK - 1] = r[4];
+    row[REMINDER_COL_DATE - 1] = r[5];
+    row[REMINDER_COL_MESSAGE - 1] = r[6];
+    return row;
   });
   sheet.getRange(2, 1, displayRows.length, headers.length).setValues(displayRows);
 
   var checkboxRule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
-  sheet.getRange(2, REMINDER_MARK_SENT_COL, displayRows.length, 1).setDataValidation(checkboxRule);
+  sheet.getRange(2, REMINDER_COL_MARK_SENT, displayRows.length, 1).setDataValidation(checkboxRule);
 
-  for (var i = 0; i < displayRows.length; i++) {
-    var link = displayRows[i][7];
-    var cell = sheet.getRange(i + 2, 8);
+  for (var i = 0; i < reminderRows.length; i++) {
+    var link = reminderRows[i][7];
+    var rowNum = i + 2;
     if (link) {
-      cell.setFormula('=HYPERLINK("' + link + '","Click to Send")');
+      sheet.getRange(rowNum, REMINDER_COL_WHATSAPP_LINK).setFormula('=HYPERLINK("' + link + '","Click to Send")');
+    }
+
+    // Colour the whole row by reminder type so birthdays/payments/advance
+    // notices are easy to tell apart at a glance.
+    var color = REMINDER_TYPE_COLORS[reminderRows[i][0]];
+    if (color) {
+      sheet.getRange(rowNum, 1, 1, headers.length).setBackground(color);
     }
   }
 
