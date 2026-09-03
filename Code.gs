@@ -1972,6 +1972,7 @@ function setupBulkEmailTemplateSheet() {
 
   var addedAttachmentRow = ensureAttachmentRow_(sheet);
   var addedListSection = ensureBulkEmailListSection_(sheet);
+  var addedFormattingGuide = ensureFormattingGuidePanel_(sheet);
 
   if (isNew) {
     SpreadsheetApp.getUi().alert(
@@ -1979,24 +1980,57 @@ function setupBulkEmailTemplateSheet() {
       "Edit cell B1 for the subject line and B2 for the message body (both support {{NAME}} " +
       'and any other header on your tracker tabs, e.g. {{PRODUCT PROPOSED}}). Wrap words in ' +
       '**double stars** for bold, *single stars* for italic, and start a line with "- " for a bullet point. ' +
-      "Use Alt+Enter (Option+Enter on Mac) inside the cell for a new line.\n\n" +
+      "Use Alt+Enter (Option+Enter on Mac) inside the cell for a new line. (Same tips are also " +
+      "written beside the template in column D, so you don't need to remember this dialog.)\n\n" +
       'Paste a Google Drive link into B3 to attach a file or show a poster image — optional.\n\n' +
       'For a plain email blast, type or paste your recipients into the "NAME" and "EMAIL" ' +
-      "columns starting row " + BLAST_LIST_START_ROW + " (below the template), then use " +
+      "columns starting row " + BLAST_LIST_START_ROW + " (below the template) — there's also a " +
+      '"POLICY NUMBER" column there if you want to personalize with {{POLICY NUMBER}} — then use ' +
       '"Send Email Blast" from the menu.'
     );
-  } else if (addedAttachmentRow || addedListSection) {
+  } else if (addedAttachmentRow || addedListSection || addedFormattingGuide) {
     SpreadsheetApp.getUi().alert(
       'Your existing "' + BULK_EMAIL_TEMPLATE_SHEET + '" tab has been upgraded — B3 now takes an ' +
       "optional Google Drive link for an attachment/poster, **double stars** makes text bold, " +
-      '*single stars* makes text italic, lines starting with "- " become bullet points, and the ' +
-      "blast list has shifted down to row " + BLAST_LIST_START_ROW + " onward " +
+      '*single stars* makes text italic, lines starting with "- " become bullet points, a formatting ' +
+      "cheat-sheet is now written beside the template in column D, the blast list now has a " +
+      '"POLICY NUMBER" column, and the blast list has shifted down to row ' + BLAST_LIST_START_ROW + " onward " +
       "(so it doesn't overlap the new B3 field). Type or paste names/emails there, then use " +
       '"Send Email Blast" from the menu.'
     );
   } else {
     SpreadsheetApp.getUi().alert('The "' + BULK_EMAIL_TEMPLATE_SHEET + '" tab is already set up.');
   }
+}
+
+/**
+ * Writes a short formatting/placeholder cheat-sheet in column D, one line
+ * beside each of the SUBJECT/BODY/ATTACHMENT rows, so the instructions are
+ * always visible on the tab itself instead of living only in the one-time
+ * alert dialog above. Returns true if it just added it, false if a D1
+ * value is already there (either this guide from a previous run, or
+ * something else you typed -- either way, left alone).
+ */
+function ensureFormattingGuidePanel_(sheet) {
+  if (sheet.getRange("D1").getValue().toString().trim()) {
+    return false;
+  }
+
+  sheet.getRange("D1").setValue(
+    "Tip: use {{NAME}}, {{POLICY NUMBER}}, {{PRODUCT PROPOSED}}, etc. anywhere in the subject or " +
+    "body -- auto-filled per recipient from that column on your tracker tab."
+  );
+  sheet.getRange("D2").setValue(
+    "Tip: **double stars** = bold, *single stars* = italic, a line starting with \"- \" = bullet " +
+    "point, Alt+Enter (Option+Enter on Mac) = new line inside the cell."
+  );
+  sheet.getRange("D3").setValue(
+    "Tip: paste a Google Drive share link in B3 (set to \"Anyone with the link\") to attach a file " +
+    "or show a poster image -- optional."
+  );
+  sheet.getRange("D1:D3").setFontStyle("italic").setFontColor("#666666").setWrap(true).setVerticalAlignment("top");
+  sheet.setColumnWidth(4, 340);
+  return true;
 }
 
 /**
@@ -2024,12 +2058,13 @@ function ensureAttachmentRow_(sheet) {
 }
 
 /**
- * Scans row BLAST_LIST_HEADER_ROW for NAME / EMAIL / SENT (by header
- * text, not fixed position), adding SENT in the next empty column if
- * it's missing. Any OTHER columns in between (like COMPANY NAME) are
- * left completely alone and usable as {{COMPANY NAME}} in your message.
- * Returns { nameCol, emailCol, sentCol, headers, lastCol } (0-based
- * column indexes, headers is the full header row as an array).
+ * Scans row BLAST_LIST_HEADER_ROW for NAME / EMAIL / POLICY NUMBER / SENT
+ * (by header text, not fixed position), adding whichever are missing (POLICY
+ * NUMBER and SENT get appended as new columns, so nothing already typed in
+ * ever shifts). Any OTHER columns in between (like COMPANY NAME) are left
+ * completely alone and usable as {{COMPANY NAME}} in your message.
+ * Returns { nameCol, emailCol, policyCol, sentCol, headers, lastCol }
+ * (0-based column indexes, headers is the full header row as an array).
  */
 function getBlastListColumns_(sheet) {
   var lastCol = Math.max(sheet.getLastColumn(), 3);
@@ -2038,6 +2073,7 @@ function getBlastListColumns_(sheet) {
 
   var nameCol = headers.indexOf("NAME");
   var emailCol = headers.indexOf("EMAIL");
+  var policyCol = headers.indexOf("POLICY NUMBER");
   var sentCol = headers.indexOf("SENT");
 
   if (nameCol === -1) {
@@ -2050,6 +2086,13 @@ function getBlastListColumns_(sheet) {
     emailCol = 1;
     headers[1] = "EMAIL";
   }
+  if (policyCol === -1) {
+    var newPolicyCol = Math.max(lastCol, headers.length) + 1;
+    sheet.getRange(BLAST_LIST_HEADER_ROW, newPolicyCol).setValue("POLICY NUMBER").setFontWeight("bold");
+    policyCol = newPolicyCol - 1;
+    headers[policyCol] = "POLICY NUMBER";
+    lastCol = newPolicyCol;
+  }
   if (sentCol === -1) {
     var newCol = Math.max(lastCol, headers.length) + 1;
     sheet.getRange(BLAST_LIST_HEADER_ROW, newCol).setValue("SENT").setFontWeight("bold");
@@ -2058,20 +2101,21 @@ function getBlastListColumns_(sheet) {
     lastCol = newCol;
   }
 
-  return { nameCol: nameCol, emailCol: emailCol, sentCol: sentCol, headers: headers, lastCol: Math.max(lastCol, sentCol + 1) };
+  return { nameCol: nameCol, emailCol: emailCol, policyCol: policyCol, sentCol: sentCol, headers: headers, lastCol: Math.max(lastCol, sentCol + 1) };
 }
 
 /**
- * Makes sure the NAME / EMAIL / SENT header row for the blast list
- * exists below the template (adding SENT if it's missing, without
- * touching any other field you've added). Returns true if it just
+ * Makes sure the NAME / EMAIL / POLICY NUMBER / SENT header row for the
+ * blast list exists below the template (adding whichever are missing,
+ * without touching any other field you've added). Returns true if it just
  * added something, false if everything was already there.
  */
 function ensureBulkEmailListSection_(sheet) {
   var existing = sheet.getRange(BLAST_LIST_HEADER_ROW, 1, 1, Math.max(sheet.getLastColumn(), 3)).getValues()[0]
     .map(function (v) { return String(v).trim().toUpperCase(); });
 
-  if (existing[0] === "NAME" && existing[1] === "EMAIL" && existing.indexOf("SENT") > -1) {
+  if (existing[0] === "NAME" && existing[1] === "EMAIL" &&
+    existing.indexOf("POLICY NUMBER") > -1 && existing.indexOf("SENT") > -1) {
     return false; // already fully set up
   }
 
@@ -2427,6 +2471,7 @@ function debugEmailBlastList() {
   report.push(["Header row " + BLAST_LIST_HEADER_ROW, listCols.headers.join(" | ")]);
   report.push(["NAME column", colToA1_(listCols.nameCol + 1)]);
   report.push(["EMAIL column", colToA1_(listCols.emailCol + 1)]);
+  report.push(["POLICY NUMBER column", colToA1_(listCols.policyCol + 1)]);
   report.push(["SENT column", colToA1_(listCols.sentCol + 1)]);
   report.push(["Sheet's last row", sheet.getLastRow()]);
   report.push(["", ""]);
