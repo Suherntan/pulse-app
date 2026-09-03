@@ -1095,6 +1095,9 @@ function onOpen() {
     .addItem("Delete All Sent From Blast List", "deleteSentBlastRows")
     .addItem("Debug: Blast List (why \"already sent\"?)", "debugEmailBlastList")
     .addSeparator()
+    .addItem("Set Up WhatsApp Blast List", "setupWhatsAppBlastSheet")
+    .addItem("Refresh WhatsApp Blast Links", "refreshWhatsAppBlastLinks")
+    .addSeparator()
     .addItem("Add 'Date First Approached' Column (one-time)", "addOriginalDateColumnToAllTabs")
     .addItem("Set Up Performance Tracker Formulas (one-time)", "setupPerformanceTrackerFormulas")
     .addItem("Backfill Activity Log From Current Data (one-time)", "backfillActivityLog")
@@ -1487,15 +1490,238 @@ function BLAST_PHONE(rawPhone) {
 /**
  * @param {string} name The contact's name (used to fill in {name}).
  * @param {string} rawPhone The contact's phone number, any format.
- * @param {string} messageTemplate Your message text — include {name} anywhere you want it personalized.
+ * @param {string} messageTemplate Your message text — include {name} and/or {policy} anywhere you want it personalized.
+ * @param {(string|number)=} policyNumber (optional) The contact's policy number — fills in {policy}. Leave the argument out if you don't use {policy}.
  * @return {string} A wa.me link that opens WhatsApp with the message ready to send.
  * @customfunction
  */
-function BLAST_LINK(name, rawPhone, messageTemplate) {
+function BLAST_LINK(name, rawPhone, messageTemplate, policyNumber) {
   var phone = normalizePhone(rawPhone);
   if (!phone) return "";
-  var message = String(messageTemplate || "").split("{name}").join(name || "");
+  var policyText = (policyNumber === undefined || policyNumber === null) ? "" : String(policyNumber).trim();
+  var message = String(messageTemplate || "")
+    .split("{name}").join(name || "")
+    .split("{policy}").join(policyText);
   return "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+}
+
+
+/**
+ * ===================================================================
+ * PART 4b — SCRIPT-OWNED WHATSAPP BLAST LIST
+ * -------------------------------------------------------------------
+ * Same job as the BLAST_LINK formula above, but nothing here lives in
+ * a cell formula that someone could delete by accident. You type
+ * NAME / PHONE / POLICY NUMBER into the "WHATSAPP BLAST" tab and run
+ * "Refresh WhatsApp Blast Links" from the menu -- the script rewrites
+ * a fresh "Click to Send" link on every row. Wiped the link column?
+ * Just run the refresh again. Policy numbers left blank are looked up
+ * from the APPROACH / PRESENTATION / CLOSING tabs by phone number and
+ * filled back in for you.
+ * ===================================================================
+ */
+var WHATSAPP_BLAST_SHEET = "WHATSAPP BLAST";
+var WA_BLAST_MESSAGE_CELL = "B1";   // the message text; A1 is just the "MESSAGE" label
+var WA_BLAST_HEADER_ROW = 3;        // NAME / PHONE / POLICY NUMBER / CLICK TO SEND / SENT
+var WA_BLAST_START_ROW = 4;         // first recipient row
+var WA_BLAST_DEFAULT_MESSAGE =
+  "Hi {name}, a quick note regarding your policy {policy}. " +
+  "Please let me know if you have any questions. Thank you!";
+
+/**
+ * Scans row WA_BLAST_HEADER_ROW for NAME / PHONE / POLICY NUMBER /
+ * CLICK TO SEND / SENT by header text (not fixed position), adding
+ * whichever are missing. NAME and PHONE are forced into columns A/B if
+ * absent; the rest are appended as new columns so nothing already
+ * typed in ever shifts. Any other columns you've added in between are
+ * left alone. Returns 0-based indexes + the header row array.
+ */
+function getWhatsAppBlastColumns_(sheet) {
+  var lastCol = Math.max(sheet.getLastColumn(), 5);
+  var headers = sheet.getRange(WA_BLAST_HEADER_ROW, 1, 1, lastCol).getValues()[0]
+    .map(function (h) { return String(h).trim().toUpperCase(); });
+
+  function ensureAppended(label) {
+    var idx = headers.indexOf(label);
+    if (idx > -1) return idx;
+    var newCol = Math.max(lastCol, headers.length) + 1;
+    sheet.getRange(WA_BLAST_HEADER_ROW, newCol).setValue(label).setFontWeight("bold");
+    headers[newCol - 1] = label;
+    lastCol = newCol;
+    return newCol - 1;
+  }
+
+  var nameCol = headers.indexOf("NAME");
+  if (nameCol === -1) {
+    sheet.getRange(WA_BLAST_HEADER_ROW, 1).setValue("NAME").setFontWeight("bold");
+    nameCol = 0; headers[0] = "NAME";
+  }
+  var phoneCol = headers.indexOf("PHONE");
+  if (phoneCol === -1) {
+    sheet.getRange(WA_BLAST_HEADER_ROW, 2).setValue("PHONE").setFontWeight("bold");
+    phoneCol = 1; headers[1] = "PHONE";
+  }
+  var policyCol = ensureAppended("POLICY NUMBER");
+  var linkCol = ensureAppended("CLICK TO SEND");
+  var sentCol = ensureAppended("SENT");
+
+  return {
+    nameCol: nameCol, phoneCol: phoneCol, policyCol: policyCol,
+    linkCol: linkCol, sentCol: sentCol, headers: headers,
+    lastCol: Math.max(lastCol, sentCol + 1)
+  };
+}
+
+/**
+ * Builds a { normalizedPhone: policyNumber } lookup from the tracker
+ * tabs, so a blank POLICY NUMBER on the blast list can be filled in
+ * automatically. Clients with more than one policy (numbers joined by
+ * "/") are skipped -- too ambiguous to name just one.
+ */
+function buildPhoneToPolicyIndex_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var index = {};
+  TRACKING_SHEETS.forEach(function (tabName) {
+    var sheet = ss.getSheetByName(tabName);
+    if (!sheet) return;
+    var cols = getColumnMap_(sheet);
+    if (cols.contact === -1 || cols.policyNumber === -1) return;
+    var lastRow = sheet.getLastRow();
+    if (lastRow < cols._dataStartRow) return;
+    var data = sheet.getRange(cols._dataStartRow, 1, lastRow - cols._dataStartRow + 1, sheet.getLastColumn()).getValues();
+    data.forEach(function (row) {
+      var phone = normalizePhone(row[cols.contact]);
+      if (!phone) return;
+      var policy = cellToString_(row[cols.policyNumber]).trim();
+      if (!policy || policy.indexOf("/") > -1) return;
+      if (!index[phone]) index[phone] = policy;
+    });
+  });
+  return index;
+}
+
+/**
+ * Menu: "Set Up WhatsApp Blast List". Creates the "WHATSAPP BLAST" tab
+ * (message cell up top, NAME / PHONE / POLICY NUMBER / CLICK TO SEND /
+ * SENT header row below) if it's missing, or just adds whichever
+ * pieces are missing to an existing one. Safe to run repeatedly.
+ */
+function setupWhatsAppBlastSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(WHATSAPP_BLAST_SHEET);
+  var isNew = !sheet;
+
+  if (isNew) {
+    sheet = ss.insertSheet(WHATSAPP_BLAST_SHEET);
+    sheet.getRange("A1").setValue("MESSAGE").setFontWeight("bold");
+    sheet.getRange(WA_BLAST_MESSAGE_CELL).setValue(WA_BLAST_DEFAULT_MESSAGE);
+    sheet.getRange(WA_BLAST_MESSAGE_CELL).setNote(
+      "Type your WhatsApp message here. Use {name} for the contact's name and {policy} for " +
+      "their policy number -- both are filled in per row when you run \"Refresh WhatsApp Blast " +
+      "Links\". Alt+Enter (Option+Enter on Mac) for a new line."
+    );
+    sheet.getRange("D1").setValue(
+      "Tip: type NAME / PHONE (and POLICY NUMBER if you want {policy}) from row " + WA_BLAST_START_ROW +
+      " down, then run \"Refresh WhatsApp Blast Links\" from the PULSE Reminders menu. Leave POLICY " +
+      "NUMBER blank and it's looked up from your tracker tabs by phone number. Click the link in " +
+      "\"CLICK TO SEND\" to open WhatsApp with the message ready; tick SENT to keep track."
+    ).setFontStyle("italic").setFontColor("#666666").setWrap(true).setVerticalAlignment("top");
+    sheet.setColumnWidth(1, 110);
+    sheet.setColumnWidth(2, 140);
+    sheet.setColumnWidth(4, 360);
+  }
+
+  getWhatsAppBlastColumns_(sheet); // lays down / repairs the header row
+
+  ss.setActiveSheet(sheet);
+  SpreadsheetApp.getUi().alert(
+    isNew
+      ? 'Created the "' + WHATSAPP_BLAST_SHEET + '" tab.\n\n' +
+        "1. Edit cell " + WA_BLAST_MESSAGE_CELL + " for your message ({name} and {policy} get filled in per row).\n" +
+        "2. Type or paste NAME and PHONE (and POLICY NUMBER if you have it) from row " + WA_BLAST_START_ROW + " down.\n" +
+        '3. Run "Refresh WhatsApp Blast Links" from the menu -- a "Click to Send" link appears on every row.\n\n' +
+        "Nothing here is a cell formula, so it can't be broken by accident -- just re-run the refresh any time."
+      : 'The "' + WHATSAPP_BLAST_SHEET + '" tab is set up. Type recipients from row ' + WA_BLAST_START_ROW +
+        ' down, then run "Refresh WhatsApp Blast Links" from the menu.'
+  );
+}
+
+/**
+ * Menu: "Refresh WhatsApp Blast Links". Reads the message in
+ * WA_BLAST_MESSAGE_CELL and every recipient row, then writes a fresh
+ * "Click to Send" wa.me hyperlink into the CLICK TO SEND column. Blank
+ * POLICY NUMBER cells are auto-filled from the tracker tabs by phone.
+ * Re-run it whenever the message, the list, or the links change.
+ */
+function refreshWhatsAppBlastLinks() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ui = SpreadsheetApp.getUi();
+  var sheet = ss.getSheetByName(WHATSAPP_BLAST_SHEET);
+  if (!sheet) {
+    setupWhatsAppBlastSheet();
+    return;
+  }
+
+  var settings = getAgentSettings_();
+  COUNTRY_CODE = settings.countryCode; // per-sheet override for normalizePhone (see getAgentSettings_)
+
+  var messageTemplate = String(sheet.getRange(WA_BLAST_MESSAGE_CELL).getValue() || "").trim();
+  if (!messageTemplate) {
+    ui.alert("Type your message into cell " + WA_BLAST_MESSAGE_CELL + ' first, then run this again.');
+    return;
+  }
+
+  var cols = getWhatsAppBlastColumns_(sheet);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < WA_BLAST_START_ROW) {
+    ui.alert("Add some recipients first: type NAME and PHONE from row " + WA_BLAST_START_ROW + " down.");
+    return;
+  }
+
+  var numRows = lastRow - WA_BLAST_START_ROW + 1;
+  var values = sheet.getRange(WA_BLAST_START_ROW, 1, numRows, cols.lastCol).getValues();
+  var policyIndex = buildPhoneToPolicyIndex_();
+
+  var linkCount = 0;
+  var filledPolicyCount = 0;
+  var checkNumberCount = 0;
+
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i];
+    var rowNum = WA_BLAST_START_ROW + i;
+    var name = String(row[cols.nameCol] || "").trim();
+    var rawPhone = row[cols.phoneCol];
+
+    if (!name && !rawPhone) {
+      sheet.getRange(rowNum, cols.linkCol + 1).clearContent();
+      continue;
+    }
+
+    var phone = normalizePhone(rawPhone);
+    var policy = cellToString_(row[cols.policyCol]).trim();
+    if (!policy && phone && policyIndex[phone]) {
+      policy = policyIndex[phone];
+      sheet.getRange(rowNum, cols.policyCol + 1).setValue(policy);
+      filledPolicyCount++;
+    }
+
+    var message = messageTemplate.split("{name}").join(name).split("{policy}").join(policy);
+
+    if (!phone) {
+      sheet.getRange(rowNum, cols.linkCol + 1).setValue("CHECK NUMBER");
+      checkNumberCount++;
+      continue;
+    }
+
+    var link = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+    sheet.getRange(rowNum, cols.linkCol + 1).setFormula('=HYPERLINK("' + link + '","Click to Send")');
+    linkCount++;
+  }
+
+  var msg = linkCount + " WhatsApp link(s) refreshed.";
+  if (filledPolicyCount) msg += " " + filledPolicyCount + " policy number(s) auto-filled.";
+  if (checkNumberCount) msg += " " + checkNumberCount + ' row(s) marked "CHECK NUMBER".';
+  SpreadsheetApp.getActive().toast(msg, "PULSE Reminders", 6);
 }
 
 
