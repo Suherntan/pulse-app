@@ -1103,6 +1103,8 @@ function onOpen() {
     .addItem("Backfill Activity Log From Current Data (one-time)", "backfillActivityLog")
     .addSeparator()
     .addItem("Import from Manulife Export (due dates, payment mode, address)", "importPaymentModeAndAddress")
+    .addItem("Turn On Monthly Manulife Import Reminder", "createMonthlyManulifeReminder")
+    .addItem("Turn Off Monthly Manulife Import Reminder", "removeMonthlyManulifeReminder")
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
     .addToUi();
 }
@@ -1496,6 +1498,71 @@ function removeDailyTrigger() {
     }
   });
   SpreadsheetApp.getActive().toast("Daily auto-refresh + auto-emails turned OFF.", "PULSE Reminders", 5);
+}
+
+
+// -------------------------------------------------------------------
+// MONTHLY "refresh due dates from Manulife" REMINDER
+// -------------------------------------------------------------------
+// The Manulife export can't be pulled automatically (portal login, no
+// API), so this doesn't run the import -- it just emails you on the 1st
+// of each month to go do it, and tells you how long it's been since the
+// last one. importPaymentModeAndAddress() stamps LAST_MANULIFE_IMPORT_KEY
+// every time it runs, which is what the "days ago" line reads.
+var LAST_MANULIFE_IMPORT_KEY = "lastManulifeImport";
+
+function remindManulifeImport() {
+  var email = "";
+  try { email = Session.getEffectiveUser().getEmail(); } catch (e) {}
+  if (!email) return; // nothing we can do without an address
+
+  var settings = getAgentSettings_();
+  var stamp = PropertiesService.getScriptProperties().getProperty(LAST_MANULIFE_IMPORT_KEY);
+  var sinceLine = "This is your first one — no Manulife import has been recorded yet.";
+  if (stamp) {
+    var last = new Date(stamp);
+    if (!isNaN(last.getTime())) {
+      var days = Math.floor((Date.now() - last.getTime()) / (24 * 60 * 60 * 1000));
+      sinceLine = "Last import was " + days + " day" + (days === 1 ? "" : "s") + " ago (" +
+        Utilities.formatDate(last, Session.getScriptTimeZone(), "dd MMM yyyy") + ").";
+    }
+  }
+
+  var body =
+    "Hi " + settings.agentName + ",\n\n" +
+    "Time to refresh your premium due dates from Manulife so PULSE keeps reminding you on the right dates.\n\n" +
+    sinceLine + "\n\n" +
+    "Steps:\n" +
+    "1. Pull a fresh client export from the Manulife portal (name, policy number, contact, email, birthday, premium due date).\n" +
+    "2. Paste it into the tab named \"" + MANULIFE_IMPORT_SHEET_NAME + "\" in your PULSE sheet (row 1 = the column headers).\n" +
+    "3. In the sheet: PULSE Reminders menu -> \"Import from Manulife Export (due dates, payment mode, address)\".\n\n" +
+    "That's it — the daily 7am refresh takes care of the reminders themselves.\n\n" +
+    "(To stop these monthly emails: PULSE Reminders menu -> \"Turn Off Monthly Manulife Import Reminder\".)";
+
+  MailApp.sendEmail(email, "PULSE: monthly Manulife due-date refresh", body);
+}
+
+function createMonthlyManulifeReminder() {
+  removeMonthlyManulifeReminder();
+  ScriptApp.newTrigger("remindManulifeImport")
+    .timeBased()
+    .onMonthDay(1)
+    .atHour(8)
+    .create();
+  SpreadsheetApp.getActive().toast(
+    "Monthly Manulife import reminder is ON — you'll get an email on the 1st of each month.",
+    "PULSE Reminders", 6
+  );
+}
+
+function removeMonthlyManulifeReminder() {
+  var triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(function (t) {
+    if (t.getHandlerFunction() === "remindManulifeImport") {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+  SpreadsheetApp.getActive().toast("Monthly Manulife import reminder is OFF.", "PULSE Reminders", 5);
 }
 
 
@@ -3328,6 +3395,10 @@ function importPaymentModeAndAddress() {
   var addedNote = addedCount > 0
     ? "\n\nAdded " + addedCount + " new client(s)/policy group(s) to APPROACH that weren't in your tracker at all yet."
     : "";
+
+  // Stamp when this ran, so the monthly reminder email can say how long
+  // it's been since the last refresh.
+  PropertiesService.getScriptProperties().setProperty(LAST_MANULIFE_IMPORT_KEY, new Date().toISOString());
 
   ui.alert(
     "Import complete.\n\n" +
