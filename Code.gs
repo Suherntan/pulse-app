@@ -1256,42 +1256,72 @@ function paymentModeToMonths_(rawMode) {
 
 
 // Called from onEdit() when the agent ticks "Mark Sent" on a reminder row.
+//
+// The reminder row records which tab the client was on when the reminder
+// was generated. But clients move between APPROACH / PRESENTATION /
+// CLOSING, so by the time "Mark Sent" is ticked they may be on a
+// different tab -- or the row may have been carried forward across
+// several refreshes since. So we don't trust the recorded tab blindly:
+// we look on that tab first, then the other tracker tabs, matching by
+// phone number first (reliable even if the name was edited) and falling
+// back to an exact name match. Without this, a reminder for a client who
+// changed stage can never be marked sent and comes back every refresh.
 function markReminderSent_(reminderSheet, row) {
   var rowValues = reminderSheet.getRange(row, 1, 1, REMINDER_SHEET_NUM_COLS).getValues()[0];
   var type = rowValues[REMINDER_COL_TYPE - 1];
   var fromTab = rowValues[REMINDER_COL_FROM_TAB - 1];
-  var clientName = rowValues[REMINDER_COL_NAME - 1];
+  var clientName = String(rowValues[REMINDER_COL_NAME - 1] || "").trim();
+  var clientPhone = normalizePhone(rowValues[REMINDER_COL_PHONE_ENTERED - 1]);
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sourceSheet = ss.getSheetByName(fromTab);
 
-  if (sourceSheet) {
+  var tabsToTry = [];
+  if (fromTab) tabsToTry.push(fromTab);
+  TRACKING_SHEETS.forEach(function (t) {
+    if (tabsToTry.indexOf(t) === -1) tabsToTry.push(t);
+  });
+
+  var phoneMatch = null; // { sheet, cols, targetRow } -- strongest
+  var nameMatch = null;   // first exact-name hit, used only if no phone match
+
+  for (var t = 0; t < tabsToTry.length && !phoneMatch; t++) {
+    var sourceSheet = ss.getSheetByName(tabsToTry[t]);
+    if (!sourceSheet) continue;
     var cols = getColumnMap_(sourceSheet);
-    cols = ensureReminderTrackingColumns_(sourceSheet, cols);
     var lastRow = sourceSheet.getLastRow();
+    if (cols.name === -1 || lastRow < cols._dataStartRow) continue;
 
-    if (cols.name > -1 && lastRow >= cols._dataStartRow) {
-      var nameValues = sourceSheet.getRange(cols._dataStartRow, cols.name + 1, lastRow - cols._dataStartRow + 1, 1).getValues();
-      var targetRow = 0;
-      for (var i = nameValues.length - 1; i >= 0; i--) {
-        if (String(nameValues[i][0]).trim() === String(clientName).trim()) {
-          targetRow = cols._dataStartRow + i;
-          break;
-        }
-      }
+    var numRows = lastRow - cols._dataStartRow + 1;
+    var names = sourceSheet.getRange(cols._dataStartRow, cols.name + 1, numRows, 1).getValues();
+    var phones = cols.contact > -1
+      ? sourceSheet.getRange(cols._dataStartRow, cols.contact + 1, numRows, 1).getValues()
+      : null;
 
-      if (targetRow) {
-        var today = new Date();
-        if (type === "Birthday" && cols.greetingSent > -1) {
-          sourceSheet.getRange(targetRow, cols.greetingSent + 1).setValue(today).setNumberFormat("yyyy-mm-dd");
-        } else if (type === "Premium Due" && cols.reminderSent > -1 && cols.paymentDue > -1) {
-          var currentDue = sourceSheet.getRange(targetRow, cols.paymentDue + 1).getValue();
-          sourceSheet.getRange(targetRow, cols.reminderSent + 1).setValue(currentDue).setNumberFormat("yyyy-mm-dd");
-        } else if (type === "Premium Due (Advance Notice)" && cols.advanceReminderSent > -1 && cols.paymentDue > -1) {
-          var currentDueAdvance = sourceSheet.getRange(targetRow, cols.paymentDue + 1).getValue();
-          sourceSheet.getRange(targetRow, cols.advanceReminderSent + 1).setValue(currentDueAdvance).setNumberFormat("yyyy-mm-dd");
-        }
+    for (var i = numRows - 1; i >= 0; i--) {
+      if (clientPhone && phones && normalizePhone(phones[i][0]) === clientPhone) {
+        phoneMatch = { sheet: sourceSheet, cols: cols, targetRow: cols._dataStartRow + i };
+        break;
       }
+      if (!nameMatch && clientName && String(names[i][0]).trim() === clientName) {
+        nameMatch = { sheet: sourceSheet, cols: cols, targetRow: cols._dataStartRow + i };
+      }
+    }
+  }
+
+  var located = phoneMatch || nameMatch;
+  if (located) {
+    var sheet = located.sheet;
+    var c = ensureReminderTrackingColumns_(sheet, located.cols);
+    var targetRow = located.targetRow;
+    var today = new Date();
+    if (type === "Birthday" && c.greetingSent > -1) {
+      sheet.getRange(targetRow, c.greetingSent + 1).setValue(today).setNumberFormat("yyyy-mm-dd");
+    } else if (type === "Premium Due" && c.reminderSent > -1 && c.paymentDue > -1) {
+      var currentDue = sheet.getRange(targetRow, c.paymentDue + 1).getValue();
+      sheet.getRange(targetRow, c.reminderSent + 1).setValue(currentDue).setNumberFormat("yyyy-mm-dd");
+    } else if (type === "Premium Due (Advance Notice)" && c.advanceReminderSent > -1 && c.paymentDue > -1) {
+      var currentDueAdvance = sheet.getRange(targetRow, c.paymentDue + 1).getValue();
+      sheet.getRange(targetRow, c.advanceReminderSent + 1).setValue(currentDueAdvance).setNumberFormat("yyyy-mm-dd");
     }
   }
 
