@@ -1102,7 +1102,7 @@ function onOpen() {
     .addItem("Set Up Performance Tracker Formulas (one-time)", "setupPerformanceTrackerFormulas")
     .addItem("Backfill Activity Log From Current Data (one-time)", "backfillActivityLog")
     .addSeparator()
-    .addItem("Import Payment Mode + Mailing Address (from Manulife export)", "importPaymentModeAndAddress")
+    .addItem("Import from Manulife Export (due dates, payment mode, address)", "importPaymentModeAndAddress")
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
     .addToUi();
 }
@@ -3066,23 +3066,28 @@ function backfillActivityLog() {
 
 /**
  * ===================================================================
- * PART 9 — IMPORT PAYMENT MODE + MAILING ADDRESS (from Manulife export)
+ * PART 9 — IMPORT FROM MANULIFE EXPORT (due dates, mode, address)
  * -----------------------------------------------------------------
  * One-click import: reads a "MANULIFE IMPORT" tab (paste the Manulife
  * client export in -- the whole exported Excel/CSV is fine, this only
- * looks for columns named "Policy Number", "Payment Mode", and
- * "Mailing Address" by header text, same header-based approach as
- * everywhere else in this script) and writes Payment Mode + Mailing
- * Address into the matching row on APPROACH/PRESENTATION/CLOSING,
- * matched by Policy Number. Creates the PAYMENT MODE / MAILING ADDRESS
- * columns on a tab automatically if they don't exist yet.
+ * looks for columns named "Policy Number", "Premium Due Date",
+ * "Payment Mode", "Mailing Address" (and "Birthday") by header text,
+ * same header-based approach as everywhere else in this script) and
+ * writes them into the matching row on APPROACH/PRESENTATION/CLOSING,
+ * matched by Policy Number. Creates the PREMIUM DUE DATE / PAYMENT
+ * MODE / MAILING ADDRESS columns on a tab automatically if missing.
+ *
+ * Premium Due Date is refreshed on every matched row (Manulife is the
+ * source of truth for it -- this is what keeps the reminders firing
+ * on the right dates). Birthday is only filled where the tracker cell
+ * is blank; an existing birthday is never overwritten. Policy numbers
+ * in the export that match no row anywhere are added to APPROACH as
+ * new clients.
  *
  * SETUP: create a sheet tab named exactly "MANULIFE IMPORT", paste
  * your exported client data into it (row 1 = headers), then run
- * "PULSE Reminders" -> "Import Payment Mode + Mailing Address" from
- * the menu. Run it again any time you have a fresh export -- matching
- * rows get their Payment Mode / Mailing Address overwritten with the
- * freshly imported values.
+ * "PULSE Reminders" -> "Import from Manulife Export" from the menu.
+ * Run it again any time you have a fresh export.
  * ===================================================================
  */
 
@@ -3125,8 +3130,8 @@ function importPaymentModeAndAddress() {
     ui.alert('Could not find a "Policy Number" column on the "' + MANULIFE_IMPORT_SHEET_NAME + '" tab -- check your header row.');
     return;
   }
-  if (modeCol === -1 && addressCol === -1) {
-    ui.alert('Could not find a "Payment Mode" or "Mailing Address" column on the "' + MANULIFE_IMPORT_SHEET_NAME + '" tab -- nothing to import.');
+  if (modeCol === -1 && addressCol === -1 && dueDateCol === -1) {
+    ui.alert('Could not find a "Payment Mode", "Mailing Address" or "Premium Due Date" column on the "' + MANULIFE_IMPORT_SHEET_NAME + '" tab -- nothing to import.');
     return;
   }
 
@@ -3193,10 +3198,12 @@ function importPaymentModeAndAddress() {
 
     if (modeCol > -1) ensureColumnByField_(sheet, cols, 'paymentMode', 'PAYMENT MODE');
     if (addressCol > -1) ensureColumnByField_(sheet, cols, 'mailingAddress', 'MAILING ADDRESS');
+    if (dueDateCol > -1) ensureColumnByField_(sheet, cols, 'paymentDue', 'PREMIUM DUE DATE');
 
     var numCols = sheet.getLastColumn();
     var data = sheet.getRange(cols._dataStartRow, 1, tabLastRow - cols._dataStartRow + 1, numCols).getValues();
     var matched = 0;
+    var dueDatesFilled = 0;
 
     data.forEach(function (row, idx) {
       var cellRaw = cols.policyNumber > -1 ? row[cols.policyNumber] : '';
@@ -3229,9 +3236,17 @@ function importPaymentModeAndAddress() {
       // use the first non-empty one found.
       var modes = [];
       var address = '';
+      var dueDates = [];
+      var birthdayVal = null;
       matchedEntries.forEach(function (e) {
         if (e.paymentMode && modes.indexOf(e.paymentMode) === -1) modes.push(e.paymentMode);
         if (!address && e.mailingAddress) address = e.mailingAddress;
+        var d = coerceImportDate_(e.dueDate);
+        if (d) dueDates.push(d);
+        if (!birthdayVal) {
+          var b = coerceImportDate_(e.birthday);
+          if (b) birthdayVal = b;
+        }
       });
 
       var absoluteRow = cols._dataStartRow + idx;
@@ -3241,11 +3256,36 @@ function importPaymentModeAndAddress() {
       if (cols.mailingAddress > -1 && address) {
         sheet.getRange(absoluteRow, cols.mailingAddress + 1).setValue(address);
       }
+
+      // Refresh the premium due date from the export -- Manulife is the
+      // source of truth for it. For a client with several policies on one
+      // row, use the earliest date that's still in the future (the next
+      // one you'd chase); if they're all past, use the most recent one.
+      if (cols.paymentDue > -1 && dueDates.length) {
+        dueDates.sort(function (a, b) { return a.getTime() - b.getTime(); });
+        var todayMidnight = new Date();
+        todayMidnight.setHours(0, 0, 0, 0);
+        var upcoming = dueDates.filter(function (d) { return d.getTime() >= todayMidnight.getTime(); });
+        var chosenDue = upcoming.length ? upcoming[0] : dueDates[dueDates.length - 1];
+        sheet.getRange(absoluteRow, cols.paymentDue + 1).setValue(chosenDue).setNumberFormat('yyyy-mm-dd');
+        dueDatesFilled++;
+      }
+
+      // Birthday: only fill it if the tracker cell is currently blank --
+      // never overwrite one you've already got.
+      if (cols.birthday > -1 && birthdayVal) {
+        var bCell = sheet.getRange(absoluteRow, cols.birthday + 1);
+        if (!bCell.getValue()) bCell.setValue(birthdayVal).setNumberFormat('yyyy-mm-dd');
+      }
+
       matched++;
     });
 
     totalMatched += matched;
-    perTabReport.push(tabName + ": " + matched + " row(s) matched and filled");
+    perTabReport.push(
+      tabName + ": " + matched + " row(s) matched and filled" +
+      (dueDateCol > -1 ? " (" + dueDatesFilled + " due date(s) refreshed)" : "")
+    );
   });
 
   // Anything in the import sheet that never matched a row anywhere in the
@@ -3474,6 +3514,39 @@ function removeDuplicateClientRows() {
 // Manulife export, which always includes it.
 function normalizePolicyNumber_(raw) {
   return String(raw).trim().replace(/-\d+$/, '');
+}
+
+// Best-effort parse of a date coming out of the MANULIFE IMPORT tab. It
+// might already be a real Date (Sheets recognised it on paste), or text
+// like "15/03/2026", "15-03-2026", "2026-03-15", or "15 Mar 2026".
+// Day-first is assumed (Malaysia) when the format is ambiguous. Returns
+// a Date at local midnight, or null if it can't make sense of it.
+function coerceImportDate_(val) {
+  if (val instanceof Date) {
+    return isNaN(val.getTime()) ? null : new Date(val.getFullYear(), val.getMonth(), val.getDate());
+  }
+  var s = String(val || '').trim();
+  if (!s) return null;
+
+  var m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) {
+    var a = parseInt(m[1], 10), b = parseInt(m[2], 10), y = parseInt(m[3], 10);
+    if (y < 100) y += 2000;
+    var day = a, month = b;
+    if (a > 12 && b <= 12) { day = a; month = b; }      // clearly d/m
+    else if (b > 12 && a <= 12) { day = b; month = a; } // clearly m/d
+    var dt = new Date(y, month - 1, day);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  var iso = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/);
+  if (iso) {
+    var dt2 = new Date(parseInt(iso[1], 10), parseInt(iso[2], 10) - 1, parseInt(iso[3], 10));
+    return isNaN(dt2.getTime()) ? null : dt2;
+  }
+
+  var parsed = new Date(s);
+  return isNaN(parsed.getTime()) ? null : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
 /**
