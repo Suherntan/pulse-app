@@ -2055,7 +2055,8 @@ function sendBulkEmail() {
   var attachmentInfo = getEmailAttachmentInfo_(templateSheet.getRange("B3").getValue());
   if (attachmentInfo && attachmentInfo.error) {
     ui.alert('Could not open the attachment/poster link in B3 (' + attachmentInfo.error + '). ' +
-      'Sending without it — check the Drive link is set to "Anyone with the link can view."');
+      'Sending without it — check the Drive link is set to "Anyone with the link can view", ' +
+      'and that you approved the permission screen the last time the script asked.');
     attachmentInfo = null;
   }
 
@@ -2178,7 +2179,8 @@ function sendEmailBlast() {
   var attachmentInfo = getEmailAttachmentInfo_(sheet.getRange("B3").getValue());
   if (attachmentInfo && attachmentInfo.error) {
     ui.alert('Could not open the attachment/poster link in B3 (' + attachmentInfo.error + '). ' +
-      'Sending without it — check the Drive link is set to "Anyone with the link can view."');
+      'Sending without it — check the Drive link is set to "Anyone with the link can view", ' +
+      'and that you approved the permission screen the last time the script asked.');
     attachmentInfo = null;
   }
 
@@ -2466,6 +2468,10 @@ function stripBoldMarkers_(text) {
  * B3 is empty. Returns { error } if the link couldn't be opened
  * (wrong sharing permissions, bad link, etc.) so callers can warn
  * the user instead of the whole send silently failing.
+ *
+ * Tries DriveApp first, then falls back to downloading the file over
+ * its public link, so the poster still goes out when the script hasn't
+ * been granted Drive access.
  */
 function getEmailAttachmentInfo_(linkValue) {
   var trimmed = (linkValue || "").toString().trim();
@@ -2476,13 +2482,60 @@ function getEmailAttachmentInfo_(linkValue) {
     return { error: "couldn't find a Google Drive file ID in that link" };
   }
 
+  var driveError = "";
   try {
     var file = DriveApp.getFileById(id);
     var blob = file.getBlob();
     var mime = blob.getContentType() || "";
     return { blob: blob, isImage: mime.indexOf("image/") === 0, name: file.getName() };
   } catch (e) {
-    return { error: e.message };
+    driveError = e.message;
+  }
+
+  // DriveApp failed -- most often because the script's authorization
+  // predates this feature and doesn't include Drive access. Fall back to
+  // downloading the file over its public link instead.
+  var viaLink = fetchPublicDriveFile_(id);
+  if (viaLink) return viaLink;
+
+  if (driveError.indexOf("permission") !== -1 && driveError.indexOf("DriveApp") !== -1) {
+    driveError = "the script isn't authorized for Google Drive yet -- open Extensions > " +
+      "Apps Script, run any function once, and approve the permission screen";
+  }
+  return { error: driveError };
+}
+
+/**
+ * Downloads a Drive file over its public link. Used when DriveApp isn't
+ * authorized. Returns null if the file isn't publicly viewable or what
+ * came back wasn't a real file.
+ */
+function fetchPublicDriveFile_(id) {
+  try {
+    var response = UrlFetchApp.fetch(
+      "https://drive.google.com/uc?export=download&id=" + id,
+      { muteHttpExceptions: true, followRedirects: true }
+    );
+    if (response.getResponseCode() !== 200) return null;
+
+    var blob = response.getBlob();
+    var mime = blob.getContentType() || "";
+    // A private file (or Google's large-file virus-scan warning) comes
+    // back as an HTML page rather than the file itself.
+    if (mime.indexOf("text/html") === 0) return null;
+
+    var headers = response.getAllHeaders();
+    var disposition = headers["Content-Disposition"] || headers["content-disposition"] || "";
+    var name = "attachment";
+    var m = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+    if (m) {
+      try { name = decodeURIComponent(m[1]); } catch (e) { name = m[1]; }
+    }
+    blob.setName(name);
+
+    return { blob: blob, isImage: mime.indexOf("image/") === 0, name: name };
+  } catch (e) {
+    return null;
   }
 }
 
