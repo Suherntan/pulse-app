@@ -104,6 +104,7 @@ function switchTab(tabName) {
     if (tabName === 'today') renderTodayTab(lastFetchedData);
     else if (tabName === 'tracker') renderTrackerTab(lastFetchedData);
     else if (tabName === 'clients') renderClientsTab(lastFetchedData);
+    else if (tabName === 'funds') renderFundsTab();
 }
 
 // --- Date Functions ---

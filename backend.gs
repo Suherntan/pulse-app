@@ -25,6 +25,8 @@ function doGet(e) {
       case 'searchClients':
         var query = e.parameter.q;
         return jsonResponse(searchClients(query));
+      case 'fetchFundData':
+        return jsonResponse(getFundTrackerData());
       default:
         return jsonResponse({error: 'Unknown action: ' + action});
     }
@@ -95,6 +97,55 @@ function getSheetData(sheetName) {
   }
   
   return rows;
+}
+
+// Reads the "Fund Watchlist - 3 Year Horizon" and "Client Fund Interest Tracker"
+// tabs (add them to this same spreadsheet) and returns them in the shape the
+// Funds tab expects. Returns empty arrays if either tab is missing, so the
+// front-end quietly falls back to its sample data instead of breaking.
+function getFundTrackerData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var fundSheet = ss.getSheetByName('Fund Watchlist - 3 Year Horizon');
+  var clientSheet = ss.getSheetByName('Client Fund Interest Tracker');
+
+  return {
+    funds: fundSheet ? mapFundRows(getSheetData(fundSheet.getName())) : [],
+    clients: clientSheet ? mapClientRows(getSheetData(clientSheet.getName())) : []
+  };
+}
+
+// Column order: Fund Name, Type, Category, 1Y%, 3Y%, 5Y%, 10Y%, Data As Of, 3Y Rank, Recommended
+function mapFundRows(rows) {
+  return rows.map(function(r) {
+    return {
+      name: r[0],
+      type: r[1],
+      category: r[2],
+      ret1y: Number(r[3]) || 0,
+      ret3y: Number(r[4]) || 0,
+      ret5y: Number(r[5]) || 0,
+      ret10y: Number(r[6]) || 0,
+      asOf: formatDate(r[7]),
+      rank3y: Number(r[8]) || 0,
+      recommended: r[9]
+    };
+  }).filter(function(f) { return f.name; });
+}
+
+// Column order: Client Name, Contact, Risk Profile, Fund of Interest, Investment Horizon, Status, Date Discussed, Notes
+function mapClientRows(rows) {
+  return rows.map(function(r) {
+    return {
+      name: r[0],
+      contact: r[1],
+      riskProfile: r[2],
+      fundOfInterest: r[3],
+      horizon: r[4],
+      status: r[5],
+      dateDiscussed: formatDate(r[6]),
+      notes: r[7]
+    };
+  }).filter(function(c) { return c.name; });
 }
 
 function getReminders() {
