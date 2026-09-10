@@ -11,7 +11,13 @@ var FT_STATUS_CLASS = {
 };
 var ft_activeStatusFilter = 'all';
 
-function renderFundsTab() {
+// Falls back to the sample data in fund-tracker-data.js until (and unless)
+// a live Google Sheet connection successfully returns real rows.
+var ft_funds = FUND_DATA;
+var ft_clients = CLIENT_DATA;
+
+async function renderFundsTab() {
+    await ftLoadLiveData();
     renderFtInsight();
     renderFtSplit();
     renderFtTopPicks();
@@ -19,10 +25,26 @@ function renderFundsTab() {
     renderFtClients();
 }
 
+async function ftLoadLiveData() {
+    var apiUrl = (typeof API !== 'undefined') ? API.getApiUrl() : null;
+    if (!apiUrl) return;
+    try {
+        var url = apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'action=fetchFundData';
+        var response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+        if (!response.ok) return;
+        var data = await response.json();
+        if (data.error) return;
+        if (data.funds && data.funds.length) ft_funds = data.funds;
+        if (data.clients && data.clients.length) ft_clients = data.clients;
+    } catch (e) {
+        // Sheet unreachable — keep showing the sample data instead of breaking the tab.
+    }
+}
+
 function renderFtInsight() {
     var el = document.getElementById('ft-insight');
-    if (!el || !FUND_DATA.length) return;
-    var top = FUND_DATA.slice().sort(function (a, b) { return b.ret3y - a.ret3y; })[0];
+    if (!el || !ft_funds.length) return;
+    var top = ft_funds.slice().sort(function (a, b) { return b.ret3y - a.ret3y; })[0];
     el.innerHTML =
         '<span class="ft-insight-label">Top 3-Year Performer</span>' +
         '<span class="ft-insight-value">' + top.name + ', +' + top.ret3y.toFixed(2) + '%</span>';
@@ -31,8 +53,8 @@ function renderFtInsight() {
 function renderFtSplit() {
     var el = document.getElementById('ft-split');
     if (!el) return;
-    var shariah = FUND_DATA.filter(function (f) { return f.type === 'Shariah'; }).length;
-    var total = FUND_DATA.length || 1;
+    var shariah = ft_funds.filter(function (f) { return f.type === 'Shariah'; }).length;
+    var total = ft_funds.length || 1;
     var pct = Math.round((shariah / total) * 100);
     el.innerHTML =
         '<div class="ft-split-header"><span>Shariah</span><span>Conventional</span></div>' +
@@ -43,7 +65,7 @@ function renderFtSplit() {
 function renderFtTopPicks() {
     var el = document.getElementById('ft-top-picks');
     if (!el) return;
-    var top = FUND_DATA.slice().sort(function (a, b) { return a.rank3y - b.rank3y; }).slice(0, 3);
+    var top = ft_funds.slice().sort(function (a, b) { return a.rank3y - b.rank3y; }).slice(0, 3);
     el.innerHTML = top.map(function (f, i) {
         return '<div class="ft-card">' +
             '<div class="ft-card-icon">' + (FT_RANK_ICON[i] || '&#11088;') + '</div>' +
@@ -63,7 +85,7 @@ function renderFtTopPicks() {
 function renderFtStatusFilters() {
     var el = document.getElementById('ft-status-filters');
     if (!el) return;
-    var statuses = ['all'].concat(CLIENT_DATA.map(function (c) { return c.status; })
+    var statuses = ['all'].concat(ft_clients.map(function (c) { return c.status; })
         .filter(function (s, i, arr) { return arr.indexOf(s) === i; }));
     el.innerHTML = statuses.map(function (s) {
         var active = s === ft_activeStatusFilter ? ' active' : '';
@@ -81,7 +103,7 @@ function ftFilterStatus(status) {
 function renderFtClients() {
     var el = document.getElementById('ft-clients');
     if (!el) return;
-    var list = CLIENT_DATA.filter(function (c) {
+    var list = ft_clients.filter(function (c) {
         return ft_activeStatusFilter === 'all' || c.status === ft_activeStatusFilter;
     });
     if (!list.length) {
