@@ -9,6 +9,7 @@
 <meta name=theme-color content=#1a73e8>
 <title>P.U.L.S.E Dashboard</title>
 <link rel=stylesheet href=css/style.css>
+<link rel=stylesheet href=css/fund-tracker.css>
 <link rel=icon href=icons/favicon.svg type=image/svg+xml>
 </head>
 <body>
@@ -16,7 +17,7 @@
 <div class=loader></div>
 <p>Loading your dashboard...</p>
 </div>
-<div id=setup-screen class=setup-screen hidden>
+<div id=setup-screen class="setup-screen hidden">
 <div class=setup-card>
 <h1>P.U.L.S.E</h1>
 <p class=subtitle>Sales Dashboard</p>
@@ -39,7 +40,7 @@
 <div id=setup-error class=error-message></div>
 </div>
 </div>
-<div id=dashboard class=dashboard hidden>
+<div id=dashboard class="dashboard hidden">
 <header class=header>
 <div class=header-top>
 <h1>P.U.L.S.E</h1>
@@ -62,6 +63,9 @@
 </button>
 <button class=tab data-tab=add onclick="switchTab('add')">
 <span class=tab-icon>&#10133;</span><span>Add</span>
+</button>
+<button class=tab data-tab=funds onclick="switchTab('funds')">
+<span class=tab-icon>&#128142;</span><span>Funds</span>
 </button>
 </nav>
 <main id=tab-today class=tab-content active>
@@ -216,6 +220,24 @@
 <div id=form-message class=form-message></div>
 </section>
 </main>
+<main id=tab-funds class="tab-content hidden fund-tracker">
+<div class=ft-hero>
+<h2 class=ft-title>Fund &amp; Client Tracker</h2>
+<p class=ft-subtitle>3-Year horizon research &amp; client pipeline</p>
+</div>
+<div id=ft-insight class=ft-insight></div>
+<section class=ft-section>
+<h3 class=ft-section-title><span class=ft-num>01</span> Fund Summary</h3>
+<div id=ft-split class=ft-split></div>
+<div id=ft-top-picks class=ft-cards></div>
+<p class=ft-disclaimer>Past performance is not indicative of future results. This is a research/tracking tool, not standalone investment advice &mdash; final recommendations depend on each client's individual risk profile.</p>
+</section>
+<section class=ft-section>
+<h3 class=ft-section-title><span class=ft-num>02</span> Client Pipeline</h3>
+<div id=ft-status-filters class=ft-filter-tabs></div>
+<div id=ft-clients class=ft-client-list></div>
+</section>
+</main>
 <div id=settings-modal class=modal hidden>
 <div class=modal-content>
 <div class=modal-header>
@@ -248,5 +270,7 @@
 <script src="/js/app.js"></script>
 <script src="/js/tracker.js"></script>
 <script src="/js/reminders.js"></script>
+<script src="/js/fund-tracker-data.js"></script>
+<script src="/js/fund-tracker.js"></script>
 </body>
 </html>
