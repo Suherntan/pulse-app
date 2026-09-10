@@ -13,7 +13,18 @@
 <link rel=icon href=icons/favicon.svg type=image/svg+xml>
 </head>
 <body>
-<div id=loading-screen class=loading-screen>
+<div id=lock-screen class=lock-screen>
+<div class=lock-card>
+<h1>P.U.L.S.E</h1>
+<p class=subtitle>Enter password to continue</p>
+<form id=lock-form>
+<input type=password id=lock-password placeholder=Password autocomplete=off required>
+<button type=submit>Unlock</button>
+</form>
+<div id=lock-error class=error-message></div>
+</div>
+</div>
+<div id=loading-screen class="loading-screen hidden">
 <div class=loader></div>
 <p>Loading your dashboard...</p>
 </div>
@@ -272,5 +283,6 @@
 <script src="/js/reminders.js"></script>
 <script src="/js/fund-tracker-data.js"></script>
 <script src="/js/fund-tracker.js"></script>
+<script src="/js/lock.js"></script>
 </body>
 </html>
