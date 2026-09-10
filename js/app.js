@@ -1,6 +1,7 @@
 /* P.U.L.S.E Dashboard - Main App Logic */
 
-document.addEventListener('DOMContentLoaded', function () { initApp(); });
+// App startup is gated by lock.js — it calls initApp() itself once the
+// correct password has been entered (or immediately, if already unlocked).
 
 var lastFetchedData = null; // cached fetchAll() result, reused across tabs/filters
 
