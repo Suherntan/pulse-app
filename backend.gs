@@ -65,15 +65,69 @@ function getAllSheetData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = ['APPROACH', 'PRESENTATION', 'CLOSING', 'SR', 'PERFORMANCE TRACKER'];
   var result = {};
-  
+
   sheets.forEach(function(name) {
     var sheet = ss.getSheetByName(name);
-    if (sheet) {
-      result[name.toLowerCase()] = getSheetData(name);
-    }
+    if (!sheet) return;
+    result[name.toLowerCase()] = (name === 'PERFORMANCE TRACKER')
+      ? getSheetData(name)
+      : getMappedActivityRows(name);
   });
-  
+
   return result;
+}
+
+// Real activity rows are marked in column A with one of these — everything
+// else (the "MASTER LIST"/count summary rows at the top, section headers,
+// blank rows) gets filtered out.
+var ACTIVITY_ROW_MARKERS = ['APPROACH', 'PRESENTATION', 'CLOSING', 'SR', 'REFERRAL', 'SERVICING'];
+
+// getSheetData() returns each row keyed by column number ("0", "1", ...),
+// which the dashboard's front-end code does not read directly — it expects
+// named fields like row.name, row.contact, row.birthday. This converts one
+// sheet's raw rows into that shape, using each tab's real column layout.
+function getMappedActivityRows(sheetName) {
+  var rawRows = getSheetData(sheetName).filter(function(r) {
+    return ACTIVITY_ROW_MARKERS.indexOf(r[0]) !== -1 && r[4];
+  });
+
+  if (sheetName === 'SR') {
+    return rawRows.map(function(r) {
+      return {
+        status: r[0],
+        weekRange: r[1],
+        day: r[2],
+        dateOfAction: formatDateYMD(r[3]),
+        name: r[4],
+        contact: r[5],
+        referee: r[6],
+        refereeContact: r[7],
+        followUpDate: formatDateYMD(r[9]),
+        followUpRemarks: r[10],
+        dateFirstApproached: formatDateYMD(r[11])
+      };
+    });
+  }
+
+  // APPROACH, PRESENTATION, CLOSING share the same column layout.
+  return rawRows.map(function(r) {
+    return {
+      status: r[0],
+      weekRange: r[1],
+      day: r[2],
+      dateOfAction: formatDateYMD(r[3]),
+      name: r[4],
+      contact: r[5],
+      policyNumber: r[6],
+      productProposed: r[7],
+      nature: r[8],
+      followUpDate: formatDateYMD(r[10]),
+      followUpRemarks: r[11],
+      birthday: formatDateYMD(r[12]),
+      paymentDue: formatDateYMD(r[13]),
+      paymentMode: r[14]
+    };
+  });
 }
 
 function getSheetData(sheetName) {
@@ -411,6 +465,20 @@ function formatDate(date) {
   var m = date.getMonth() + 1;
   var y = date.getFullYear();
   return d + '/' + m + '/' + y;
+}
+
+// Same idea as formatDate(), but zero-padded YYYY-MM-DD — the format the
+// front-end's date comparisons (today's birthdays/payments/follow-ups) expect.
+// Non-date cells (blank, or free text like "lapsed") are returned as-is/empty
+// rather than thrown away, since app.js only acts on them when they parse.
+function formatDateYMD(date) {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return date ? String(date) : '';
+  }
+  var y = date.getFullYear();
+  var m = String(date.getMonth() + 1).padStart(2, '0');
+  var d = String(date.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
 }
 
 function getWeekNumber(d) {
