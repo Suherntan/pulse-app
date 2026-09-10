@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Welcome.md",
+                "file": "Client Tracker - Design Brief for Claude Code.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Welcome"
+              "title": "Client Tracker - Design Brief for Claude Code"
             }
           }
         ]
@@ -204,10 +204,12 @@
       "bases:Create new base": false
     }
   },
-  "active": "0c0b39b1251d192f",
+  "active": "d24f4dbc3ad5bac8",
   "lastOpenFiles": [
+    "Client Tracker - Design Brief for Claude Code 1.md",
+    "Client Tracker - Design Brief for Claude Code.md",
+    "Welcome.md",
     "manulife_fund_scraper.py",
-    "Skills & Tools Log.md",
-    "Welcome.md"
+    "Skills & Tools Log.md"
   ]
 }
