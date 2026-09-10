@@ -78,6 +78,9 @@
 <button class=tab data-tab=funds onclick="switchTab('funds')">
 <span class=tab-icon>&#128142;</span><span>Funds</span>
 </button>
+<button class=tab data-tab=send onclick="switchTab('send')">
+<span class=tab-icon>&#128227;</span><span>Send</span>
+</button>
 </nav>
 <main id=tab-today class=tab-content active>
 <section class=reminders-section>
@@ -107,7 +110,7 @@
 </div>
 </section>
 </main>
-<main id=tab-tracker class=tab-content hidden>
+<main id=tab-tracker class="tab-content hidden">
 <section class=tracker-section>
 <h2>Weekly Targets</h2>
 <div class=target-card>
@@ -147,9 +150,13 @@
 </div>
 </section>
 </main>
-<main id=tab-clients class=tab-content hidden>
+<main id=tab-clients class="tab-content hidden">
 <section class=clients-section>
 <h2>Closed Clients</h2>
+<div class=wa-template-group>
+<label for=wa-template>WhatsApp message (use {name} and {policy})</label>
+<textarea id=wa-template rows=2 placeholder="Hi {name}, this is a reminder about your policy {policy}." oninput="saveWaTemplate()"></textarea>
+</div>
 <div class=search-bar>
 <input type=text id=client-search placeholder=Search by name or policy number... oninput="filterClients()">
 </div>
@@ -161,7 +168,7 @@
 <div id=clients-list class=clients-list><p class=placeholder>Loading clients...</p></div>
 </section>
 </main>
-<main id=tab-add class=tab-content hidden>
+<main id=tab-add class="tab-content hidden">
 <section class=add-section>
 <h2>Add New Activity</h2>
 <form id=activity-form onsubmit="submitActivity(event)">
@@ -203,7 +210,7 @@
 <label for=follow-up-remarks>Remarks</label>
 <textarea id=follow-up-remarks rows=3 placeholder=Any notes...></textarea>
 </div>
-<div id=closing-fields class=closing-fields hidden>
+<div id=closing-fields class="closing-fields hidden">
 <h3>Client Details (Closing)</h3>
 <div class=form-group>
 <label for=policy-number>Policy Number</label>
@@ -249,7 +256,28 @@
 <div id=ft-clients class=ft-client-list></div>
 </section>
 </main>
-<div id=settings-modal class=modal hidden>
+<main id=tab-send class="tab-content hidden">
+<section class=send-section>
+<h2>Send Reminders</h2>
+<div class=send-card>
+<h3>&#128231; Email Blast</h3>
+<p class=send-desc>Sends whatever is filled into your "EMAIL TEMPLATE" sheet, right now, from your Gmail.</p>
+<button class=send-btn onclick="sendEmailBlastNow()" id=send-email-btn>Send Email Blast Now</button>
+<div id=send-email-result class=send-result></div>
+</div>
+<div class=send-card>
+<h3>&#127874; Birthday Vouchers</h3>
+<p class=send-desc>Sends the automatic birthday voucher email to any client whose birthday reminder is due today.</p>
+<button class=send-btn onclick="sendBirthdayVouchersNow()" id=send-voucher-btn>Send Birthday Vouchers Now</button>
+<div id=send-voucher-result class=send-result></div>
+</div>
+<div class=send-card>
+<h3>&#128241; WhatsApp</h3>
+<p class=send-desc>WhatsApp can't be sent automatically for free &mdash; go to the <strong>Clients</strong> tab, set your message once, then tap "Send via WhatsApp" on each client card to open it ready to send.</p>
+</div>
+</section>
+</main>
+<div id=settings-modal class="modal hidden">
 <div class=modal-content>
 <div class=modal-header>
 <h2>Settings</h2>
@@ -275,7 +303,7 @@
 </div>
 </div>
 </div>
-<div id=toast class=toast hidden></div>
+<div id=toast class="toast hidden"></div>
 </div>
 <script src="/js/api.js"></script>
 <script src="/js/app.js"></script>
@@ -283,6 +311,7 @@
 <script src="/js/reminders.js"></script>
 <script src="/js/fund-tracker-data.js"></script>
 <script src="/js/fund-tracker.js"></script>
+<script src="/js/messaging.js"></script>
 <script src="/js/lock.js"></script>
 </body>
 </html>

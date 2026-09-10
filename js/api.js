@@ -246,5 +246,19 @@ const API = {
      */
     async searchClients(query) {
         return this.get('searchClients', { q: query });
+    },
+
+    /**
+     * Trigger the Email Blast (EMAIL TEMPLATE sheet) right now
+     */
+    async sendEmailBlast() {
+        return this.post('sendEmailBlast', {});
+    },
+
+    /**
+     * Trigger today's birthday voucher emails right now
+     */
+    async sendBirthdayVouchers() {
+        return this.post('sendBirthdayVouchers', {});
     }
 };

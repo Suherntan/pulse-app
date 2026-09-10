@@ -282,6 +282,7 @@ var currentClientFilter = 'all';
 
 function renderClientsTab(data) {
     if (!data) return;
+    loadWaTemplate();
     renderClientsList();
 }
 
@@ -333,12 +334,17 @@ function renderClientsList() {
 
     container.innerHTML = clients.map(function (c) {
         var badge = c.policyNumber ? escapeHtml(c.policyNumber) : 'No policy #';
+        var waLink = buildWaLink(c.contact, c.name, c.policyNumber);
+        var waButton = waLink
+            ? '<a class="wa-send-btn" href="' + waLink + '" target="_blank" rel="noopener">&#128241; Send via WhatsApp</a>'
+            : '';
         return '<div class="client-card">' +
             '<div class="client-name">' + escapeHtml(c.name || 'Unnamed Client') + '</div>' +
             '<div class="client-badge">' + badge + '</div>' +
             '<div class="client-info">Contact: ' + escapeHtml(c.contact || 'N/A') + '</div>' +
             '<div class="client-info">Birthday: ' + escapeHtml(formatNiceDate(c.birthday) || 'N/A') + '</div>' +
             '<div class="client-info">Payment Due: ' + escapeHtml(formatNiceDate(c.paymentDue) || 'N/A') + '</div>' +
+            waButton +
             '</div>';
     }).join('');
 }

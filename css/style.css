@@ -670,6 +670,109 @@ h3 {
     color: #1967d2;
 }
 
+.wa-template-group {
+    margin-bottom: 16px;
+}
+
+.wa-template-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 6px;
+}
+
+.wa-template-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.wa-template-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.wa-send-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 14px;
+    background: #25d366;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.wa-send-btn:active {
+    transform: scale(0.97);
+}
+
+/* --- Send Tab --- */
+.send-section h2 {
+    margin-bottom: 16px;
+}
+
+.send-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+}
+
+.send-card h3 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+}
+
+.send-desc {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 14px;
+}
+
+.send-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.send-btn:hover {
+    background: var(--primary-dark);
+}
+
+.send-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.send-result {
+    margin-top: 12px;
+    font-size: 0.85rem;
+}
+
+.send-result.success {
+    color: var(--success);
+}
+
+.send-result.error {
+    color: var(--danger);
+}
+
 /* --- Form --- */
 .form-group {
     margin-bottom: 16px;
