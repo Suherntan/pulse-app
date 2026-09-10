@@ -1894,6 +1894,25 @@ function sendBirthdayVoucherEmails() {
   if (sentCount > 0) {
     SpreadsheetApp.getActive().toast(sentCount + " birthday voucher email(s) sent.", "PULSE Reminders", 5);
   }
+
+  return sentCount;
+}
+
+/**
+ * Web-triggered wrapper for sendBirthdayVoucherEmails(), for the PULSE
+ * website's "Send" tab. The underlying function already has no UI
+ * dependency (just a toast, which is safe from a web request), so this
+ * only needs to shape the result as JSON.
+ */
+function sendBirthdayVouchersFromWeb_() {
+  var sentCount = sendBirthdayVoucherEmails() || 0;
+  return {
+    ok: true,
+    sent: sentCount,
+    message: sentCount > 0
+      ? (sentCount + " birthday voucher email(s) sent.")
+      : "No birthday vouchers were due to send today."
+  };
 }
 
 
@@ -2705,6 +2724,99 @@ function sendEmailBlast() {
 
   ui.alert("Blast done. Sent: " + sentCount + ". Failed: " + failCount +
     (failCount > 0 ? '\n\nCheck the "SENT" column for error details.' : ""));
+}
+
+/**
+ * Web-triggered twin of sendEmailBlast(), for the PULSE website's "Send"
+ * tab. Does the exact same send, but returns a plain result object
+ * instead of calling SpreadsheetApp.getUi() — which throws when there's
+ * no open Sheets UI, i.e. every time this runs from a web request. The
+ * website shows its own confirmation before calling this, so there's no
+ * YES/NO prompt here. Kept as a separate function (rather than editing
+ * sendEmailBlast() itself) so the existing menu item is untouched.
+ */
+function sendEmailBlastFromWeb_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(BULK_EMAIL_TEMPLATE_SHEET);
+  if (!sheet) {
+    return { ok: false, message: 'No "' + BULK_EMAIL_TEMPLATE_SHEET + '" tab yet. Run "Set Up Bulk Email Template" from the Sheet menu first.' };
+  }
+
+  ensureAttachmentRow_(sheet);
+  ensureBulkEmailListSection_(sheet);
+  var listCols = getBlastListColumns_(sheet);
+
+  var subjectTemplate = sheet.getRange("B1").getValue().toString();
+  var bodyTemplate = sheet.getRange("B2").getValue().toString();
+  if (!subjectTemplate || !bodyTemplate) {
+    return { ok: false, message: "Your email template is empty. Fill in B1 (subject) and B2 (message) in the EMAIL TEMPLATE sheet first." };
+  }
+
+  var attachmentInfo = getEmailAttachmentInfo_(sheet.getRange("B3").getValue());
+  if (attachmentInfo && attachmentInfo.error) {
+    attachmentInfo = null;
+  }
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < BLAST_LIST_START_ROW) {
+    return { ok: false, message: "No recipients yet. Add names/emails in the EMAIL TEMPLATE sheet starting row " + BLAST_LIST_START_ROW + "." };
+  }
+
+  var values = sheet.getRange(BLAST_LIST_START_ROW, 1, lastRow - BLAST_LIST_START_ROW + 1, listCols.lastCol).getValues();
+
+  var rowsToSend = [];
+  for (var i = 0; i < values.length; i++) {
+    var name = (values[i][listCols.nameCol] || "").toString().trim();
+    var email = (values[i][listCols.emailCol] || "").toString().trim();
+    var alreadySent = values[i][listCols.sentCol];
+    if (email && !alreadySent) rowsToSend.push(i);
+  }
+
+  if (rowsToSend.length === 0) {
+    return { ok: false, message: "Nothing to send — everyone in the list already has a SENT date, or the list is empty." };
+  }
+
+  var remainingQuota = MailApp.getRemainingDailyQuota();
+  if (remainingQuota < rowsToSend.length) {
+    return { ok: false, message: "Not enough email quota left today. Want to send: " + rowsToSend.length + ". Remaining: " + remainingQuota + "." };
+  }
+
+  var sentCount = 0;
+  var failCount = 0;
+
+  rowsToSend.forEach(function (i) {
+    var row = values[i];
+    var email = row[listCols.emailCol].toString().trim();
+    var subject = stripBoldMarkers_(fillBulkEmailTemplate_(subjectTemplate, listCols.headers, row));
+    var filledBody = fillBulkEmailTemplate_(bodyTemplate, listCols.headers, row);
+    var plainBody = stripBoldMarkers_(filledBody);
+    var htmlBody = boldMarkdownToHtml_(filledBody);
+    var sheetRowNum = BLAST_LIST_START_ROW + i;
+    var mailOptions = { htmlBody: htmlBody };
+    if (attachmentInfo) {
+      mailOptions.attachments = [attachmentInfo.blob];
+      if (attachmentInfo.isImage) {
+        mailOptions.inlineImages = { posterImage: attachmentInfo.blob };
+        mailOptions.htmlBody += '<br><br><img src="cid:posterImage" style="max-width:500px;">';
+      }
+    }
+    try {
+      GmailApp.sendEmail(email, subject, plainBody, mailOptions);
+      sheet.getRange(sheetRowNum, listCols.sentCol + 1).setValue(new Date());
+      sentCount++;
+    } catch (e) {
+      sheet.getRange(sheetRowNum, listCols.sentCol + 1).setValue("FAILED: " + e.message);
+      failCount++;
+    }
+  });
+
+  return {
+    ok: true,
+    sent: sentCount,
+    failed: failCount,
+    message: "Sent: " + sentCount + ". Failed: " + failCount +
+      (failCount > 0 ? " — check the SENT column in the EMAIL TEMPLATE sheet for details." : "")
+  };
 }
 
 /**

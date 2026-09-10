@@ -49,6 +49,10 @@ function doPost(e) {
         return jsonResponse(addActivity(data));
       case 'addClientDetails':
         return jsonResponse(addClientDetails(data));
+      case 'sendEmailBlast':
+        return jsonResponse(sendEmailBlastFromWeb_());
+      case 'sendBirthdayVouchers':
+        return jsonResponse(sendBirthdayVouchersFromWeb_());
       default:
         return jsonResponse({error: 'Unknown action: ' + action});
     }
