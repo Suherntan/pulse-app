@@ -17,10 +17,15 @@
 <div id=lock-screen class=lock-screen>
 <div class=lock-card>
 <h1>P.U.L.S.E</h1>
-<p class=subtitle>Enter password to continue</p>
+<p id=lock-subtitle class=subtitle>Enter password to continue</p>
 <form id=lock-form>
 <input type=password id=lock-password placeholder=Password autocomplete=off required>
-<button type=submit>Unlock</button>
+<div id=lock-setup-fields class=hidden>
+<input type=password id=lock-password-confirm placeholder="Confirm password" autocomplete=off>
+<label for=lock-api-url class=template-label>Google Apps Script Web App URL (optional — you can also add this later in Settings)</label>
+<input type=url id=lock-api-url placeholder=https://script.google.com/macros/s/.../exec>
+</div>
+<button type=submit id=lock-submit-btn>Unlock</button>
 </form>
 <div id=lock-error class=error-message></div>
 </div>
