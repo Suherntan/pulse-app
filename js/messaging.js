@@ -34,7 +34,49 @@ function saveWaTemplate() {
     var el = document.getElementById('wa-template');
     if (!el) return;
     localStorage.setItem(WA_TEMPLATE_KEY, el.value);
-    renderClientsList(); // refresh the wa.me links with the new message
+    if (typeof renderClientsList === 'function') renderClientsList(); // refresh the wa.me links with the new message
+    if (lastFetchedData && document.getElementById('tab-today') && !document.getElementById('tab-today').classList.contains('hidden')) {
+        renderTodayTab(lastFetchedData); // refresh Today's per-reminder WhatsApp buttons too
+    }
+    showToast('WhatsApp template saved');
+}
+
+// --- Email template (per-reminder mailto: links + the Email Blast tab) ---
+
+var EMAIL_TEMPLATE_KEY = 'pulse_email_template'; // stores {subject, body}
+
+function buildMailtoLink(name, policy) {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(EMAIL_TEMPLATE_KEY) || '{}'); } catch (e) { saved = {}; }
+    var subjectEl = document.getElementById('email-template-subject');
+    var bodyEl = document.getElementById('email-template-body');
+    var subject = (subjectEl && subjectEl.value) || saved.subject || '';
+    var body = (bodyEl && bodyEl.value) || saved.body || '';
+    if (!subject.trim() && !body.trim()) return '';
+    subject = subject.split('{name}').join(name || '').split('{policy}').join(policy || '');
+    body = body.split('{name}').join(name || '').split('{policy}').join(policy || '');
+    return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+function loadEmailTemplate() {
+    var subjectEl = document.getElementById('email-template-subject');
+    var bodyEl = document.getElementById('email-template-body');
+    if (!subjectEl || !bodyEl) return;
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(EMAIL_TEMPLATE_KEY) || '{}'); } catch (e) { saved = {}; }
+    subjectEl.value = saved.subject || '';
+    bodyEl.value = saved.body || '';
+}
+
+function saveEmailTemplate() {
+    var subjectEl = document.getElementById('email-template-subject');
+    var bodyEl = document.getElementById('email-template-body');
+    if (!subjectEl || !bodyEl) return;
+    localStorage.setItem(EMAIL_TEMPLATE_KEY, JSON.stringify({ subject: subjectEl.value, body: bodyEl.value }));
+    if (lastFetchedData && document.getElementById('tab-today') && !document.getElementById('tab-today').classList.contains('hidden')) {
+        renderTodayTab(lastFetchedData); // refresh Today's per-reminder Email buttons too
+    }
+    showToast('Email template saved');
 }
 
 // --- Email Blast / Birthday Vouchers ---
