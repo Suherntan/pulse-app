@@ -190,9 +190,21 @@ const API = {
 
     /**
      * Fetch all data from all tabs
+     * Backend (Code.gs) returns uppercase keys (APPROACH, PRESENTATION,
+     * CLOSING, SR) for the Scriptable iOS widget; normalize to lowercase
+     * here so the rest of the web app's lowercase reads keep working.
      */
     async fetchAllData() {
-        return this.get('fetchAll');
+        const data = await this.get('fetchAll');
+        if (data && !data.error) {
+            ['APPROACH', 'PRESENTATION', 'CLOSING', 'SR'].forEach(key => {
+                const lower = key.toLowerCase();
+                if (data[key] !== undefined && data[lower] === undefined) {
+                    data[lower] = data[key];
+                }
+            });
+        }
+        return data;
     },
 
     /**
