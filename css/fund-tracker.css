@@ -1,5 +1,7 @@
 /* ============================================
-   Fund & Client Tracker tab — dark navy + gold
+   Fund & Client Tracker tab
+   Uses the same tokens as the rest of the app (style.css's :root) so it
+   stays in sync with the site's navy/gold system automatically.
    ============================================ */
 
 .fund-tracker, .fund-tracker *, .fund-tracker *::before, .fund-tracker *::after {
@@ -7,20 +9,8 @@
 }
 
 .fund-tracker {
-    --ft-navy: #0b1220;
-    --ft-navy-card: #131d31;
-    --ft-navy-card-2: #182541;
-    --ft-gold: #d4af37;
-    --ft-gold-soft: rgba(212, 175, 55, 0.15);
-    --ft-text: #eef1f7;
-    --ft-text-dim: #94a1b8;
-    --ft-border: #24314f;
-    --ft-green: #34d399;
-    --ft-red: #f87171;
-    --ft-blue: #60a5fa;
-
-    background: var(--ft-navy);
-    color: var(--ft-text);
+    background: var(--bg);
+    color: var(--text);
     padding: 1.25rem 1rem 2rem;
 }
 
@@ -31,9 +21,8 @@
 
 .ft-title {
     font-size: 1.5rem;
-    font-weight: 800;
     letter-spacing: 0.02em;
-    color: var(--ft-text);
+    color: var(--text);
 }
 
 .ft-title::after {
@@ -41,22 +30,48 @@
     display: block;
     width: 42px;
     height: 3px;
-    background: var(--ft-gold);
+    background: var(--primary);
     margin: 0.5rem auto 0;
     border-radius: 2px;
 }
 
 .ft-subtitle {
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     font-size: 0.85rem;
     margin-top: 0.5rem;
 }
 
+.ft-insight,
+.ft-split,
+.ft-card,
+.ft-client-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+    cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ft-insight:hover,
+    .ft-split:hover,
+    .ft-card:hover,
+    .ft-client-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-hover);
+    }
+}
+
+.ft-insight:active,
+.ft-split:active,
+.ft-card:active,
+.ft-client-card:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-active);
+}
+
 .ft-insight {
-    background: linear-gradient(135deg, var(--ft-navy-card-2), var(--ft-navy-card));
-    border: 1px solid var(--ft-gold-soft);
-    border-left: 4px solid var(--ft-gold);
-    border-radius: 10px;
+    border-left: 4px solid var(--primary);
     padding: 0.9rem 1rem;
     display: flex;
     flex-direction: column;
@@ -68,7 +83,7 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--ft-gold);
+    color: var(--primary);
     font-weight: 700;
 }
 
@@ -86,7 +101,6 @@
     align-items: center;
     gap: 0.6rem;
     font-size: 1.05rem;
-    font-weight: 700;
     margin-bottom: 1rem;
 }
 
@@ -97,25 +111,23 @@
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    background: var(--ft-gold-soft);
-    color: var(--ft-gold);
+    background: #FBF3DC;
+    color: var(--primary);
     font-size: 0.75rem;
     font-weight: 800;
 }
 
 .ft-split {
-    background: var(--ft-navy-card);
-    border: 1px solid var(--ft-border);
-    border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1rem;
+    cursor: default;
 }
 
 .ft-split-header, .ft-split-counts {
     display: flex;
     justify-content: space-between;
     font-size: 0.75rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
 }
 
 .ft-split-header { margin-bottom: 0.4rem; font-weight: 600; }
@@ -124,15 +136,15 @@
 .ft-split-bar {
     height: 10px;
     border-radius: 6px;
-    background: var(--ft-blue);
-    opacity: 0.35;
+    background: #EDEFF4;
     overflow: hidden;
 }
 
 .ft-split-fill {
     height: 100%;
-    background: var(--ft-gold);
+    background: var(--primary);
     border-radius: 6px;
+    transition: width 500ms var(--ease-in-out);
 }
 
 .ft-cards {
@@ -144,9 +156,6 @@
 .ft-card {
     display: flex;
     gap: 0.85rem;
-    background: var(--ft-navy-card);
-    border: 1px solid var(--ft-border);
-    border-radius: 12px;
     padding: 1rem;
 }
 
@@ -168,6 +177,7 @@
 .ft-card-top h4 {
     font-size: 0.95rem;
     font-weight: 700;
+    color: var(--text);
 }
 
 .ft-tag {
@@ -180,12 +190,12 @@
     letter-spacing: 0.03em;
 }
 
-.ft-tag-shariah { background: rgba(52, 211, 153, 0.15); color: var(--ft-green); }
-.ft-tag-conventional { background: rgba(96, 165, 250, 0.15); color: var(--ft-blue); }
+.ft-tag-shariah { background: #e6f4ea; color: #137333; }
+.ft-tag-conventional { background: #EDEFF4; color: var(--navy); }
 
 .ft-card-category {
     font-size: 0.75rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     margin-top: 0.15rem;
 }
 
@@ -201,15 +211,17 @@
 }
 
 .ft-ret-val {
-    font-weight: 700;
-    font-size: 0.9rem;
+    font-family: 'Oswald', 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
 }
 
-.ft-ret-highlight { color: var(--ft-gold); font-size: 1.05rem; }
+.ft-ret-highlight { color: var(--primary); font-size: 1.1rem; }
 
 .ft-ret-label {
     font-size: 0.65rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     text-transform: uppercase;
 }
 
@@ -222,22 +234,22 @@
     border-radius: 999px;
 }
 
-.ft-recommend-yes { background: rgba(52, 211, 153, 0.15); color: var(--ft-green); }
-.ft-recommend-consider { background: rgba(212, 175, 55, 0.18); color: var(--ft-gold); }
+.ft-recommend-yes { background: #e6f4ea; color: #137333; }
+.ft-recommend-consider { background: #FBF3DC; color: var(--primary); }
 
 .ft-disclaimer {
     font-size: 0.7rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     line-height: 1.5;
     margin-top: 1rem;
     padding: 0.75rem;
-    border: 1px dashed var(--ft-border);
+    border: 1px dashed var(--border);
     border-radius: 8px;
 }
 
 .ft-filter-tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     overflow-x: auto;
     padding-bottom: 0.25rem;
     margin-bottom: 1rem;
@@ -245,19 +257,26 @@
 
 .ft-filter-btn {
     flex-shrink: 0;
-    background: var(--ft-navy-card);
-    border: 1px solid var(--ft-border);
-    color: var(--ft-text-dim);
-    font-size: 0.75rem;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 0.8rem;
     font-weight: 600;
-    padding: 0.4rem 0.8rem;
-    border-radius: 999px;
+    padding: 8px 16px;
+    min-height: 36px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms var(--ease-out);
+}
+
+.ft-filter-btn:active {
+    transform: scale(0.96);
 }
 
 .ft-filter-btn.active {
-    background: var(--ft-gold);
-    border-color: var(--ft-gold);
-    color: #14100a;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--navy);
 }
 
 .ft-client-list {
@@ -267,10 +286,8 @@
 }
 
 .ft-client-card {
-    background: var(--ft-navy-card);
-    border: 1px solid var(--ft-border);
-    border-radius: 12px;
     padding: 1rem;
+    cursor: default;
 }
 
 .ft-client-top {
@@ -280,7 +297,7 @@
     gap: 0.5rem;
 }
 
-.ft-client-top h4 { font-size: 0.95rem; font-weight: 700; }
+.ft-client-top h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
 
 .ft-status-badge {
     flex-shrink: 0;
@@ -291,30 +308,31 @@
     white-space: nowrap;
 }
 
-.ft-status-new { background: rgba(96, 165, 250, 0.18); color: var(--ft-blue); }
-.ft-status-discussed { background: rgba(212, 175, 55, 0.18); color: var(--ft-gold); }
-.ft-status-considering { background: rgba(212, 175, 55, 0.18); color: var(--ft-gold); }
-.ft-status-proposal { background: rgba(167, 139, 250, 0.18); color: #a78bfa; }
-.ft-status-closed { background: rgba(52, 211, 153, 0.18); color: var(--ft-green); }
-.ft-status-declined { background: rgba(248, 113, 113, 0.18); color: var(--ft-red); }
-.ft-status-default { background: rgba(148, 161, 184, 0.18); color: var(--ft-text-dim); }
+.ft-status-new { background: #EDEFF4; color: var(--navy); }
+.ft-status-discussed { background: #FBF3DC; color: var(--primary); }
+.ft-status-considering { background: #FBF3DC; color: var(--primary); }
+.ft-status-proposal { background: #F3EEFF; color: #7C3AED; }
+.ft-status-closed { background: #e6f4ea; color: #137333; }
+.ft-status-declined { background: #fce8e6; color: var(--danger); }
+.ft-status-default { background: #f1f3f4; color: var(--text-light); }
 
 .ft-client-meta {
     display: flex;
     gap: 0.4rem;
     font-size: 0.72rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     margin-top: 0.35rem;
 }
 
 .ft-client-fund {
     font-size: 0.8rem;
     margin-top: 0.5rem;
+    color: var(--text);
 }
 
 .ft-client-notes {
     font-size: 0.75rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     margin-top: 0.35rem;
     line-height: 1.4;
 }
@@ -323,17 +341,21 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.7rem;
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     margin-top: 0.6rem;
     padding-top: 0.6rem;
-    border-top: 1px solid var(--ft-border);
+    border-top: 1px solid var(--border);
 }
 
 .ft-placeholder {
-    color: var(--ft-text-dim);
+    color: var(--text-light);
     font-size: 0.85rem;
     text-align: center;
     padding: 1rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ft-insight, .ft-split, .ft-card, .ft-client-card { transition: none; }
 }
 
 @media (min-width: 640px) {
