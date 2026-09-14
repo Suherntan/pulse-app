@@ -8,6 +8,9 @@ var lastFetchedData = null; // cached fetchAll() result, reused across tabs/filt
 async function initApp() {
     showLoading(true);
 
+    var dateInput = document.getElementById('activity-date');
+    if (dateInput && !dateInput.value) dateInput.value = todayStr();
+
     var savedUrl = API.getApiUrl();
     if (savedUrl && savedUrl.length > 20) {
         await connectDashboard(savedUrl);
@@ -336,17 +339,34 @@ function renderClientsList() {
         var badge = c.policyNumber ? escapeHtml(c.policyNumber) : 'No policy #';
         var waLink = buildWaLink(c.contact, c.name, c.policyNumber);
         var waButton = waLink
-            ? '<a class="wa-send-btn" href="' + waLink + '" target="_blank" rel="noopener">&#128241; Send via WhatsApp</a>'
+            ? '<a class="wa-send-btn" href="' + waLink + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128241; Send via WhatsApp</a>'
             : '';
-        return '<div class="client-card">' +
+        var contactHtml = c.contact
+            ? '<a href="tel:' + escapeHtml(c.contact) + '" onclick="event.stopPropagation()">' + escapeHtml(c.contact) + '</a>'
+            : 'N/A';
+        var clickable = !!c.policyNumber;
+        var cardAttrs = clickable ? ' onclick="copyPolicyNumber(\'' + escapeHtml(c.policyNumber).replace(/'/g, "\\'") + '\')" title="Tap to copy policy number"' : '';
+        return '<div class="client-card' + (clickable ? ' clickable' : '') + '"' + cardAttrs + '>' +
             '<div class="client-name">' + escapeHtml(c.name || 'Unnamed Client') + '</div>' +
             '<div class="client-badge">' + badge + '</div>' +
-            '<div class="client-info">Contact: ' + escapeHtml(c.contact || 'N/A') + '</div>' +
+            '<div class="client-info">Contact: ' + contactHtml + '</div>' +
             '<div class="client-info">Birthday: ' + escapeHtml(formatNiceDate(c.birthday) || 'N/A') + '</div>' +
             '<div class="client-info">Payment Due: ' + escapeHtml(formatNiceDate(c.paymentDue) || 'N/A') + '</div>' +
             waButton +
             '</div>';
     }).join('');
+}
+
+function copyPolicyNumber(policyNumber) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(policyNumber).then(function () {
+            showToast('Policy number copied');
+        }).catch(function () {
+            showToast('Policy #: ' + policyNumber);
+        });
+    } else {
+        showToast('Policy #: ' + policyNumber);
+    }
 }
 
 function filterClients() {
@@ -381,11 +401,21 @@ async function submitActivity(event) {
     var remarks = document.getElementById('follow-up-remarks').value.trim();
 
     var messageBox = document.getElementById('form-message');
+    var submitBtn = document.querySelector('#activity-form .submit-btn');
+
+    function setMessage(text, type) {
+        if (!messageBox) return;
+        messageBox.textContent = text;
+        messageBox.classList.remove('success', 'error');
+        if (type) messageBox.classList.add(type);
+    }
 
     if (!activityType || !date || !name) {
-        if (messageBox) messageBox.textContent = 'Please fill in Activity Type, Date, and Client Name.';
+        setMessage('Please fill in Activity Type, Date, and Client Name.', 'error');
         return;
     }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
 
     try {
         await API.addActivity({
@@ -416,14 +446,17 @@ async function submitActivity(event) {
             });
         }
 
-        if (messageBox) messageBox.textContent = 'Activity added!';
+        setMessage('Activity added!', 'success');
         document.getElementById('activity-form').reset();
+        document.getElementById('activity-date').value = todayStr();
         toggleClientFields();
         showToast('Activity saved');
         await refreshData();
     } catch (error) {
         console.error('Submit activity error:', error);
-        if (messageBox) messageBox.textContent = 'Failed to save: ' + error.message;
+        setMessage('Failed to save: ' + error.message, 'error');
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit Activity'; }
     }
 }
 
@@ -469,6 +502,7 @@ async function refreshData() {
 }
 
 function clearCache() {
+    if (!confirm('Clear cached data? The dashboard will reload fresh data from your Google Sheet next time it needs it.')) return;
     API.clearCache();
     showToast('Cache cleared');
 }

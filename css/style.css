@@ -23,6 +23,10 @@
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     --radius: 12px;
     --tab-height: 60px;
+
+    /* Emil Kowalski-style custom easing: stronger than built-in CSS curves */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 html {
@@ -175,10 +179,17 @@ body {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
 }
 
-.setup-input-group button:hover {
-    background: var(--primary-dark);
+@media (hover: hover) and (pointer: fine) {
+    .setup-input-group button:hover {
+        background: var(--primary-dark);
+    }
+}
+
+.setup-input-group button:active {
+    transform: scale(0.98);
 }
 
 .error-message {
@@ -245,10 +256,17 @@ body {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
 }
 
-.lock-card button:hover {
-    background: var(--primary-dark);
+@media (hover: hover) and (pointer: fine) {
+    .lock-card button:hover {
+        background: var(--primary-dark);
+    }
+}
+
+.lock-card button:active {
+    transform: scale(0.98);
 }
 
 /* --- Utility --- */
@@ -283,7 +301,15 @@ body {
     border: none;
     font-size: 1.3rem;
     cursor: pointer;
-    padding: 4px;
+    padding: 10px;
+    margin: -10px;
+    border-radius: 50%;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
+}
+
+.settings-btn:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .date-display {
@@ -312,14 +338,15 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10px 4px;
+    padding: 12px 4px;
     border: none;
     background: none;
     color: var(--text-light);
     font-size: 0.7rem;
     cursor: pointer;
-    transition: color 0.2s, background 0.2s;
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
     min-width: 60px;
+    min-height: 44px;
     border-bottom: 3px solid transparent;
 }
 
@@ -339,7 +366,7 @@ body {
     display: block;
     padding: 16px;
     padding-bottom: calc(var(--tab-height) + 32px);
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 200ms var(--ease-out);
 }
 
 .tab-content.hidden {
@@ -347,8 +374,12 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tab-content { animation: none; }
 }
 
 h2 {
@@ -371,6 +402,21 @@ h3 {
     margin-bottom: 12px;
     box-shadow: var(--shadow);
     border-left: 4px solid var(--border);
+    opacity: 0;
+    animation: cardIn 260ms var(--ease-out) forwards;
+}
+
+.reminder-card:nth-of-type(1) { animation-delay: 0ms; }
+.reminder-card:nth-of-type(2) { animation-delay: 40ms; }
+.reminder-card:nth-of-type(3) { animation-delay: 80ms; }
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reminder-card { animation: none; opacity: 1; }
 }
 
 .birthday-card {
@@ -492,7 +538,7 @@ h3 {
     height: 100%;
     background: linear-gradient(90deg, var(--primary), #4285f4);
     border-radius: 6px;
-    transition: width 0.5s ease;
+    transition: width 500ms var(--ease-in-out);
 }
 
 .progress-bar.complete {
@@ -599,12 +645,17 @@ h3 {
 
 .filter-btn {
     padding: 8px 16px;
+    min-height: 36px;
     border: 2px solid var(--border);
     border-radius: 20px;
     background: var(--card-bg);
     font-size: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms var(--ease-out);
+}
+
+.filter-btn:active {
+    transform: scale(0.96);
 }
 
 .filter-btn.active {
@@ -624,13 +675,35 @@ h3 {
     background: var(--card-bg);
     border-radius: var(--radius);
     padding: 14px;
+    min-height: 44px;
     box-shadow: var(--shadow);
-    cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 120ms var(--ease-out), box-shadow 160ms ease;
+    opacity: 0;
+    animation: cardIn 260ms var(--ease-out) forwards;
 }
 
-.client-card:active {
-    transform: scale(0.98);
+.client-card.clickable {
+    cursor: pointer;
+}
+
+.client-card.clickable:active {
+    transform: scale(0.97);
+}
+
+.client-card .client-info a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.clients-list .client-card:nth-child(1) { animation-delay: 0ms; }
+.clients-list .client-card:nth-child(2) { animation-delay: 30ms; }
+.clients-list .client-card:nth-child(3) { animation-delay: 60ms; }
+.clients-list .client-card:nth-child(4) { animation-delay: 90ms; }
+.clients-list .client-card:nth-child(5) { animation-delay: 120ms; }
+.clients-list .client-card:nth-child(n+6) { animation-delay: 140ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    .client-card { animation: none; opacity: 1; }
 }
 
 .client-card .client-name {
@@ -709,10 +782,11 @@ h3 {
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out);
 }
 
 .wa-send-btn:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
 }
 
 /* --- Send Tab --- */
@@ -749,10 +823,17 @@ h3 {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease, opacity 160ms ease;
 }
 
-.send-btn:hover {
-    background: var(--primary-dark);
+@media (hover: hover) and (pointer: fine) {
+    .send-btn:hover:not(:disabled) {
+        background: var(--primary-dark);
+    }
+}
+
+.send-btn:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 .send-btn:disabled {
@@ -828,15 +909,23 @@ h3 {
     font-weight: 600;
     cursor: pointer;
     margin-top: 8px;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease, opacity 160ms ease;
 }
 
-.submit-btn:hover {
-    background: var(--primary-dark);
+@media (hover: hover) and (pointer: fine) {
+    .submit-btn:hover:not(:disabled) {
+        background: var(--primary-dark);
+    }
+}
+
+.submit-btn:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 .submit-btn:disabled {
     background: var(--border);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .form-message {
@@ -846,16 +935,24 @@ h3 {
     text-align: center;
     font-size: 0.9rem;
     display: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+
+.form-message.success,
+.form-message.error {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .form-message.success {
-    display: block;
     background: #e6f4ea;
     color: #137333;
 }
 
 .form-message.error {
-    display: block;
     background: #fce8e6;
     color: #c5221f;
 }
@@ -870,6 +967,16 @@ h3 {
     justify-content: center;
     z-index: 200;
     padding: 20px;
+    opacity: 1;
+    transition: opacity 200ms ease-out;
+}
+
+/* Override the generic .hidden (display:none) so the modal can fade+scale
+   out instead of vanishing instantly; higher specificity than .hidden alone. */
+.modal.hidden {
+    display: flex !important;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .modal-content {
@@ -880,6 +987,16 @@ h3 {
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transform: scale(1) translateY(0);
+    transition: transform 220ms var(--ease-out);
+}
+
+.modal.hidden .modal-content {
+    transform: scale(0.95) translateY(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal, .modal-content { transition: opacity 150ms ease; transform: none !important; }
 }
 
 .modal-header {
@@ -900,8 +1017,16 @@ h3 {
     border: none;
     font-size: 1.3rem;
     cursor: pointer;
-    padding: 4px;
+    padding: 10px;
+    margin: -10px;
+    border-radius: 50%;
     color: var(--text-light);
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
+}
+
+.close-btn:active {
+    transform: scale(0.9);
+    background: #f1f3f4;
 }
 
 .modal-body {
@@ -930,12 +1055,14 @@ h3 {
 
 .setting-group button {
     padding: 10px 16px;
+    min-height: 40px;
     background: var(--primary);
     color: white;
     border: none;
     border-radius: 8px;
     font-size: 0.85rem;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
 }
 
 .refresh-btn {
@@ -947,6 +1074,7 @@ h3 {
     border-radius: 8px;
     font-size: 0.95rem;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
 }
 
 .clear-cache-btn {
@@ -959,6 +1087,13 @@ h3 {
     font-size: 0.95rem;
     cursor: pointer;
     margin-top: 8px;
+    transition: transform 120ms var(--ease-out), background-color 160ms ease;
+}
+
+.setting-group button:active,
+.refresh-btn:active,
+.clear-cache-btn:active {
+    transform: scale(0.98);
 }
 
 /* --- Toast --- */
@@ -973,18 +1108,23 @@ h3 {
     border-radius: 24px;
     font-size: 0.9rem;
     z-index: 300;
-    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+    animation: toastIn 220ms var(--ease-out), toastOut 180ms ease 2.7s forwards;
     white-space: nowrap;
 }
 
 @keyframes toastIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 
 @keyframes toastOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    to { opacity: 0; transform: translateX(-50%) translateY(4px) scale(0.97); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast { animation: toastFade 200ms ease, toastFade 200ms ease 2.7s reverse forwards; }
+    @keyframes toastFade { from { opacity: 0; } to { opacity: 1; } }
 }
 
 /* --- Responsive Tweaks --- */
