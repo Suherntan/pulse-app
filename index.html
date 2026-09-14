@@ -8,6 +8,7 @@
 <meta name=apple-mobile-web-app-status-bar-style content=black-translucent>
 <meta name=theme-color content=#1a73e8>
 <title>P.U.L.S.E Dashboard</title>
+<link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap">
 <link rel=stylesheet href=css/style.css>
 <link rel=stylesheet href=css/fund-tracker.css>
 <link rel=icon href=icons/favicon.svg type=image/svg+xml>
@@ -84,7 +85,7 @@
 </nav>
 <main id=tab-today class="tab-content active">
 <section class=reminders-section>
-<h2>Today's Reminders</h2>
+<h2>Today's Priorities</h2>
 <div class="reminder-card birthday-card">
 <h3>&#127881; Birthdays</h3>
 <div id=birthdays-list class=reminder-list><p class=placeholder>Loading...</p></div>
@@ -153,10 +154,6 @@
 <main id=tab-clients class="tab-content hidden">
 <section class=clients-section>
 <h2>Closed Clients</h2>
-<div class=wa-template-group>
-<label for=wa-template>WhatsApp message (use {name} and {policy})</label>
-<textarea id=wa-template rows=2 placeholder="Hi {name}, this is a reminder about your policy {policy}." oninput="saveWaTemplate()"></textarea>
-</div>
 <div class=search-bar>
 <input type=text id=client-search placeholder=Search by name or policy number... oninput="filterClients()">
 </div>
@@ -258,22 +255,43 @@
 </main>
 <main id=tab-send class="tab-content hidden">
 <section class=send-section>
-<h2>Send Reminders</h2>
+<h2>Client Outreach</h2>
+<div class=send-section-label>Correspondence Templates</div>
+<div class=template-card>
+<h3>&#128241; WhatsApp Message</h3>
+<p class=template-hint>Use <code>{name}</code> and <code>{policy}</code> as placeholders</p>
+<textarea id=wa-template rows=3 placeholder="Hi {name}, this is a reminder about your policy {policy}."></textarea>
+<div class=template-card-footer>
+<button type=button class=btn-outline onclick="saveWaTemplate()">Save Template</button>
+</div>
+</div>
+<div class=template-card>
+<h3>&#128231; Email Blast</h3>
+<p class=template-hint>Use <code>{name}</code> and <code>{policy}</code> as placeholders</p>
+<label for=email-template-subject class=template-label>Subject</label>
+<input type=text id=email-template-subject placeholder="Your policy {policy} — payment reminder">
+<label for=email-template-body class=template-label>Body</label>
+<textarea id=email-template-body rows=4 placeholder="Dear {name}, this is a reminder that payment for policy {policy} is due soon."></textarea>
+<div class=template-card-footer>
+<button type=button class=btn-outline onclick="saveEmailTemplate()">Save Template</button>
+</div>
+</div>
+<div class=send-section-label>Dispatch</div>
 <div class=send-card>
 <h3>&#128231; Email Blast</h3>
 <p class=send-desc>Sends whatever is filled into your "EMAIL TEMPLATE" sheet, right now, from your Gmail.</p>
-<button class=send-btn onclick="sendEmailBlastNow()" id=send-email-btn>Send Email Blast Now</button>
+<button class=send-btn onclick="sendEmailBlastNow()" id=send-email-btn>Send Email Blast</button>
 <div id=send-email-result class=send-result></div>
 </div>
 <div class=send-card>
 <h3>&#127874; Birthday Vouchers</h3>
 <p class=send-desc>Sends the automatic birthday voucher email to any client whose birthday reminder is due today.</p>
-<button class=send-btn onclick="sendBirthdayVouchersNow()" id=send-voucher-btn>Send Birthday Vouchers Now</button>
+<button class=send-btn onclick="sendBirthdayVouchersNow()" id=send-voucher-btn>Send Birthday Vouchers</button>
 <div id=send-voucher-result class=send-result></div>
 </div>
 <div class=send-card>
 <h3>&#128241; WhatsApp</h3>
-<p class=send-desc>WhatsApp can't be sent automatically for free &mdash; go to the <strong>Clients</strong> tab, set your message once, then tap "Send via WhatsApp" on each client card to open it ready to send.</p>
+<p class=send-desc>WhatsApp can't be sent automatically for free &mdash; go to the <strong>Clients</strong> tab, then tap "Send via WhatsApp" on each client card to open it ready to send.</p>
 </div>
 </section>
 </main>

@@ -109,6 +109,7 @@ function switchTab(tabName) {
     else if (tabName === 'tracker') renderTrackerTab(lastFetchedData);
     else if (tabName === 'clients') renderClientsTab(lastFetchedData);
     else if (tabName === 'funds') renderFundsTab();
+    else if (tabName === 'send') { loadWaTemplate(); loadEmailTemplate(); }
 }
 
 // --- Date Functions ---
@@ -213,7 +214,16 @@ function renderReminderList(elId, rows, detailText, emptyText) {
         return;
     }
     el.innerHTML = rows.map(function (row) {
-        return '<div class="reminder-item"><span class="name">' + escapeHtml(row.name || 'Unknown') + '</span><span class="detail">' + detailText + '</span></div>';
+        var waLink = (typeof buildWaLink === 'function') ? buildWaLink(row.contact, row.name, row.policyNumber) : '';
+        var mailtoLink = (typeof buildMailtoLink === 'function') ? buildMailtoLink(row.name, row.policyNumber) : '';
+        var waBtn = waLink
+            ? '<a class="reminder-action-btn wa" href="' + waLink + '" target="_blank" rel="noopener" title="Send WhatsApp" aria-label="Send WhatsApp">&#128241;</a>'
+            : '';
+        var mailBtn = mailtoLink
+            ? '<a class="reminder-action-btn email" href="' + mailtoLink + '" title="Send Email" aria-label="Send Email">&#9993;</a>'
+            : '';
+        var actions = (waBtn || mailBtn) ? '<div class="reminder-actions">' + waBtn + mailBtn + '</div>' : '';
+        return '<div class="reminder-item"><div class="reminder-item-info"><span class="name">' + escapeHtml(row.name || 'Unknown') + '</span><span class="detail">' + detailText + '</span></div>' + actions + '</div>';
     }).join('');
 }
 
@@ -285,7 +295,6 @@ var currentClientFilter = 'all';
 
 function renderClientsTab(data) {
     if (!data) return;
-    loadWaTemplate();
     renderClientsList();
 }
 
