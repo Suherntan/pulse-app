@@ -17,7 +17,13 @@ const API = {
      * Get the stored API URL
      */
     getApiUrl() {
-        return localStorage.getItem(this.API_URL_KEY);
+        const stored = localStorage.getItem(this.API_URL_KEY);
+        if (!stored) return stored;
+        // Strip any query string the URL was saved with. Pasting the URL
+        // with a trailing ?action=... makes callers that append their own
+        // action produce two of them, and Apps Script honours the first —
+        // so every request silently runs the wrong action.
+        return stored.split('?')[0].split('#')[0];
     },
 
     /**
