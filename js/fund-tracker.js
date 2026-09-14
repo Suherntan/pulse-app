@@ -108,6 +108,37 @@ function renderFtSplit() {
         '<div class="ft-split-counts"><span>' + shariah + ' funds (' + pct + '%)</span><span>' + (total - shariah) + ' funds (' + (100 - pct) + '%)</span></div>';
 }
 
+function ftTopByType(type) {
+    return ft_funds
+        .filter(function (f) { return f.type === type; })
+        .sort(function (a, b) { return b.ret3y - a.ret3y; })
+        .slice(0, 3);
+}
+
+function ftFundCard(f, i) {
+    return '<div class="ft-card">' +
+        '<div class="ft-card-icon">' + (FT_RANK_ICON[i] || '&#11088;') + '</div>' +
+        '<div class="ft-card-body">' +
+        '<div class="ft-card-top"><h4>' + escapeHtml(f.name) + '</h4><span class="ft-tag ft-tag-' + f.type.toLowerCase() + '">' + escapeHtml(f.type) + '</span></div>' +
+        '<p class="ft-card-category">' + escapeHtml(f.category) + '</p>' +
+        '<div class="ft-card-returns">' +
+        '<div><span class="ft-ret-val">+' + f.ret1y.toFixed(2) + '%</span><span class="ft-ret-label">1Y</span></div>' +
+        '<div><span class="ft-ret-val ft-ret-highlight">+' + f.ret3y.toFixed(2) + '%</span><span class="ft-ret-label">3Y</span></div>' +
+        '<div><span class="ft-ret-val">+' + f.ret5y.toFixed(2) + '%</span><span class="ft-ret-label">5Y</span></div>' +
+        '</div>' +
+        '<span class="ft-recommend ft-recommend-yes">Top Pick</span>' +
+        '</div></div>';
+}
+
+function ftPickGroup(title, type) {
+    var picks = ftTopByType(type);
+    var body = picks.length
+        ? '<div class="ft-cards">' + picks.map(ftFundCard).join('') + '</div>'
+        : '<p class="ft-placeholder">No ' + title + ' funds added yet.</p>';
+    return '<div class="ft-pick-group">' +
+        '<h4 class="ft-pick-group-title">Top 3 ' + title + '</h4>' + body + '</div>';
+}
+
 function renderFtTopPicks() {
     var el = document.getElementById('ft-top-picks');
     if (!el) return;
@@ -115,21 +146,7 @@ function renderFtTopPicks() {
         el.innerHTML = '<p class="ft-placeholder">No funds added yet. Tap "+ Add Fund" above to start tracking one.</p>';
         return;
     }
-    var top = ftRankedFunds().slice(0, 3);
-    el.innerHTML = top.map(function (f, i) {
-        return '<div class="ft-card">' +
-            '<div class="ft-card-icon">' + (FT_RANK_ICON[i] || '&#11088;') + '</div>' +
-            '<div class="ft-card-body">' +
-            '<div class="ft-card-top"><h4>' + escapeHtml(f.name) + '</h4><span class="ft-tag ft-tag-' + f.type.toLowerCase() + '">' + escapeHtml(f.type) + '</span></div>' +
-            '<p class="ft-card-category">' + escapeHtml(f.category) + '</p>' +
-            '<div class="ft-card-returns">' +
-            '<div><span class="ft-ret-val">+' + f.ret1y.toFixed(2) + '%</span><span class="ft-ret-label">1Y</span></div>' +
-            '<div><span class="ft-ret-val ft-ret-highlight">+' + f.ret3y.toFixed(2) + '%</span><span class="ft-ret-label">3Y</span></div>' +
-            '<div><span class="ft-ret-val">+' + f.ret5y.toFixed(2) + '%</span><span class="ft-ret-label">5Y</span></div>' +
-            '</div>' +
-            '<span class="ft-recommend ft-recommend-yes">Top Pick</span>' +
-            '</div></div>';
-    }).join('');
+    el.innerHTML = ftPickGroup('Shariah', 'Shariah') + ftPickGroup('Conventional', 'Conventional');
 }
 
 function renderFtStatusFilters() {
@@ -162,7 +179,7 @@ function renderFtClients() {
     }
     el.innerHTML = list.map(function (c) {
         var statusClass = FT_STATUS_CLASS[c.status.toLowerCase()] || 'ft-status-default';
-        return '<div class="ft-client-card">' +
+        return '<div class="ft-client-card" role="button" tabindex="0" onclick="ftEditClient(' + ft_clients.indexOf(c) + ')">' +
             '<div class="ft-client-top">' +
             '<h4>' + escapeHtml(c.name) + '</h4>' +
             '<span class="ft-status-badge ' + statusClass + '">' + escapeHtml(c.status) + '</span>' +
