@@ -35,8 +35,8 @@ async function ftLoadLiveData() {
     var apiUrl = (typeof API !== 'undefined') ? API.getApiUrl() : null;
     if (!apiUrl) return;
     try {
-        var url = apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'action=fetchFundData';
-        var response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+        var url = apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'action=fetchFundData&_ts=' + Date.now();
+        var response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, cache: 'no-store' });
         if (!response.ok) {
             ft_liveDataError = 'HTTP ' + response.status;
             console.error('ftLoadLiveData: request failed —', ft_liveDataError);

@@ -92,7 +92,7 @@ const API = {
 
         const url = new URL(apiUrl);
         url.searchParams.set('action', action);
-        
+
         Object.keys(params).forEach(key => {
             url.searchParams.set(key, params[key]);
         });
@@ -106,11 +106,19 @@ const API = {
                 }
             }
 
+            // Cache-bust: the Apps Script response is served from
+            // script.googleusercontent.com, which can carry headers the
+            // browser's HTTP cache respects — without a unique URL per
+            // call, a write followed by a re-fetch can silently come back
+            // with the pre-write response instead of hitting the backend.
+            url.searchParams.set('_ts', Date.now().toString());
+
             const response = await fetch(url.toString(), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json'
-                }
+                },
+                cache: 'no-store'
             });
 
             if (!response.ok) {
