@@ -70,37 +70,37 @@
 </header>
 <nav class=tab-nav>
 <button class="tab active" data-tab=today onclick="switchTab('today')">
-<span class=tab-icon>&#128197;</span><span>Today</span>
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><rect x=3 y=4 width=18 height=18 rx=2></rect><line x1=16 y1=2 x2=16 y2=6></line><line x1=8 y1=2 x2=8 y2=6></line><line x1=3 y1=10 x2=21 y2=10></line></svg></span><span>Today</span>
 </button>
 <button class=tab data-tab=tracker onclick="switchTab('tracker')">
-<span class=tab-icon>&#127919;</span><span>Targets</span>
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><circle cx=12 cy=12 r=9></circle><circle cx=12 cy=12 r=5></circle><circle cx=12 cy=12 r=1.2 fill=currentColor></circle></svg></span><span>Targets</span>
 </button>
 <button class=tab data-tab=clients onclick="switchTab('clients')">
-<span class=tab-icon>&#128101;</span><span>Clients</span>
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx=9 cy=7 r=4></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span><span>Clients</span>
 </button>
 <button class=tab data-tab=add onclick="switchTab('add')">
-<span class=tab-icon>&#10133;</span><span>Add</span>
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><line x1=12 y1=5 x2=12 y2=19></line><line x1=5 y1=12 x2=19 y2=12></line></svg></span><span>Add</span>
 </button>
 <button class=tab data-tab=funds onclick="switchTab('funds')">
-<span class=tab-icon>&#128142;</span><span>Funds</span>
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21l2-7.5L2 9h7z"></path></svg></span><span>Funds</span>
 </button>
 <button class=tab data-tab=send onclick="switchTab('send')">
-<span class=tab-icon>&#128227;</span><span>Send</span>
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><line x1=22 y1=2 x2=11 y2=13></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span><span>Send</span>
 </button>
 </nav>
 <main id=tab-today class="tab-content active">
 <section class=reminders-section>
 <h2>Today's Priorities</h2>
 <div class="reminder-card birthday-card">
-<h3>&#127881; Birthdays</h3>
+<h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#d46b08 stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path><path d="M4 11V9a2 2 0 0 1 2-2h2"></path><path d="M16 7h2a2 2 0 0 1 2 2v2"></path><path d="M12 3v4"></path><path d="M9 7h6"></path></svg> Birthdays</h3>
 <div id=birthdays-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
 <div class="reminder-card payment-card">
-<h3>&#128179; Payment Due</h3>
+<h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#137333 stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=1 y=4 width=22 height=16 rx=2></rect><line x1=1 y1=10 x2=23 y2=10></line></svg> Payment Due</h3>
 <div id=payments-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
 <div class="reminder-card followup-card">
-<h3>&#128222; Follow-ups Today</h3>
+<h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#0B2545 stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> Follow-ups Today</h3>
 <div id=followups-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
 </section>

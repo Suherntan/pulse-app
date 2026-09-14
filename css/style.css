@@ -385,7 +385,7 @@ body {
 }
 
 .tab .tab-icon {
-    font-size: 1.2rem;
+    display: flex;
     margin-bottom: 2px;
 }
 
@@ -456,8 +456,15 @@ h3 {
 }
 
 .reminder-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 12px;
     font-size: 0.95rem;
+}
+
+.card-icon {
+    flex-shrink: 0;
 }
 
 .reminder-list {
