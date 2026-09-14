@@ -261,8 +261,31 @@ function showAddPipelineModal() {
     if (dateDiscussed) dateDiscussed.value = todayStr();
     var msg = document.getElementById('add-pipeline-message');
     if (msg) { msg.textContent = ''; msg.className = 'form-message'; }
+    var title = document.getElementById('add-pipeline-title');
+    if (title) title.textContent = 'Add Pipeline Client';
+    var name = document.getElementById('pipeline-name');
+    if (name) name.readOnly = false;
     var modal = document.getElementById('add-pipeline-modal');
     if (modal) modal.classList.remove('hidden');
+}
+
+// Opens the same modal pre-filled from an existing client. The backend
+// upserts by name, so saving updates that row -- the name stays read-only
+// because editing it would write a second row instead of renaming this one.
+function ftEditClient(index) {
+    var c = ft_clients[index];
+    if (!c) return;
+    showAddPipelineModal();
+    document.getElementById('add-pipeline-title').textContent = 'Edit Client';
+    document.getElementById('pipeline-name').value = c.name;
+    document.getElementById('pipeline-name').readOnly = true;
+    document.getElementById('pipeline-contact').value = c.contact || '';
+    document.getElementById('pipeline-risk').value = c.riskProfile || 'Conservative';
+    document.getElementById('pipeline-fund').value = c.fundOfInterest || '';
+    document.getElementById('pipeline-horizon').value = c.horizon || '';
+    document.getElementById('pipeline-status').value = c.status || 'New Lead';
+    document.getElementById('pipeline-date-discussed').value = c.dateDiscussed || todayStr();
+    document.getElementById('pipeline-notes').value = c.notes || '';
 }
 
 function hideAddPipelineModal() {

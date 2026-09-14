@@ -362,6 +362,21 @@
     padding: 1rem 0;
 }
 
+.ft-pick-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.ft-pick-group-title {
+    margin: 0 0 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-light);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ft-insight, .ft-split, .ft-card, .ft-client-card { transition: none; }
 }
