@@ -247,17 +247,125 @@
 </div>
 <div id=ft-insight class=ft-insight></div>
 <section class=ft-section>
-<h3 class=ft-section-title><span class=ft-num>01</span> Fund Summary</h3>
+<h3 class=ft-section-title><span class=ft-num>01</span> Fund Summary<button type=button class="btn-outline ft-add-btn" onclick="showAddFundModal()">+ Add Fund</button></h3>
 <div id=ft-split class=ft-split></div>
 <div id=ft-top-picks class=ft-cards></div>
 <p class=ft-disclaimer>Past performance is not indicative of future results. This is a research/tracking tool, not standalone investment advice &mdash; final recommendations depend on each client's individual risk profile.</p>
 </section>
 <section class=ft-section>
-<h3 class=ft-section-title><span class=ft-num>02</span> Client Pipeline</h3>
+<h3 class=ft-section-title><span class=ft-num>02</span> Client Pipeline<button type=button class="btn-outline ft-add-btn" onclick="showAddPipelineModal()">+ Add Client</button></h3>
 <div id=ft-status-filters class=ft-filter-tabs></div>
 <div id=ft-clients class=ft-client-list></div>
 </section>
 </main>
+
+<div id=add-fund-modal class="modal hidden">
+<div class=modal-content>
+<div class=modal-header>
+<h2>Add Fund</h2>
+<button class=close-btn onclick="hideAddFundModal()">&#10005;</button>
+</div>
+<div class=modal-body>
+<form id=add-fund-form onsubmit="submitAddFund(event)">
+<div class=form-group>
+<label for=fund-name>Fund Name *</label>
+<input type=text id=fund-name required placeholder="e.g. HW Shariah Flexi Fund">
+</div>
+<div class=form-group>
+<label for=fund-type>Type</label>
+<select id=fund-type>
+<option value=Shariah>Shariah</option>
+<option value=Conventional>Conventional</option>
+</select>
+</div>
+<div class=form-group>
+<label for=fund-category>Category</label>
+<input type=text id=fund-category placeholder="e.g. Equity - Global">
+</div>
+<div class=form-group>
+<label for=fund-ret1y>1-Year Return (%)</label>
+<input type=number step=0.01 id=fund-ret1y placeholder="e.g. 15.10">
+</div>
+<div class=form-group>
+<label for=fund-ret3y>3-Year Return (%)</label>
+<input type=number step=0.01 id=fund-ret3y placeholder="e.g. 41.20">
+</div>
+<div class=form-group>
+<label for=fund-ret5y>5-Year Return (%)</label>
+<input type=number step=0.01 id=fund-ret5y placeholder="e.g. 58.90">
+</div>
+<div class=form-group>
+<label for=fund-ret10y>10-Year Return (%)</label>
+<input type=number step=0.01 id=fund-ret10y placeholder="e.g. 98.40">
+</div>
+<div class=form-group>
+<label for=fund-as-of>As Of Date</label>
+<input type=date id=fund-as-of>
+</div>
+<button type=submit class=submit-btn>Save Fund</button>
+</form>
+<div id=add-fund-message class=form-message></div>
+</div>
+</div>
+</div>
+
+<div id=add-pipeline-modal class="modal hidden">
+<div class=modal-content>
+<div class=modal-header>
+<h2>Add Pipeline Client</h2>
+<button class=close-btn onclick="hideAddPipelineModal()">&#10005;</button>
+</div>
+<div class=modal-body>
+<form id=add-pipeline-form onsubmit="submitAddPipelineClient(event)">
+<div class=form-group>
+<label for=pipeline-name>Client Name *</label>
+<input type=text id=pipeline-name required placeholder="Full name">
+</div>
+<div class=form-group>
+<label for=pipeline-contact>Contact Number</label>
+<input type=tel id=pipeline-contact placeholder="Phone number">
+</div>
+<div class=form-group>
+<label for=pipeline-risk>Risk Profile</label>
+<select id=pipeline-risk>
+<option value=Conservative>Conservative</option>
+<option value=Moderate>Moderate</option>
+<option value=Aggressive>Aggressive</option>
+</select>
+</div>
+<div class=form-group>
+<label for=pipeline-fund>Fund of Interest</label>
+<input type=text id=pipeline-fund placeholder="e.g. HW Shariah Flexi Fund">
+</div>
+<div class=form-group>
+<label for=pipeline-horizon>Horizon</label>
+<input type=text id=pipeline-horizon placeholder="e.g. 3 Year">
+</div>
+<div class=form-group>
+<label for=pipeline-status>Status</label>
+<select id=pipeline-status>
+<option value="New Lead">New Lead</option>
+<option value="Discussed">Discussed</option>
+<option value="Considering">Considering</option>
+<option value="Proposal Sent">Proposal Sent</option>
+<option value="Closed">Closed</option>
+<option value="Declined">Declined</option>
+</select>
+</div>
+<div class=form-group>
+<label for=pipeline-date-discussed>Date Discussed</label>
+<input type=date id=pipeline-date-discussed>
+</div>
+<div class=form-group>
+<label for=pipeline-notes>Notes</label>
+<textarea id=pipeline-notes rows=3 placeholder="Any notes..."></textarea>
+</div>
+<button type=submit class=submit-btn>Save Client</button>
+</form>
+<div id=add-pipeline-message class=form-message></div>
+</div>
+</div>
+</div>
 <main id=tab-send class="tab-content hidden">
 <section class=send-section>
 <h2>Client Outreach</h2>

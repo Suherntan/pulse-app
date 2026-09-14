@@ -609,6 +609,8 @@ function doGet(e) {
         return jsonResponse(getMessageTemplates());
       case 'searchClients':
         return jsonResponse(searchClients(e.parameter.q));
+      case 'fetchFundData':
+        return jsonResponse(getFundPipelineData());
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -628,6 +630,10 @@ function doPost(e) {
         return jsonResponse(addActivity(data));
       case 'addClientDetails':
         return jsonResponse(addClientDetails(data));
+      case 'addFund':
+        return jsonResponse(addFundEntry(data));
+      case 'addPipelineClient':
+        return jsonResponse(addPipelineClient(data));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -3783,4 +3789,175 @@ function ensureColumnByField_(sheet, cols, fieldKey, headerText) {
   sheet.getRange(headerRow, newCol).setValue(headerText);
   cols[fieldKey] = newCol - 1;
   return cols[fieldKey];
+}
+
+/**
+ * ===================================================================
+ * PART 10 — FUND & CLIENT PIPELINE TRACKER (dashboard's Funds tab)
+ * ===================================================================
+ * Two simple, fixed-header sheets (row 1 = headers, always in this
+ * order -- unlike APPROACH/PRESENTATION/CLOSING/SR these aren't meant
+ * to be reordered, so there's no need for the header-scanning engine
+ * PART 0 uses). Both are created automatically, with their headers,
+ * the first time either is needed -- same pattern as the SETTINGS tab.
+ */
+
+var FUND_SHEET_NAME = "FUNDS";
+var FUND_SHEET_HEADERS = ["NAME", "TYPE", "CATEGORY", "1Y RETURN (%)", "3Y RETURN (%)", "5Y RETURN (%)", "10Y RETURN (%)", "AS OF DATE"];
+
+var CLIENT_PIPELINE_SHEET_NAME = "CLIENT PIPELINE";
+var CLIENT_PIPELINE_SHEET_HEADERS = ["NAME", "CONTACT", "RISK PROFILE", "FUND OF INTEREST", "HORIZON", "STATUS", "DATE DISCUSSED", "NOTES"];
+
+function ensureFundSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(FUND_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(FUND_SHEET_NAME);
+    sheet.getRange(1, 1, 1, FUND_SHEET_HEADERS.length).setValues([FUND_SHEET_HEADERS]).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function ensureClientPipelineSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(CLIENT_PIPELINE_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(CLIENT_PIPELINE_SHEET_NAME);
+    sheet.getRange(1, 1, 1, CLIENT_PIPELINE_SHEET_HEADERS.length).setValues([CLIENT_PIPELINE_SHEET_HEADERS]).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// Reads FUNDS + CLIENT PIPELINE into the shape the dashboard's Funds tab
+// expects ({funds: [...], clients: [...]}). Returns empty arrays (not an
+// error) when a sheet has no rows yet, so the tab just shows its
+// placeholder text rather than breaking -- the frontend falls back to
+// its own sample data only when this whole request fails outright
+// (offline, wrong URL, etc.), not for a genuinely-empty live sheet.
+function getFundPipelineData() {
+  var fundSheet = ensureFundSheet_();
+  var fundValues = fundSheet.getLastRow() > 1
+    ? fundSheet.getRange(2, 1, fundSheet.getLastRow() - 1, FUND_SHEET_HEADERS.length).getValues()
+    : [];
+  var funds = fundValues
+    .filter(function (row) { return String(row[0]).trim(); })
+    .map(function (row) {
+      return {
+        name: String(row[0]).trim(),
+        type: String(row[1]).trim() || "Conventional",
+        category: String(row[2]).trim(),
+        ret1y: Number(row[3]) || 0,
+        ret3y: Number(row[4]) || 0,
+        ret5y: Number(row[5]) || 0,
+        ret10y: Number(row[6]) || 0,
+        asOf: cellToDateString_(SpreadsheetApp.getActiveSpreadsheet(), row[7])
+      };
+    });
+
+  var pipelineSheet = ensureClientPipelineSheet_();
+  var pipelineValues = pipelineSheet.getLastRow() > 1
+    ? pipelineSheet.getRange(2, 1, pipelineSheet.getLastRow() - 1, CLIENT_PIPELINE_SHEET_HEADERS.length).getValues()
+    : [];
+  var clients = pipelineValues
+    .filter(function (row) { return String(row[0]).trim(); })
+    .map(function (row) {
+      return {
+        name: String(row[0]).trim(),
+        contact: String(row[1]).trim(),
+        riskProfile: String(row[2]).trim(),
+        fundOfInterest: String(row[3]).trim(),
+        horizon: String(row[4]).trim(),
+        status: String(row[5]).trim() || "New Lead",
+        dateDiscussed: cellToDateString_(SpreadsheetApp.getActiveSpreadsheet(), row[6]),
+        notes: String(row[7]).trim()
+      };
+    });
+
+  return { funds: funds, clients: clients };
+}
+
+// Upserts by fund NAME (case-sensitive exact match) -- re-adding a fund
+// you've already entered updates its numbers instead of duplicating the
+// row, so re-running a periodic research refresh is safe to repeat.
+function addFundEntry(record) {
+  if (!record || !String(record.name || "").trim()) {
+    return { success: false, error: "Fund name is required." };
+  }
+  var sheet = ensureFundSheet_();
+  var name = String(record.name).trim();
+  var lastRow = sheet.getLastRow();
+  var targetRow = 0;
+
+  if (lastRow > 1) {
+    var names = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < names.length; i++) {
+      if (String(names[i][0]).trim() === name) { targetRow = i + 2; break; }
+    }
+  }
+
+  var asOf = record.asOf ? new Date(record.asOf + "T00:00:00") : new Date();
+  var rowValues = [
+    name,
+    record.type === "Shariah" ? "Shariah" : "Conventional",
+    record.category || "",
+    Number(record.ret1y) || 0,
+    Number(record.ret3y) || 0,
+    Number(record.ret5y) || 0,
+    Number(record.ret10y) || 0,
+    asOf
+  ];
+
+  if (targetRow) {
+    sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
+    sheet.getRange(targetRow, 8).setNumberFormat("yyyy-mm-dd");
+    return { success: true, created: false };
+  }
+
+  sheet.appendRow(rowValues);
+  sheet.getRange(sheet.getLastRow(), 8).setNumberFormat("yyyy-mm-dd");
+  return { success: true, created: true };
+}
+
+// Upserts by client NAME -- adding the same prospect again (e.g. to move
+// their status from "New Lead" to "Discussed") updates the existing row
+// instead of creating a duplicate pipeline entry.
+function addPipelineClient(record) {
+  if (!record || !String(record.name || "").trim()) {
+    return { success: false, error: "Client name is required." };
+  }
+  var sheet = ensureClientPipelineSheet_();
+  var name = String(record.name).trim();
+  var lastRow = sheet.getLastRow();
+  var targetRow = 0;
+
+  if (lastRow > 1) {
+    var names = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < names.length; i++) {
+      if (String(names[i][0]).trim() === name) { targetRow = i + 2; break; }
+    }
+  }
+
+  var dateDiscussed = record.dateDiscussed ? new Date(record.dateDiscussed + "T00:00:00") : new Date();
+  var rowValues = [
+    name,
+    record.contact || "",
+    record.riskProfile || "",
+    record.fundOfInterest || "",
+    record.horizon || "",
+    record.status || "New Lead",
+    dateDiscussed,
+    record.notes || ""
+  ];
+
+  if (targetRow) {
+    sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
+    sheet.getRange(targetRow, 7).setNumberFormat("yyyy-mm-dd");
+    return { success: true, created: false };
+  }
+
+  sheet.appendRow(rowValues);
+  sheet.getRange(sheet.getLastRow(), 7).setNumberFormat("yyyy-mm-dd");
+  return { success: true, created: true };
 }

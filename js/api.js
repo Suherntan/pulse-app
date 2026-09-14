@@ -257,6 +257,29 @@ const API = {
     },
 
     /**
+     * Fetch live Fund research + Client Pipeline data (Funds tab)
+     */
+    async fetchFundData() {
+        return this.get('fetchFundData');
+    },
+
+    /**
+     * Add or update a fund research entry (upserted by fund name)
+     * @param {object} fundData - Fund details
+     */
+    async addFund(fundData) {
+        return this.post('addFund', fundData);
+    },
+
+    /**
+     * Add or update a client pipeline entry (upserted by client name)
+     * @param {object} clientData - Pipeline client details
+     */
+    async addPipelineClient(clientData) {
+        return this.post('addPipelineClient', clientData);
+    },
+
+    /**
      * Trigger the Email Blast (EMAIL TEMPLATE sheet) right now
      */
     async sendEmailBlast() {

@@ -104,6 +104,14 @@
     margin-bottom: 1rem;
 }
 
+.ft-add-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    min-height: 36px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
 .ft-num {
     display: inline-flex;
     align-items: center;
