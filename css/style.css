@@ -864,6 +864,32 @@ h3 {
     box-shadow: -1px 2px 2px rgba(11,37,69,0.12);
 }
 
+.reminder-item.sent {
+    opacity: 0.65;
+}
+
+.reminder-item.sent .name {
+    text-decoration: line-through;
+    text-decoration-color: var(--border);
+}
+
+.sent-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #137333;
+    white-space: nowrap;
+}
+
+.undo-sent-link {
+    background: none;
+    border: none;
+    padding: 4px;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 /* --- Correspondence templates (Send tab) --- */
 .template-card {
     background: var(--card-bg);
