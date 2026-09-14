@@ -63,7 +63,7 @@
 </div>
 </header>
 <nav class=tab-nav>
-<button class=tab active data-tab=today onclick="switchTab('today')">
+<button class="tab active" data-tab=today onclick="switchTab('today')">
 <span class=tab-icon>&#128197;</span><span>Today</span>
 </button>
 <button class=tab data-tab=tracker onclick="switchTab('tracker')">
@@ -82,18 +82,18 @@
 <span class=tab-icon>&#128227;</span><span>Send</span>
 </button>
 </nav>
-<main id=tab-today class=tab-content active>
+<main id=tab-today class="tab-content active">
 <section class=reminders-section>
 <h2>Today's Reminders</h2>
-<div class=reminder-card birthday-card>
+<div class="reminder-card birthday-card">
 <h3>&#127881; Birthdays</h3>
 <div id=birthdays-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
-<div class=reminder-card payment-card>
+<div class="reminder-card payment-card">
 <h3>&#128179; Payment Due</h3>
 <div id=payments-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
-<div class=reminder-card followup-card>
+<div class="reminder-card followup-card">
 <h3>&#128222; Follow-ups Today</h3>
 <div id=followups-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
@@ -161,9 +161,9 @@
 <input type=text id=client-search placeholder=Search by name or policy number... oninput="filterClients()">
 </div>
 <div class=filter-tabs>
-<button class=filter-btn active data-filter="all" onclick="filterByType('all')">All</button>
-<button class=filter-btn data-filter="birthday" onclick="filterByType('birthday')">Birthdays</button>
-<button class=filter-btn data-filter="payment" onclick="filterByType('payment')">Payments</button>
+<button class="filter-btn active" data-filter="all" onclick="filterByType('all')">All</button>
+<button class=filter-btn data-filter="birthday" onclick="filterByType('birthday')">Birthdays (30d)</button>
+<button class=filter-btn data-filter="payment" onclick="filterByType('payment')">Payments (30d)</button>
 </div>
 <div id=clients-list class=clients-list><p class=placeholder>Loading clients...</p></div>
 </section>
@@ -188,7 +188,7 @@
 </div>
 <div class=form-group>
 <label for=client-name>Client Name *</label>
-<input type=text id=client-name placeholder=Full name required>
+<input type=text id=client-name required placeholder="Full name">
 </div>
 <div class=form-group>
 <label for=client-contact>Contact Number</label>
