@@ -21,13 +21,13 @@
     .card {
       background: #fff;
       border-radius: 8px;
-      --sh1: rgba(120,120,120,0.16);
-      --sh2: rgba(120,120,120,0.08);
-      --sh1h: rgba(120,120,120,0.26);
-      --sh2h: rgba(120,120,120,0.14);
+      --sh1: rgba(60,60,60,0.22);
+      --sh2: rgba(60,60,60,0.12);
+      --sh1h: rgba(60,60,60,0.34);
+      --sh2h: rgba(60,60,60,0.20);
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.9),
-        -2px 3px 3px rgba(17,17,17,0.03),
+        -2px 3px 3px rgba(17,17,17,0.04),
         -6px 10px 16px var(--sh1),
         -12px 18px 26px var(--sh2);
       transition: transform 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1);
@@ -35,12 +35,12 @@
     }
     @media (hover: hover) and (pointer: fine) {
       .card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-5px);
         box-shadow:
           inset 0 1px 0 rgba(255,255,255,0.9),
-          -3px 5px 4px rgba(17,17,17,0.04),
-          -8px 13px 18px var(--sh1h),
-          -14px 22px 30px var(--sh2h);
+          -3px 5px 4px rgba(17,17,17,0.05),
+          -9px 15px 20px var(--sh1h),
+          -16px 25px 34px var(--sh2h);
       }
     }
     .card:active {
@@ -49,6 +49,44 @@
         inset 0 1px 0 rgba(255,255,255,0.9),
         -2px 3px 3px rgba(17,17,17,0.05),
         -4px 7px 10px var(--sh1);
+    }
+
+    /* Buttons: each carries a shadow tinted to its own fill/border color,
+       not a generic grey — a gold button casts a gold shadow, etc. */
+    .btn-gold {
+      background: #B8860B; color: #0B2545; text-align: center; font-size: 14px;
+      font-weight: 700; border-radius: 6px; padding: 12px; cursor: pointer;
+      box-shadow: -3px 5px 4px rgba(184,134,11,0.18), -8px 13px 18px rgba(184,134,11,0.24), -14px 20px 28px rgba(184,134,11,0.14);
+      transition: transform 180ms cubic-bezier(0.23,1,0.32,1), box-shadow 180ms cubic-bezier(0.23,1,0.32,1), background-color 180ms ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-gold:hover {
+        transform: translateY(-3px);
+        background: #C89A17;
+        box-shadow: -4px 7px 5px rgba(184,134,11,0.22), -10px 17px 22px rgba(184,134,11,0.32), -18px 26px 36px rgba(184,134,11,0.18);
+      }
+    }
+    .btn-gold:active {
+      transform: scale(0.97) translateY(0);
+      box-shadow: -2px 4px 3px rgba(184,134,11,0.2), -5px 9px 12px rgba(184,134,11,0.22);
+    }
+
+    .btn-outline {
+      font-size: 13px; font-weight: 600; color: #0B2545; border: 1px solid #0B2545;
+      border-radius: 6px; padding: 12px 18px; min-height: 44px; display: flex;
+      align-items: center; background: #fff; cursor: pointer;
+      box-shadow: -2px 4px 3px rgba(11,37,69,0.06), -6px 10px 14px rgba(11,37,69,0.10);
+      transition: transform 180ms cubic-bezier(0.23,1,0.32,1), box-shadow 180ms cubic-bezier(0.23,1,0.32,1);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-outline:hover {
+        transform: translateY(-2px);
+        box-shadow: -3px 6px 4px rgba(11,37,69,0.09), -8px 13px 18px rgba(11,37,69,0.14);
+      }
+    }
+    .btn-outline:active {
+      transform: scale(0.97) translateY(0);
+      box-shadow: -2px 3px 3px rgba(11,37,69,0.08), -4px 7px 9px rgba(11,37,69,0.10);
     }
   </style>
 </helmet>
@@ -116,7 +154,7 @@
       <div style="font-size: 11.5px; color: rgba(0,0,0,0.60); margin: 4px 0 10px;">Use <code style="background: #f5f5f5; padding: 1px 5px; border-radius: 3px; font-size: 11px;">{name}</code> and <code style="background: #f5f5f5; padding: 1px 5px; border-radius: 3px; font-size: 11px;">{policy}</code> as placeholders</div>
       <div style="border: 1px solid #d9d9d9; border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.5; color: rgba(0,0,0,0.88); min-height: 64px;">Hi {name}, just a friendly reminder that your policy {policy} has a payment coming up soon. Let me know if you have any questions!</div>
       <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-        <div style="font-size: 13px; font-weight: 600; color: #0B2545; border: 1px solid #0B2545; border-radius: 6px; padding: 12px 18px; min-height: 44px; display: flex; align-items: center;">Save Template</div>
+        <div class="btn-outline">Save Template</div>
       </div>
     </div>
 
@@ -137,7 +175,7 @@
       <div style="border: 1px solid #d9d9d9; border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.5; color: rgba(0,0,0,0.88); min-height: 90px;">Dear {name},<br><br>This is a reminder that payment for policy {policy} is due soon. Please reach out if you'd like to discuss your options.<br><br>Best regards</div>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-        <div style="font-size: 13px; font-weight: 600; color: #0B2545; border: 1px solid #0B2545; border-radius: 6px; padding: 12px 18px; min-height: 44px; display: flex; align-items: center;">Save Template</div>
+        <div class="btn-outline">Save Template</div>
       </div>
     </div>
 
@@ -148,14 +186,14 @@
     <div class="card" style="padding: 16px;">
       <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Email Blast</div>
       <div style="font-size: 12px; color: rgba(0,0,0,0.60); margin-bottom: 12px; line-height: 1.5;">Sends the template above, right now, from your Gmail.</div>
-      <div style="background: #B8860B; color: #0B2545; text-align: center; font-size: 14px; font-weight: 700; border-radius: 6px; padding: 12px;">Send Email Blast</div>
+      <div class="btn-gold">Send Email Blast</div>
     </div>
 
     <!-- Birthday vouchers send -->
     <div class="card" style="padding: 16px;">
       <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Birthday Vouchers</div>
       <div style="font-size: 12px; color: rgba(0,0,0,0.60); margin-bottom: 12px; line-height: 1.5;">Sends the automatic birthday voucher email to any client whose birthday reminder is due today.</div>
-      <div style="background: #B8860B; color: #0B2545; text-align: center; font-size: 14px; font-weight: 700; border-radius: 6px; padding: 12px;">Send Birthday Vouchers</div>
+      <div class="btn-gold">Send Birthday Vouchers</div>
     </div>
 
     <!-- WhatsApp info note -->
