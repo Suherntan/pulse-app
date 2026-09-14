@@ -30,7 +30,8 @@ async function renderFundsTab() {
 
 var ft_liveDataError = null;
 
-async function ftLoadLiveData() {
+async function ftLoadLiveData(attempt) {
+    attempt = attempt || 1;
     ft_liveDataError = null;
     var apiUrl = (typeof API !== 'undefined') ? API.getApiUrl() : null;
     if (!apiUrl) return;
@@ -38,6 +39,13 @@ async function ftLoadLiveData() {
         var url = apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'action=fetchFundData&_ts=' + Date.now();
         var response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, cache: 'no-store' });
         if (!response.ok) {
+            // Apps Script intermittently 404s a read issued immediately
+            // after a write. Retrying once keeps a save from looking like
+            // it silently did nothing.
+            if (attempt < 3) {
+                await new Promise(function (r) { setTimeout(r, 800 * attempt); });
+                return ftLoadLiveData(attempt + 1);
+            }
             ft_liveDataError = 'HTTP ' + response.status;
             console.error('ftLoadLiveData: request failed —', ft_liveDataError);
             return;
