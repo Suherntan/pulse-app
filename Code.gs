@@ -623,7 +623,7 @@ function doPost(e) {
   var action = e.parameter.action;
 
   try {
-    var data = JSON.parse(e.postData.getContentText());
+    var data = JSON.parse(e.postData.contents);
 
     switch (action) {
       case 'addActivity':
