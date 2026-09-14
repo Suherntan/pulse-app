@@ -18,6 +18,9 @@ var ft_clients = CLIENT_DATA;
 
 async function renderFundsTab() {
     await ftLoadLiveData();
+    if (ft_liveDataError && typeof showToast === 'function') {
+        showToast('Could not load live Funds data (' + ft_liveDataError + ') — showing sample data');
+    }
     renderFtInsight();
     renderFtSplit();
     renderFtTopPicks();
@@ -25,23 +28,36 @@ async function renderFundsTab() {
     renderFtClients();
 }
 
+var ft_liveDataError = null;
+
 async function ftLoadLiveData() {
+    ft_liveDataError = null;
     var apiUrl = (typeof API !== 'undefined') ? API.getApiUrl() : null;
     if (!apiUrl) return;
     try {
         var url = apiUrl + (apiUrl.indexOf('?') === -1 ? '?' : '&') + 'action=fetchFundData';
         var response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
-        if (!response.ok) return;
+        if (!response.ok) {
+            ft_liveDataError = 'HTTP ' + response.status;
+            console.error('ftLoadLiveData: request failed —', ft_liveDataError);
+            return;
+        }
         var data = await response.json();
-        if (data.error) return;
+        if (data.error) {
+            ft_liveDataError = data.error;
+            console.error('ftLoadLiveData: backend returned an error —', data.error);
+            return;
+        }
         // A live sheet that's simply empty so far is still "connected" --
         // show it as empty (via the .length checks in each render
         // function below) rather than silently keeping the sample data,
         // which would make it look like nothing was ever added.
-        if (data.funds) ft_funds = data.funds;
-        if (data.clients) ft_clients = data.clients;
+        ft_funds = data.funds || [];
+        ft_clients = data.clients || [];
     } catch (e) {
         // Sheet unreachable — keep showing the sample data instead of breaking the tab.
+        ft_liveDataError = e.message;
+        console.error('ftLoadLiveData: network/parse error —', e);
     }
 }
 
