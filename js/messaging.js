@@ -24,6 +24,43 @@ function buildWaLink(rawPhone, name, policy) {
     return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
 }
 
+// --- Sheet-provided message wording (birthday / premium reminder) ---
+// These come straight from Code.gs's BIRTHDAY_MESSAGE_TEMPLATE /
+// PREMIUM_REMINDER_MESSAGE_TEMPLATE via the messageTemplates API action,
+// so the Today tab's WhatsApp/Email buttons are ready to send immediately
+// with the exact wording already set up in the Sheet — no separate
+// template has to be typed into this app first.
+var sheetMessageTemplates = null; // {agentName, birthday, premiumReminder}
+
+async function loadSheetMessageTemplates() {
+    try {
+        sheetMessageTemplates = await API.fetchMessageTemplates();
+    } catch (e) {
+        sheetMessageTemplates = null; // offline / not deployed yet — callers fall back gracefully
+    }
+}
+
+// Mirrors makeReminderRow()'s {name}/{dueDate}/{policyLine} substitution.
+function fillReminderTemplate(template, row) {
+    var policyLine = row.policyNumber ? ('(Policy No: ' + row.policyNumber + ')') : '';
+    var dueDate = row.paymentDue ? formatNiceDate(row.paymentDue) : '';
+    return template
+        .split('{name}').join(row.name || '')
+        .split('{dueDate}').join(dueDate)
+        .split('{policyLine}').join(policyLine);
+}
+
+function buildPresetWaLink(rawPhone, template, row) {
+    var phone = normalizePhoneJS(rawPhone);
+    if (!phone || !template) return '';
+    return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(fillReminderTemplate(template, row));
+}
+
+function buildPresetMailtoLink(subject, template, row) {
+    if (!template) return '';
+    return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(fillReminderTemplate(template, row));
+}
+
 function loadWaTemplate() {
     var el = document.getElementById('wa-template');
     if (!el) return;

@@ -225,6 +225,14 @@ const API = {
     },
 
     /**
+     * Fetch the agent's own birthday/premium-reminder message wording
+     * (same templates the sheet's WhatsApp blast-list menu uses)
+     */
+    async fetchMessageTemplates() {
+        return this.get('messageTemplates');
+    },
+
+    /**
      * Add a new activity record
      * @param {object} record - The activity record
      */

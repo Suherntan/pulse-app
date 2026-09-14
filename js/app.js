@@ -160,6 +160,7 @@ async function loadAllData() {
         showToast('Failed to load data from your Sheet.');
         lastFetchedData = { approach: [], presentation: [], closing: [], sr: [] };
     }
+    if (typeof loadSheetMessageTemplates === 'function') await loadSheetMessageTemplates();
     renderTodayTab(lastFetchedData);
     renderTrackerTab(lastFetchedData);
     renderClientsTab(lastFetchedData);
@@ -184,17 +185,17 @@ function renderTodayTab(data) {
         var d = parseYMD(row.birthday);
         return d && isSameMonthDay(d, today);
     });
-    renderReminderList('birthdays-list', todayBirthdays, 'Birthday today!', 'No birthdays today');
+    renderReminderList('birthdays-list', todayBirthdays, 'Birthday today!', 'No birthdays today', 'birthday');
 
     var todayPayments = birthdaySource.filter(function (row) {
         return row.paymentDue === todayYMD;
     });
-    renderReminderList('payments-list', todayPayments, 'Payment due today!', 'No payments due today');
+    renderReminderList('payments-list', todayPayments, 'Payment due today!', 'No payments due today', 'payment');
 
     var todayFollowups = allRows(data).filter(function (row) {
         return row.followUpDate === todayYMD;
     });
-    renderReminderList('followups-list', todayFollowups, 'Deadline action item due', 'No deadlines or followups scheduled');
+    renderReminderList('followups-list', todayFollowups, 'Deadline action item due', 'No deadlines or followups scheduled', 'followup');
 
     // Quick stats: activities logged today, by type.
     var approachesToday = (data.approach || []).filter(function (r) { return r.dateOfAction === todayYMD; }).length;
@@ -206,7 +207,7 @@ function renderTodayTab(data) {
     setText('today-closings', closingsToday);
 }
 
-function renderReminderList(elId, rows, detailText, emptyText) {
+function renderReminderList(elId, rows, detailText, emptyText, kind) {
     var el = document.getElementById(elId);
     if (!el) return;
     if (rows.length === 0) {
@@ -214,8 +215,20 @@ function renderReminderList(elId, rows, detailText, emptyText) {
         return;
     }
     el.innerHTML = rows.map(function (row) {
-        var waLink = (typeof buildWaLink === 'function') ? buildWaLink(row.contact, row.name, row.policyNumber) : '';
-        var mailtoLink = (typeof buildMailtoLink === 'function') ? buildMailtoLink(row.name, row.policyNumber) : '';
+        // Birthdays/payments prefer the wording already set up in the Sheet
+        // (Code.gs's BIRTHDAY_MESSAGE_TEMPLATE / PREMIUM_REMINDER_MESSAGE_TEMPLATE)
+        // over the agent's own custom Send-tab template, so these buttons are
+        // ready to send immediately with no extra setup. Follow-ups have no
+        // sheet-side equivalent, so those always use the custom template.
+        var presetTemplate = kind === 'birthday' && sheetMessageTemplates ? sheetMessageTemplates.birthday
+            : kind === 'payment' && sheetMessageTemplates ? sheetMessageTemplates.premiumReminder
+            : null;
+        var waLink = presetTemplate
+            ? buildPresetWaLink(row.contact, presetTemplate, row)
+            : ((typeof buildWaLink === 'function') ? buildWaLink(row.contact, row.name, row.policyNumber) : '');
+        var mailtoLink = presetTemplate
+            ? buildPresetMailtoLink(kind === 'birthday' ? 'Happy Birthday!' : 'Premium Payment Reminder', presetTemplate, row)
+            : ((typeof buildMailtoLink === 'function') ? buildMailtoLink(row.name, row.policyNumber) : '');
         var waBtn = waLink
             ? '<a class="reminder-action-btn wa" href="' + waLink + '" target="_blank" rel="noopener" title="Send WhatsApp" aria-label="Send WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#389e0d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>'
             : '';
