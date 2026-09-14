@@ -172,10 +172,18 @@ const API = {
         url.searchParams.set('action', action);
 
         try {
+            // Body is JSON, but it MUST be sent as text/plain. An
+            // application/json content type is not CORS-"simple", so the
+            // browser fires an OPTIONS preflight first — and Apps Script
+            // answers every request with a 302 redirect, which is illegal
+            // on a preflight response. The preflight fails and the POST is
+            // never sent ("Failed to fetch"). text/plain skips preflight;
+            // e.postData.contents on the Apps Script side is the same raw
+            // JSON string either way.
             const response = await fetch(url.toString(), {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain;charset=utf-8'
                 },
                 body: JSON.stringify(data)
             });
