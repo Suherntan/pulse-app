@@ -84,9 +84,11 @@ function renderFtInsight() {
         return;
     }
     var top = ftRankedFunds()[0];
+    var ann = ftAnnualizedPct(top.ret3y, 3);
     el.innerHTML =
-        '<span class="ft-insight-label">Top 3-Year Performer</span>' +
-        '<span class="ft-insight-value">' + escapeHtml(top.name) + ', +' + top.ret3y.toFixed(2) + '%</span>';
+        '<span class="ft-insight-label">Top 3-Year Performer (total return)</span>' +
+        '<span class="ft-insight-value">' + escapeHtml(top.name) + ', +' + top.ret3y.toFixed(2) + '%' +
+        (ann != null ? ' <span class="ft-ret-annualized">(' + ann.toFixed(2) + '%/yr)</span>' : '') + '</span>';
 }
 
 function renderFtSplit() {
@@ -115,7 +117,21 @@ function ftTopByType(type) {
         .slice(0, 3);
 }
 
+// Converts a CUMULATIVE (total-over-the-period) return into the
+// annualized rate that would compound to that same total -- e.g. an 80%
+// total gain over 5 years is ~12.5%/year, not 80%/year. The FUNDS sheet
+// stores cumulative returns (matching Manulife's own reporting), so this
+// is a pure display-time conversion, not a different data source.
+function ftAnnualizedPct(cumulativePct, years) {
+    if (typeof cumulativePct !== 'number' || !years) return null;
+    var growth = 1 + cumulativePct / 100;
+    if (growth <= 0) return null; // a >100% cumulative loss isn't a real fund outcome; guard anyway
+    return (Math.pow(growth, 1 / years) - 1) * 100;
+}
+
 function ftFundCard(f, i) {
+    var ann3y = ftAnnualizedPct(f.ret3y, 3);
+    var ann5y = ftAnnualizedPct(f.ret5y, 5);
     return '<div class="ft-card">' +
         '<div class="ft-card-icon">' + (FT_RANK_ICON[i] || '&#11088;') + '</div>' +
         '<div class="ft-card-body">' +
@@ -123,8 +139,8 @@ function ftFundCard(f, i) {
         '<p class="ft-card-category">' + escapeHtml(f.category) + '</p>' +
         '<div class="ft-card-returns">' +
         '<div><span class="ft-ret-val">+' + f.ret1y.toFixed(2) + '%</span><span class="ft-ret-label">1Y</span></div>' +
-        '<div><span class="ft-ret-val ft-ret-highlight">+' + f.ret3y.toFixed(2) + '%</span><span class="ft-ret-label">3Y</span></div>' +
-        '<div><span class="ft-ret-val">+' + f.ret5y.toFixed(2) + '%</span><span class="ft-ret-label">5Y</span></div>' +
+        '<div><span class="ft-ret-val ft-ret-highlight">+' + f.ret3y.toFixed(2) + '%</span><span class="ft-ret-label">3Y total</span>' + (ann3y != null ? '<span class="ft-ret-annualized">' + ann3y.toFixed(2) + '%/yr</span>' : '') + '</div>' +
+        '<div><span class="ft-ret-val">+' + f.ret5y.toFixed(2) + '%</span><span class="ft-ret-label">5Y total</span>' + (ann5y != null ? '<span class="ft-ret-annualized">' + ann5y.toFixed(2) + '%/yr</span>' : '') + '</div>' +
         '</div>' +
         '<span class="ft-recommend ft-recommend-yes">Top Pick</span>' +
         '</div></div>';

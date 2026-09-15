@@ -233,6 +233,12 @@
     text-transform: uppercase;
 }
 
+.ft-ret-annualized {
+    font-size: 0.68rem;
+    color: var(--text-light);
+    font-style: italic;
+}
+
 .ft-recommend {
     display: inline-block;
     margin-top: 0.75rem;
