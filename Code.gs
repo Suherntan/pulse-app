@@ -4095,7 +4095,9 @@ function syncManulifeFunds() {
     sheet.getRange(targetRow, 8).setNumberFormat("yyyy-mm-dd");
   }
 
-  return { success: true, added: added, updated: updated, skipped: skipped };
+  var summary = { success: true, added: added, updated: updated, skipped: skipped };
+  Logger.log(JSON.stringify(summary));
+  return summary;
 }
 
 function syncManulifeFundsFromMenu() {
@@ -4121,7 +4123,9 @@ function createMonthlyFundSyncTrigger() {
     .onMonthDay(1)
     .atHour(7)
     .create();
-  SpreadsheetApp.getUi().alert("Monthly fund sync is ON — it will refresh on the 1st of each month, around 7am.");
+  // No getUi() alert: this is meant to be run from the Apps Script editor,
+  // where getUi() throws. Check the Execution log instead.
+  Logger.log("Monthly fund sync is ON — runs on the 1st of each month, around 7am.");
 }
 
 function removeMonthlyFundSyncTrigger() {
