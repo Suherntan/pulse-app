@@ -4147,12 +4147,17 @@ function removeMonthlyFundSyncTrigger() {
  * Calendar -- the same Google account this Sheet lives in, so
  * CalendarApp needs no separate login, API key, or webhook.
  *
- * An appointment is "matched" to a pipeline client when their name
- * appears in the event's title or description -- the same way you'd
- * naturally title a meeting ("Meeting with Ahmad Faiz",
- * "Ahmad Faiz - policy review"). There is no other reliable link
- * between a calendar event and a sheet row, so naming matters: type
- * the client's name into the event somewhere for it to be picked up.
+ * Only events titled with your F2F:/OL: convention count as client
+ * appointments -- anything else (dentist, family dinner, personal
+ * stuff) is left alone entirely, never shown and never touches a
+ * client row. Whatever follows the prefix is matched against your
+ * Client Pipeline by name ("F2F: Ahmad Faiz", "OL - Ahmad Faiz" both
+ * work); there is no other link between a calendar event and a sheet
+ * row, so the name has to actually be in there.
+ *
+ * An unmatched F2F/OL event is surfaced, not auto-added as a new
+ * client -- a typo or vague title would otherwise create a wrong or
+ * garbled pipeline row with no review step.
  * ============================================================ */
 
 // Leave "" to read your default/primary calendar. Set to a calendar's
@@ -4161,12 +4166,30 @@ function removeMonthlyFundSyncTrigger() {
 // e.g. one your phone's calendar app syncs into via your Google account.
 var APPOINTMENT_CALENDAR_NAME = "";
 
+// Matches "F2F: Name", "F2F - Name", "F2F Name" (and OL) at the start
+// of the title, case-insensitive. Group 1 is the prefix, group 2 is
+// everything after it.
+var APPOINTMENT_PREFIX_PATTERN = /^\s*(F2F|OL)\b[\s:.\-–—]*(.*)$/i;
+
 function getAppointmentCalendar_() {
   if (APPOINTMENT_CALENDAR_NAME) {
     var named = CalendarApp.getCalendarsByName(APPOINTMENT_CALENDAR_NAME);
     if (named.length) return named[0];
   }
   return CalendarApp.getDefaultCalendar();
+}
+
+// Returns null for a personal/unrelated event (no F2F:/OL: prefix), or
+// {meetingType, rest} for a client appointment -- meetingType is a
+// display label, rest is the part of the title to match a client name
+// against.
+function parseAppointmentTitle_(title) {
+  var m = APPOINTMENT_PREFIX_PATTERN.exec(String(title || ""));
+  if (!m) return null;
+  return {
+    meetingType: m[1].toUpperCase() === "OL" ? "Online" : "Face to Face",
+    rest: m[2].trim()
+  };
 }
 
 function matchClientInText_(text, clientNames) {
@@ -4187,8 +4210,9 @@ function getPipelineClientNames_() {
     .filter(function (n) { return n; });
 }
 
-// Upcoming appointments for the app's Today tab -- next 7 days, the
-// same window getReminders() uses for birthdays/payments.
+// Upcoming CLIENT appointments for the app's Today tab -- next 7 days,
+// the same window getReminders() uses for birthdays/payments.
+// Non-F2F/OL events (personal appointments) are skipped entirely.
 function getUpcomingAppointments() {
   var cal = getAppointmentCalendar_();
   var now = new Date();
@@ -4197,29 +4221,39 @@ function getUpcomingAppointments() {
   var events = cal.getEvents(now, weekFromNow);
   var clientNames = getPipelineClientNames_();
 
-  return events.map(function (ev) {
-    var matched = matchClientInText_(ev.getTitle(), clientNames) || matchClientInText_(ev.getDescription(), clientNames);
-    return {
+  var appointments = [];
+  events.forEach(function (ev) {
+    var parsed = parseAppointmentTitle_(ev.getTitle());
+    if (!parsed) return; // not a F2F/OL event -- personal, ignore
+
+    var matched = matchClientInText_(parsed.rest, clientNames) || matchClientInText_(ev.getDescription(), clientNames);
+    appointments.push({
       title: ev.getTitle(),
+      meetingType: parsed.meetingType,
       start: ev.getStartTime().toISOString(),
       end: ev.getEndTime().toISOString(),
-      matchedClient: matched
-    };
-  }).sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
+      matchedClient: matched,
+      inPipeline: !!matched
+    });
+  });
+
+  return appointments.sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
 }
 
 // Advances a pipeline client from "New Lead" to "Discussed" once a
-// calendar event naming them has already happened. Only ever touches
-// rows still at "New Lead" -- Considering / Proposal Sent / Closed /
-// Declined are left exactly as you set them. That also makes this
-// safe to re-run: a client already bumped to Discussed no longer
-// matches "New Lead", so nothing re-processes it.
+// F2F/OL calendar event naming them has already happened. Only ever
+// touches rows still at "New Lead" -- Considering / Proposal Sent /
+// Closed / Declined are left exactly as you set them. That also makes
+// this safe to re-run: a client already bumped to Discussed no longer
+// matches "New Lead", so nothing re-processes it. Events with no
+// F2F/OL prefix (personal) are skipped entirely, same as above.
 function syncAppointmentStatusFromCalendar() {
   var cal = getAppointmentCalendar_();
   var now = new Date();
   var lookback = new Date(now);
   lookback.setDate(now.getDate() - 60); // catches appointments confirmed a while back
-  var events = cal.getEvents(lookback, now); // only events that have already happened
+  var rawEvents = cal.getEvents(lookback, now); // only events that have already happened
+  var events = rawEvents.filter(function (ev) { return !!parseAppointmentTitle_(ev.getTitle()); });
 
   var sheet = ensureClientPipelineSheet_();
   var lastRow = sheet.getLastRow();

@@ -503,6 +503,21 @@ h3 {
     font-size: 0.8rem;
 }
 
+.appointment-type-tag {
+    font-weight: 600;
+    color: #6b3fa0;
+}
+
+.appointment-unmatched-tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #d46b08;
+    background: #fff7e6;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    white-space: nowrap;
+}
+
 .placeholder {
     color: var(--text-light);
     font-size: 0.85rem;

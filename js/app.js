@@ -225,22 +225,28 @@ async function loadAndRenderAppointments() {
     }
 }
 
+// Only F2F:/OL: events reach here at all (Code.gs filters out anything
+// else as personal). "not in pipeline yet" is a flag to add the client
+// yourself, not an error -- the app never auto-creates a pipeline row
+// from a calendar title, since a typo or vague title would create a
+// wrong entry with no review step.
 function renderAppointmentsList(appointments) {
     var el = document.getElementById('appointments-list');
     if (!el) return;
     if (!appointments.length) {
-        el.innerHTML = '<p class="placeholder">No appointments in the next 7 days</p>';
+        el.innerHTML = '<p class="placeholder">No F2F/OL appointments in the next 7 days</p>';
         return;
     }
     el.innerHTML = appointments.map(function (a) {
         var start = new Date(a.start);
         var when = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
             + ', ' + start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        var displayName = a.matchedClient || (a.title + ' (no client match)');
-        var detail = a.matchedClient ? (when + ' &middot; ' + escapeHtml(a.title)) : when;
+        var displayName = a.matchedClient || a.title;
+        var typeTag = '<span class="appointment-type-tag">' + escapeHtml(a.meetingType) + '</span>';
+        var unmatchedTag = a.inPipeline ? '' : ' <span class="appointment-unmatched-tag">not in pipeline yet</span>';
         return '<div class="reminder-item"><div class="reminder-item-info">' +
-            '<span class="name">' + escapeHtml(displayName) + '</span>' +
-            '<span class="detail">' + detail + '</span>' +
+            '<span class="name">' + escapeHtml(displayName) + unmatchedTag + '</span>' +
+            '<span class="detail">' + typeTag + ' &middot; ' + when + '</span>' +
             '</div></div>';
     }).join('');
 }
