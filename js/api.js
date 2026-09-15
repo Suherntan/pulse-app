@@ -298,6 +298,13 @@ const API = {
     },
 
     /**
+     * Fetch upcoming appointments from the connected Google Calendar
+     */
+    async fetchAppointments() {
+        return this.get('appointments');
+    },
+
+    /**
      * Add or update a fund research entry (upserted by fund name)
      * @param {object} fundData - Fund details
      */

@@ -205,6 +205,46 @@ function renderTodayTab(data) {
     setText('today-approaches', approachesToday);
     setText('today-presentations', presentationsToday);
     setText('today-closings', closingsToday);
+
+    loadAndRenderAppointments();
+}
+
+// Appointments come from Google Calendar via a separate API action, not
+// from the bulk dashboard fetch, so they load on their own -- same
+// pattern as the Funds tab's live data. Failing quietly (leaving the
+// placeholder or last-known list) matches how the rest of the Today tab
+// behaves when the sheet-backed data is unavailable.
+async function loadAndRenderAppointments() {
+    var el = document.getElementById('appointments-list');
+    if (!el || typeof API === 'undefined' || !API.getApiUrl()) return;
+    try {
+        var appointments = await API.fetchAppointments();
+        renderAppointmentsList(Array.isArray(appointments) ? appointments : []);
+    } catch (e) {
+        console.error('loadAndRenderAppointments:', e);
+    }
+}
+
+function renderAppointmentsList(appointments) {
+    var el = document.getElementById('appointments-list');
+    if (!el) return;
+    if (!appointments.length) {
+        el.innerHTML = '<p class="placeholder">No appointments in the next 7 days</p>';
+        return;
+    }
+    el.innerHTML = appointments.map(function (a) {
+        var start = new Date(a.start);
+        var when = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+            + ', ' + start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        var who = a.matchedClient
+            ? '<strong>' + escapeHtml(a.matchedClient) + '</strong>'
+            : escapeHtml(a.title) + ' <span class="placeholder">(no client match)</span>';
+        return '<div class="reminder-item">' +
+            '<div class="reminder-item-main">' +
+            '<span class="reminder-item-name">' + who + '</span>' +
+            '<span class="reminder-item-detail">' + when + (a.matchedClient ? ' &middot; ' + escapeHtml(a.title) : '') + '</span>' +
+            '</div></div>';
+    }).join('');
 }
 
 // --- "Sent today" tracking, so a reminder you've already messaged shows

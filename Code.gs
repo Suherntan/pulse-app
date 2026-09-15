@@ -611,6 +611,8 @@ function doGet(e) {
         return jsonResponse(searchClients(e.parameter.q));
       case 'fetchFundData':
         return jsonResponse(getFundPipelineData());
+      case 'appointments':
+        return jsonResponse(getUpcomingAppointments());
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -4132,6 +4134,139 @@ function removeMonthlyFundSyncTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === "syncManulifeFunds") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+}
+
+
+/* ============================================================
+ * PART 12 — GOOGLE CALENDAR APPOINTMENT SYNC
+ *
+ * Reads confirmed client appointments straight from your Google
+ * Calendar -- the same Google account this Sheet lives in, so
+ * CalendarApp needs no separate login, API key, or webhook.
+ *
+ * An appointment is "matched" to a pipeline client when their name
+ * appears in the event's title or description -- the same way you'd
+ * naturally title a meeting ("Meeting with Ahmad Faiz",
+ * "Ahmad Faiz - policy review"). There is no other reliable link
+ * between a calendar event and a sheet row, so naming matters: type
+ * the client's name into the event somewhere for it to be picked up.
+ * ============================================================ */
+
+// Leave "" to read your default/primary calendar. Set to a calendar's
+// display name (Google Calendar > that calendar's Settings page,
+// "Integrate calendar" name) to read a dedicated calendar instead --
+// e.g. one your phone's calendar app syncs into via your Google account.
+var APPOINTMENT_CALENDAR_NAME = "";
+
+function getAppointmentCalendar_() {
+  if (APPOINTMENT_CALENDAR_NAME) {
+    var named = CalendarApp.getCalendarsByName(APPOINTMENT_CALENDAR_NAME);
+    if (named.length) return named[0];
+  }
+  return CalendarApp.getDefaultCalendar();
+}
+
+function matchClientInText_(text, clientNames) {
+  if (!text) return "";
+  var lower = text.toLowerCase();
+  for (var i = 0; i < clientNames.length; i++) {
+    if (clientNames[i] && lower.indexOf(clientNames[i].toLowerCase()) !== -1) return clientNames[i];
+  }
+  return "";
+}
+
+function getPipelineClientNames_() {
+  var sheet = ensureClientPipelineSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  return sheet.getRange(2, 1, lastRow - 1, 1).getValues()
+    .map(function (r) { return String(r[0]).trim(); })
+    .filter(function (n) { return n; });
+}
+
+// Upcoming appointments for the app's Today tab -- next 7 days, the
+// same window getReminders() uses for birthdays/payments.
+function getUpcomingAppointments() {
+  var cal = getAppointmentCalendar_();
+  var now = new Date();
+  var weekFromNow = new Date(now);
+  weekFromNow.setDate(now.getDate() + 7);
+  var events = cal.getEvents(now, weekFromNow);
+  var clientNames = getPipelineClientNames_();
+
+  return events.map(function (ev) {
+    var matched = matchClientInText_(ev.getTitle(), clientNames) || matchClientInText_(ev.getDescription(), clientNames);
+    return {
+      title: ev.getTitle(),
+      start: ev.getStartTime().toISOString(),
+      end: ev.getEndTime().toISOString(),
+      matchedClient: matched
+    };
+  }).sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
+}
+
+// Advances a pipeline client from "New Lead" to "Discussed" once a
+// calendar event naming them has already happened. Only ever touches
+// rows still at "New Lead" -- Considering / Proposal Sent / Closed /
+// Declined are left exactly as you set them. That also makes this
+// safe to re-run: a client already bumped to Discussed no longer
+// matches "New Lead", so nothing re-processes it.
+function syncAppointmentStatusFromCalendar() {
+  var cal = getAppointmentCalendar_();
+  var now = new Date();
+  var lookback = new Date(now);
+  lookback.setDate(now.getDate() - 60); // catches appointments confirmed a while back
+  var events = cal.getEvents(lookback, now); // only events that have already happened
+
+  var sheet = ensureClientPipelineSheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    var emptySummary = { success: true, updated: 0 };
+    Logger.log(JSON.stringify(emptySummary));
+    return emptySummary;
+  }
+
+  var rows = sheet.getRange(2, 1, lastRow - 1, CLIENT_PIPELINE_SHEET_HEADERS.length).getValues();
+  var updated = 0;
+  var updatedNames = [];
+
+  for (var i = 0; i < rows.length; i++) {
+    var name = String(rows[i][0]).trim();
+    var status = String(rows[i][5]).trim();
+    if (!name || status !== "New Lead") continue;
+
+    var hasAppointment = events.some(function (ev) {
+      return matchClientInText_(ev.getTitle(), [name]) || matchClientInText_(ev.getDescription(), [name]);
+    });
+    if (hasAppointment) {
+      sheet.getRange(i + 2, 6).setValue("Discussed");
+      updated++;
+      updatedNames.push(name);
+    }
+  }
+
+  var summary = { success: true, updated: updated, names: updatedNames };
+  Logger.log(JSON.stringify(summary));
+  return summary;
+}
+
+function createDailyAppointmentSyncTrigger() {
+  removeDailyAppointmentSyncTrigger();
+  ScriptApp.newTrigger("syncAppointmentStatusFromCalendar")
+    .timeBased()
+    .everyDays(1)
+    .atHour(6)
+    .create();
+  Logger.log("Daily calendar status sync is ON — runs once a day, around 6am.");
+}
+
+function removeDailyAppointmentSyncTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "syncAppointmentStatusFromCalendar") {
       ScriptApp.deleteTrigger(triggers[i]);
     }
   }
