@@ -236,13 +236,11 @@ function renderAppointmentsList(appointments) {
         var start = new Date(a.start);
         var when = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
             + ', ' + start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        var who = a.matchedClient
-            ? '<strong>' + escapeHtml(a.matchedClient) + '</strong>'
-            : escapeHtml(a.title) + ' <span class="placeholder">(no client match)</span>';
-        return '<div class="reminder-item">' +
-            '<div class="reminder-item-main">' +
-            '<span class="reminder-item-name">' + who + '</span>' +
-            '<span class="reminder-item-detail">' + when + (a.matchedClient ? ' &middot; ' + escapeHtml(a.title) : '') + '</span>' +
+        var displayName = a.matchedClient || (a.title + ' (no client match)');
+        var detail = a.matchedClient ? (when + ' &middot; ' + escapeHtml(a.title)) : when;
+        return '<div class="reminder-item"><div class="reminder-item-info">' +
+            '<span class="name">' + escapeHtml(displayName) + '</span>' +
+            '<span class="detail">' + detail + '</span>' +
             '</div></div>';
     }).join('');
 }
