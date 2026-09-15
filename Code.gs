@@ -636,6 +636,8 @@ function doPost(e) {
         return jsonResponse(addFundEntry(data));
       case 'addPipelineClient':
         return jsonResponse(addPipelineClient(data));
+      case 'importFundData':
+        return jsonResponse(importFundData(data));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -1124,10 +1126,6 @@ function onOpen() {
     .addItem("Turn On Monthly Manulife Import Reminder", "createMonthlyManulifeReminder")
     .addItem("Turn Off Monthly Manulife Import Reminder", "removeMonthlyManulifeReminder")
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
-    .addSeparator()
-    .addItem("Sync Manulife Fund Performance Now", "syncManulifeFundsFromMenu")
-    .addItem("Turn On Monthly Fund Sync (1st, 7am)", "createMonthlyFundSyncTrigger")
-    .addItem("Turn Off Monthly Fund Sync", "removeMonthlyFundSyncTrigger")
     .addToUi();
 }
 
@@ -3970,117 +3968,89 @@ function addPipelineClient(record) {
 
 
 /* ============================================================
- * PART 11 — MANULIFE ILP FUND SYNC (auto-fills the FUNDS sheet)
+ * PART 11 -- MANULIFE INVESTMENT MANAGEMENT WEEKLY FUND IMPORT
  *
- * The public fund pages are an Angular app, so there is no HTML to
- * scrape. These are the JSON endpoints that app calls. They need a
- * Referer header -- without one they return an empty array rather
- * than an error, which is why a plain fetch looks "broken".
+ * manulifeim.com.my (the full unit trust / Shariah fund range --
+ * NOT the small ILP-only list) is protected by Akamai bot-detection
+ * that blocks every non-browser request, including robots.txt itself.
+ * UrlFetchApp cannot pass a real browser fingerprint, so this cannot
+ * be scraped automatically -- confirmed by direct testing, not a guess.
  *
- * Returns are not published by the API (cumulativeReturns comes back
- * empty), so they are computed here from the daily NAV history.
+ * The workaround: a browser BOOKMARKLET. Run once a week from the
+ * agent's own logged-in browser session on the live Fund Price &
+ * Performance page -- a genuine browser request, so Akamai never
+ * blocks it -- it reads that page's own fund JSON and POSTs it
+ * straight into this Sheet via the importFundData action below.
+ * See the setup guide for the actual bookmarklet code.
  * ============================================================ */
 
-var MANULIFE_REFERER = "https://www.manulife.com.my/en/individual/funds/funds.html";
-var MANULIFE_LIST_URL = "https://www.manulife.com.my/bin/funds/fundslist?productLine=ilp&overrideLocale=";
-var MANULIFE_DETAIL_URL = "https://www.manulife.com.my/bin/funds/funddetail?id=%ID%&productLine=ilp&overrideLocale=";
-var MANULIFE_HISTORY_URL = "https://www.manulife.com.my/bin/funds/fundhistory?id=%ID%&productLine=ilp&overrideLocale=";
-
-// The 40+ "EGA/EAP Managed Fund (Tranche N)" entries are closed legacy
-// series. They are not sold to new clients and would swamp the ranking,
-// so they are skipped. Set to false to pull every fund.
-var MANULIFE_SKIP_TRANCHE_FUNDS = true;
-
-function manulifeFetchJson_(url) {
-  var res = UrlFetchApp.fetch(url, {
-    method: "get",
-    headers: { "Referer": MANULIFE_REFERER },
-    muteHttpExceptions: true
-  });
-  if (res.getResponseCode() !== 200) return null;
-  try {
-    return JSON.parse(res.getContentText());
-  } catch (err) {
-    return null;
-  }
+// fundTypeName distinguishes product SERIES (Flexi series, Private
+// Retirement Scheme), not just Shariah/Conventional -- several Shariah
+// funds live inside those series without fundTypeName saying so, e.g.
+// "Manulife Investment - Shariah Flexi Fund" has fundTypeName
+// "Flexi series". So Shariah status is fundTypeName === "Islamic" OR
+// the fund name itself says Shariah/Islamic -- matches how Manulife's
+// own weekly internal fund performance report groups them.
+function isShariahFund_(fundTypeName, fundName) {
+  if (String(fundTypeName || "").trim() === "Islamic") return true;
+  return /shariah|islamic/i.test(String(fundName || ""));
 }
 
-// Latest price vs the closest price on or before the same date N years
-// back. Returns "" when the history does not reach that far, so a young
-// fund shows blank instead of a misleadingly small number.
-function manulifeReturnPct_(history, years) {
-  if (!history.length) return "";
-  var last = history[history.length - 1];
-  var target = new Date(last.asOfDate);
-  target.setFullYear(target.getFullYear() - years);
-  if (new Date(history[0].asOfDate) > target) return "";
-
-  var older = null;
-  for (var i = 0; i < history.length; i++) {
-    if (new Date(history[i].asOfDate) <= target) older = history[i]; else break;
+// Pulls y1/y3/y5/ytd out of cumulativeReturns.periods -- that field is
+// a list of {period, value} pairs, not a fixed object shape.
+function findReturnPeriod_(periods, key) {
+  if (!Array.isArray(periods)) return "";
+  for (var i = 0; i < periods.length; i++) {
+    if (periods[i] && periods[i].period === key && typeof periods[i].value === "number") {
+      return Math.round(periods[i].value * 100) / 100;
+    }
   }
-  if (!older || !older.price) return "";
-  return Math.round((last.price / older.price - 1) * 10000) / 100;
+  return "";
 }
 
-function syncManulifeFunds() {
-  var list = manulifeFetchJson_(MANULIFE_LIST_URL);
-  if (!Array.isArray(list) || !list.length) {
-    return { success: false, error: "Could not load the Manulife fund list." };
+// Body is the raw JSON array from manulifeim.com.my's own
+// funds.listing.json endpoint (productLine=mf) -- one entry per fund
+// share class, already carrying pre-computed returns, so no NAV-history
+// math is needed here (unlike the old ILP sync). Upserts by fund name,
+// same convention as addFundEntry, so re-running a weekly import
+// updates existing rows rather than duplicating them.
+function importFundData(funds) {
+  if (!Array.isArray(funds) || !funds.length) {
+    return { success: false, error: "No fund data received -- expected an array from the fund listing page." };
   }
-
-  var wanted = list.filter(function (f) {
-    if (!f || !f.fundId) return false;
-    return !(MANULIFE_SKIP_TRANCHE_FUNDS && /\(Tranche \d+\)/i.test(f.fundName || ""));
-  });
 
   var sheet = ensureFundSheet_();
   var lastRow = sheet.getLastRow();
-  var existing = lastRow > 1
-    ? sheet.getRange(2, 1, lastRow - 1, FUND_SHEET_HEADERS.length).getValues()
-    : [];
-
-  // Remember the row and the TYPE already on the sheet, keyed by name.
-  // TYPE is auto-detected for new funds only -- if the agent corrected a
-  // classification by hand, a later sync must not overwrite it.
   var rowByName = {};
-  var typeByName = {};
-  for (var i = 0; i < existing.length; i++) {
-    var existingName = String(existing[i][0]).trim();
-    if (!existingName) continue;
-    rowByName[existingName] = i + 2;
-    typeByName[existingName] = String(existing[i][1]).trim();
+  if (lastRow > 1) {
+    var existing = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < existing.length; i++) {
+      var existingName = String(existing[i][0]).trim();
+      if (existingName) rowByName[existingName] = i + 2;
+    }
   }
 
-  var updated = 0;
   var added = 0;
+  var updated = 0;
   var skipped = 0;
 
-  for (var j = 0; j < wanted.length; j++) {
-    var fund = wanted[j];
-    var history = manulifeFetchJson_(MANULIFE_HISTORY_URL.replace("%ID%", fund.fundId));
-    var prices = (history && history.priceHistory ? history.priceHistory : [])
-      .filter(function (p) { return p && p.price; })
-      .sort(function (a, b) { return new Date(a.asOfDate) - new Date(b.asOfDate); });
-    if (!prices.length) { skipped++; continue; }
+  funds.forEach(function (fund) {
+    var name = String((fund && (fund.displayName || fund.fundName)) || "").trim();
+    if (!name) { skipped++; return; }
 
-    var name = String(fund.fundName || "").trim();
-    var type = typeByName[name];
-    if (!type) {
-      var detail = manulifeFetchJson_(MANULIFE_DETAIL_URL.replace("%ID%", fund.fundId));
-      var objective = detail && detail.details ? String(detail.details.fundObjective || "") : "";
-      type = (/shariah|islamic/i.test(objective) || /\bdana\b/i.test(name)) ? "Shariah" : "Conventional";
-    }
+    var periods = fund.cumulativeReturns ? fund.cumulativeReturns.periods : null;
+    var asOfRaw = fund.cumulativeReturns ? fund.cumulativeReturns.asOfDate : "";
+    var asOf = asOfRaw ? new Date(asOfRaw + (String(asOfRaw).length <= 10 ? "T00:00:00" : "")) : new Date();
+    if (isNaN(asOf.getTime())) asOf = new Date();
 
-    var asOf = new Date(prices[prices.length - 1].asOfDate);
     var rowValues = [
       name,
-      type,
+      isShariahFund_(fund.fundTypeName, name) ? "Shariah" : "Conventional",
       String(fund.assetClassName || "").trim(),
-      manulifeReturnPct_(prices, 1),
-      manulifeReturnPct_(prices, 3),
-      manulifeReturnPct_(prices, 5),
-      manulifeReturnPct_(prices, 10),
+      findReturnPeriod_(periods, "y1"),
+      findReturnPeriod_(periods, "y3"),
+      findReturnPeriod_(periods, "y5"),
+      findReturnPeriod_(periods, "y10"),
       asOf
     ];
 
@@ -4095,48 +4065,11 @@ function syncManulifeFunds() {
       added++;
     }
     sheet.getRange(targetRow, 8).setNumberFormat("yyyy-mm-dd");
-  }
+  });
 
   var summary = { success: true, added: added, updated: updated, skipped: skipped };
   Logger.log(JSON.stringify(summary));
   return summary;
-}
-
-function syncManulifeFundsFromMenu() {
-  var ui = SpreadsheetApp.getUi();
-  var result = syncManulifeFunds();
-  if (!result.success) {
-    ui.alert("Fund sync failed\n\n" + result.error);
-    return;
-  }
-  ui.alert(
-    "Manulife fund sync complete\n\n" +
-    result.added + " fund(s) added\n" +
-    result.updated + " fund(s) updated\n" +
-    result.skipped + " skipped (no price history)\n\n" +
-    "Returns are NAV-to-NAV and exclude policy charges."
-  );
-}
-
-function createMonthlyFundSyncTrigger() {
-  removeMonthlyFundSyncTrigger();
-  ScriptApp.newTrigger("syncManulifeFunds")
-    .timeBased()
-    .onMonthDay(1)
-    .atHour(7)
-    .create();
-  // No getUi() alert: this is meant to be run from the Apps Script editor,
-  // where getUi() throws. Check the Execution log instead.
-  Logger.log("Monthly fund sync is ON — runs on the 1st of each month, around 7am.");
-}
-
-function removeMonthlyFundSyncTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === "syncManulifeFunds") {
-      ScriptApp.deleteTrigger(triggers[i]);
-    }
-  }
 }
 
 
