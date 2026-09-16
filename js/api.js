@@ -283,6 +283,15 @@ const API = {
     },
 
     /**
+     * Edit an existing row on any tracker tab (APPROACH/PRESENTATION/
+     * CLOSING/SR), optionally moving it to a different stage
+     * @param {object} record - { sheetName, rowNumber, expectedName, ...fields, newStatus }
+     */
+    async updateClientRecord(record) {
+        return this.post('updateClientRecord', record);
+    },
+
+    /**
      * Search clients by name or policy number
      * @param {string} query - Search query
      */

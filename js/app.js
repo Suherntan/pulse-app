@@ -400,26 +400,52 @@ function renderTrackerTab(data) {
     setText('month-closings', monthCounts.closing);
 }
 
-// --- CLIENTS TAB ("Closed Clients") ---
+// --- CLIENTS TAB ("Closed Clients" + Presentation/SR) ---
 var currentClientFilter = 'all';
+var currentClientStage = 'closing'; // 'closing' | 'presentation' | 'sr' -- which sheet's rows this tab shows
+var clientCardIndex = []; // the exact rows behind the currently-rendered cards, so a card click can look itself up by index rather than re-escaping data into onclick attributes
 
 function renderClientsTab(data) {
     if (!data) return;
     renderClientsList();
 }
 
-function getClientCards() {
+// Every field updateClientRecord()/the edit modal needs, straight from
+// whichever sheet readSheetRows_() pulled it from (rowNumber makes the
+// edit unambiguous even though several rows can share a name).
+function getClientCards(stage) {
     var data = lastFetchedData;
     if (!data) return [];
-    return (data.closing || []).map(function (row) {
+    var sheetNameByStage = { closing: 'CLOSING', presentation: 'PRESENTATION', sr: 'SR' };
+    var rows = data[stage || currentClientStage] || [];
+    return rows.map(function (row) {
         return {
+            sheetName: sheetNameByStage[stage || currentClientStage],
+            rowNumber: row.rowNumber,
             name: row.name,
             contact: row.contact,
             policyNumber: row.policyNumber,
+            productProposed: row.productProposed,
+            nature: row.nature,
+            percentage: row.percentage,
+            followUpDate: row.followUpDate,
+            remarks: row.remarks,
             birthday: row.birthday,
             paymentDue: row.paymentDue
         };
     });
+}
+
+function switchClientStage(stage) {
+    currentClientStage = stage;
+    document.querySelectorAll('.stage-filter-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-stage') === stage);
+    });
+    var heading = document.getElementById('clients-heading');
+    if (heading) {
+        heading.textContent = stage === 'closing' ? 'Closed Clients' : stage === 'presentation' ? 'Presentation Clients' : 'SR Clients';
+    }
+    renderClientsList();
 }
 
 function renderClientsList() {
@@ -449,12 +475,14 @@ function renderClientsList() {
         clients = clients.filter(function (c) { return paymentNames[c.name]; });
     }
 
+    clientCardIndex = clients;
+
     if (clients.length === 0) {
         container.innerHTML = '<p class="placeholder">No clients found</p>';
         return;
     }
 
-    container.innerHTML = clients.map(function (c) {
+    container.innerHTML = clients.map(function (c, i) {
         var badge = c.policyNumber ? escapeHtml(c.policyNumber) : 'No policy #';
         var waLink = buildWaLink(c.contact, c.name, c.policyNumber);
         var waButton = waLink
@@ -463,17 +491,91 @@ function renderClientsList() {
         var contactHtml = c.contact
             ? '<a href="tel:' + escapeHtml(c.contact) + '" onclick="event.stopPropagation()">' + escapeHtml(c.contact) + '</a>'
             : 'N/A';
-        var clickable = !!c.policyNumber;
-        var cardAttrs = clickable ? ' onclick="copyPolicyNumber(\'' + escapeHtml(c.policyNumber).replace(/'/g, "\\'") + '\')" title="Tap to copy policy number"' : '';
-        return '<div class="client-card' + (clickable ? ' clickable' : '') + '"' + cardAttrs + '>' +
+        var copyBtn = c.policyNumber
+            ? '<button type="button" class="client-copy-btn" onclick="event.stopPropagation(); copyPolicyNumber(\'' + escapeHtml(c.policyNumber).replace(/'/g, "\\'") + '\')" title="Copy policy number">&#128203;</button>'
+            : '';
+        return '<div class="client-card clickable" onclick="openEditClientModal(' + i + ')" title="Tap to edit">' +
             '<div class="client-name">' + escapeHtml(c.name || 'Unnamed Client') + '</div>' +
-            '<div class="client-badge">' + badge + '</div>' +
+            '<div class="client-badge">' + badge + copyBtn + '</div>' +
             '<div class="client-info">Contact: ' + contactHtml + '</div>' +
             '<div class="client-info">Birthday: ' + escapeHtml(formatNiceDate(c.birthday) || 'N/A') + '</div>' +
             '<div class="client-info">Payment Due: ' + escapeHtml(formatNiceDate(c.paymentDue) || 'N/A') + '</div>' +
             waButton +
             '</div>';
     }).join('');
+}
+
+// --- Edit Client modal (works for a row on any of the 4 tracker tabs) ---
+function openEditClientModal(index) {
+    var c = clientCardIndex[index];
+    if (!c) return;
+    document.getElementById('edit-client-sheet').value = c.sheetName;
+    document.getElementById('edit-client-row').value = c.rowNumber;
+    document.getElementById('edit-client-expected-name').value = c.name || '';
+    document.getElementById('edit-client-name').value = c.name || '';
+    document.getElementById('edit-client-contact').value = c.contact || '';
+    document.getElementById('edit-client-policy').value = c.policyNumber || '';
+    document.getElementById('edit-client-product').value = c.productProposed || '';
+    document.getElementById('edit-client-nature').value = c.nature || '';
+    document.getElementById('edit-client-percentage').value = c.percentage || '';
+    document.getElementById('edit-client-followup').value = c.followUpDate || '';
+    document.getElementById('edit-client-birthday').value = c.birthday || '';
+    document.getElementById('edit-client-payment-due').value = c.paymentDue || '';
+    document.getElementById('edit-client-remarks').value = c.remarks || '';
+    document.getElementById('edit-client-status').value = c.sheetName;
+    var msg = document.getElementById('edit-client-message');
+    if (msg) { msg.textContent = ''; msg.className = 'form-message'; }
+    var modal = document.getElementById('edit-client-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function hideEditClientModal() {
+    var modal = document.getElementById('edit-client-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function submitEditClient(event) {
+    event.preventDefault();
+    var msg = document.getElementById('edit-client-message');
+    var btn = document.querySelector('#edit-client-form .submit-btn');
+
+    var record = {
+        sheetName: document.getElementById('edit-client-sheet').value,
+        rowNumber: document.getElementById('edit-client-row').value,
+        expectedName: document.getElementById('edit-client-expected-name').value,
+        name: document.getElementById('edit-client-name').value.trim(),
+        contact: document.getElementById('edit-client-contact').value.trim(),
+        policyNumber: document.getElementById('edit-client-policy').value.trim(),
+        productProposed: document.getElementById('edit-client-product').value.trim(),
+        nature: document.getElementById('edit-client-nature').value,
+        percentage: document.getElementById('edit-client-percentage').value.trim(),
+        followUpDate: document.getElementById('edit-client-followup').value,
+        birthday: document.getElementById('edit-client-birthday').value,
+        paymentDue: document.getElementById('edit-client-payment-due').value,
+        remarks: document.getElementById('edit-client-remarks').value.trim(),
+        newStatus: document.getElementById('edit-client-status').value
+    };
+
+    if (!record.name) {
+        msg.textContent = 'Client name is required.';
+        msg.className = 'form-message error';
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+    try {
+        var result = await API.updateClientRecord(record);
+        if (result && result.error) throw new Error(result.error);
+        hideEditClientModal();
+        API.clearCache();
+        await loadAllData();
+        showToast(result && result.moved ? 'Client moved to ' + result.newSheet : 'Client updated');
+    } catch (err) {
+        msg.textContent = 'Failed to save: ' + err.message;
+        msg.className = 'form-message error';
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+    }
 }
 
 function copyPolicyNumber(policyNumber) {

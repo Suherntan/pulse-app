@@ -213,6 +213,95 @@ function stampDateAndWeekDay_(sheet, cols, rowNum, dateVal) {
 }
 
 /**
+ * Moves a row from one tracker tab to another -- the exact same thing
+ * that happens when you type a new status into the Status column by
+ * hand in the Sheet. Factored out of onEdit() so both a live cell edit
+ * AND updateClientRecord() (an edit made through the web app) share one
+ * implementation instead of two copies that could quietly drift apart.
+ * Returns { targetSheetName, targetRow } on success, or null if
+ * statusValue doesn't name a real tab or is the row's current tab.
+ */
+function moveRowToStatus_(sourceSheet, cols, row, statusValue) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var targetSheet = ss.getSheetByName(statusValue);
+  if (!targetSheet || sourceSheet.getName() === targetSheet.getName()) return null;
+
+  var targetCols = getColumnMap_(targetSheet);
+  var targetStatusLetter = colToA1_(targetCols.status + 1);
+  var targetValues = targetSheet
+    .getRange(targetStatusLetter + targetCols._dataStartRow + ":" + targetStatusLetter)
+    .getValues();
+  var nextRow = targetCols._dataStartRow;
+  for (var j = 0; j < targetValues.length; j++) {
+    if (targetValues[j][0] === "") {
+      nextRow = targetCols._dataStartRow + j;
+      break;
+    }
+  }
+
+  var moveDate = new Date();
+  moveDate.setHours(0, 0, 0, 0);
+
+  if (statusValue === "SR") {
+    var nameValue = cols.name > -1 ? sourceSheet.getRange(row, cols.name + 1).getValue() : "";
+    var contactValue = cols.contact > -1 ? sourceSheet.getRange(row, cols.contact + 1).getValue() : "";
+
+    // SR only copies name/contact across (not the whole row), so the
+    // original date has to be carried over explicitly: use the
+    // source's own "DATE FIRST APPROACHED" if it already has one,
+    // otherwise fall back to its current Date of Action.
+    var sourceOriginalDate = null;
+    if (cols.originalDate > -1) {
+      sourceOriginalDate = sourceSheet.getRange(row, cols.originalDate + 1).getValue();
+    }
+    if (!sourceOriginalDate && cols.dateOfAction > -1) {
+      sourceOriginalDate = sourceSheet.getRange(row, cols.dateOfAction + 1).getValue();
+    }
+
+    if (targetCols.name > -1) targetSheet.getRange(nextRow, targetCols.name + 1).setValue(nameValue);
+    if (targetCols.contact > -1) targetSheet.getRange(nextRow, targetCols.contact + 1).setValue(contactValue);
+    targetSheet.getRange(nextRow, targetCols.status + 1).setValue("SR");
+    preserveOriginalDate_(targetSheet, targetCols, nextRow, sourceOriginalDate);
+    stampDateAndWeekDay_(targetSheet, targetCols, nextRow, moveDate);
+    logActivity_("SR", nameValue, contactValue, moveDate);
+    sourceSheet.deleteRow(row);
+    return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
+  }
+
+  // Whole-row copy: works as long as this tab and the target tab share
+  // the same column layout as each other (they're meant to mirror one
+  // another). If you reorder columns, do it identically across
+  // APPROACH / PRESENTATION / CLOSING so this stays correct.
+  var numCols = sourceSheet.getLastColumn();
+  if (numCols < 1) numCols = 1;
+  var sourceRange = sourceSheet.getRange(row, 1, 1, numCols);
+  var destination = targetSheet.getRange(nextRow, 1);
+  sourceRange.copyTo(destination);
+
+  // Before we overwrite Date of Action with today, capture whatever it
+  // currently holds (copied over from the source row) into "DATE FIRST
+  // APPROACHED" -- but only if that column is still empty, so the
+  // EARLIEST date ever recorded is what sticks, no matter how many
+  // times this row moves stages after this.
+  var priorDateOfAction = targetCols.dateOfAction > -1
+    ? targetSheet.getRange(nextRow, targetCols.dateOfAction + 1).getValue()
+    : null;
+  preserveOriginalDate_(targetSheet, targetCols, nextRow, priorDateOfAction);
+
+  // The Date of Action now reflects when THIS stage happened (e.g. when
+  // it became a Closing), not the original approach date -- that's the
+  // "Option 1" behavior. Week/Day and the Activity Log entry are updated
+  // to match, since a script-driven change doesn't re-trigger onEdit.
+  var movedName = targetCols.name > -1 ? targetSheet.getRange(nextRow, targetCols.name + 1).getValue() : "";
+  var movedContact = targetCols.contact > -1 ? targetSheet.getRange(nextRow, targetCols.contact + 1).getValue() : "";
+  stampDateAndWeekDay_(targetSheet, targetCols, nextRow, moveDate);
+  logActivity_(statusValue, movedName, movedContact, moveDate);
+
+  sourceSheet.deleteRow(row);
+  return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
+}
+
+/**
  * Finds (or creates) the "DATE FIRST APPROACHED" column on a tab, so
  * the original date is never lost even though Date of Action gets
  * overwritten to "today" every time a row changes stage. Updates the
@@ -304,85 +393,8 @@ function onEdit(e) {
   if (column === cols.status + 1) {
     var rawStatus = value;
     if (!rawStatus) return;
-
-    var statusValue = String(rawStatus).toUpperCase().trim();
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var targetSheetAPC = ss.getSheetByName(statusValue);
-    if (!targetSheetAPC || sheetName === targetSheetAPC.getName()) return;
-
-    var targetCols = getColumnMap_(targetSheetAPC);
-    var targetStatusLetter = colToA1_(targetCols.status + 1);
-    var targetValuesAPC = targetSheetAPC
-      .getRange(targetStatusLetter + targetCols._dataStartRow + ":" + targetStatusLetter)
-      .getValues();
-    var nextRowAPC = targetCols._dataStartRow;
-    for (var j = 0; j < targetValuesAPC.length; j++) {
-      if (targetValuesAPC[j][0] === "") {
-        nextRowAPC = targetCols._dataStartRow + j;
-        break;
-      }
-    }
-
-    var moveDate = new Date();
-    moveDate.setHours(0, 0, 0, 0);
-
-    if (statusValue === "SR") {
-      var nameValue = cols.name > -1 ? sheet.getRange(row, cols.name + 1).getValue() : "";
-      var contactValue = cols.contact > -1 ? sheet.getRange(row, cols.contact + 1).getValue() : "";
-
-      // SR only copies name/contact across (not the whole row), so the
-      // original date has to be carried over explicitly: use the
-      // source's own "DATE FIRST APPROACHED" if it already has one,
-      // otherwise fall back to its current Date of Action.
-      var sourceOriginalDate = null;
-      if (cols.originalDate > -1) {
-        sourceOriginalDate = sheet.getRange(row, cols.originalDate + 1).getValue();
-      }
-      if (!sourceOriginalDate && cols.dateOfAction > -1) {
-        sourceOriginalDate = sheet.getRange(row, cols.dateOfAction + 1).getValue();
-      }
-
-      if (targetCols.name > -1) targetSheetAPC.getRange(nextRowAPC, targetCols.name + 1).setValue(nameValue);
-      if (targetCols.contact > -1) targetSheetAPC.getRange(nextRowAPC, targetCols.contact + 1).setValue(contactValue);
-      targetSheetAPC.getRange(nextRowAPC, targetCols.status + 1).setValue("SR");
-      preserveOriginalDate_(targetSheetAPC, targetCols, nextRowAPC, sourceOriginalDate);
-      stampDateAndWeekDay_(targetSheetAPC, targetCols, nextRowAPC, moveDate);
-      logActivity_("SR", nameValue, contactValue, moveDate);
-      return;
-    } else {
-      // Whole-row copy: works as long as this tab and the target tab
-      // share the same column layout as each other (they're meant to
-      // mirror one another). If you reorder columns, do it identically
-      // across APPROACH / PRESENTATION / CLOSING so this stays correct.
-      var numCols = sheet.getLastColumn();
-      if (numCols < 1) numCols = 1;
-      var sourceRange = sheet.getRange(row, 1, 1, numCols);
-      var destination = targetSheetAPC.getRange(nextRowAPC, 1);
-      sourceRange.copyTo(destination);
-
-      // Before we overwrite Date of Action with today, capture whatever
-      // it currently holds (copied over from the source row) into
-      // "DATE FIRST APPROACHED" -- but only if that column is still
-      // empty, so the EARLIEST date ever recorded is what sticks, no
-      // matter how many times this row moves stages after this.
-      var priorDateOfAction = targetCols.dateOfAction > -1
-        ? targetSheetAPC.getRange(nextRowAPC, targetCols.dateOfAction + 1).getValue()
-        : null;
-      preserveOriginalDate_(targetSheetAPC, targetCols, nextRowAPC, priorDateOfAction);
-
-      // The Date of Action now reflects when THIS stage happened (e.g.
-      // when it became a Closing), not the original approach date --
-      // that's the "Option 1" behavior you asked for. Week/Day and the
-      // Activity Log entry are updated to match, since a script-driven
-      // change doesn't re-trigger onEdit on its own.
-      var movedName = targetCols.name > -1 ? targetSheetAPC.getRange(nextRowAPC, targetCols.name + 1).getValue() : "";
-      var movedContact = targetCols.contact > -1 ? targetSheetAPC.getRange(nextRowAPC, targetCols.contact + 1).getValue() : "";
-      stampDateAndWeekDay_(targetSheetAPC, targetCols, nextRowAPC, moveDate);
-      logActivity_(statusValue, movedName, movedContact, moveDate);
-
-      sheet.deleteRow(row);
-      return;
-    }
+    moveRowToStatus_(sheet, cols, row, String(rawStatus).toUpperCase().trim());
+    return;
   }
 
   // --- Nature column edited: auto-calculate follow-up deadline + sort ---
@@ -634,6 +646,8 @@ function doPost(e) {
         return jsonResponse(addActivity(data));
       case 'addClientDetails':
         return jsonResponse(addClientDetails(data));
+      case 'updateClientRecord':
+        return jsonResponse(updateClientRecord(data));
       case 'addFund':
         return jsonResponse(addFundEntry(data));
       case 'addPipelineClient':
@@ -924,6 +938,76 @@ function addClientDetails(record) {
   if (cols.paymentDue > -1 && record.paymentDue) sheet.getRange(targetRow, cols.paymentDue + 1).setValue(new Date(record.paymentDue + 'T00:00:00')).setNumberFormat('yyyy-mm-dd');
 
   return { success: true, created: false };
+}
+
+/**
+ * Edits an existing row on any of the four tracker tabs from the web
+ * app -- e.g. updating a Presentation client's follow-up date, or
+ * moving them to Closing. Matched by the row's absolute sheet row
+ * number (readSheetRows_/getAllSheetData already return this as
+ * `rowNumber` on every row, so the app always knows exactly which row
+ * it's editing) plus an expected-name check, so a row that shifted
+ * position since the app last fetched data (another row inserted/moved
+ * above it) is caught rather than silently editing the wrong client.
+ *
+ * Field values are written first, THEN a stage change (if any) moves
+ * the row via moveRowToStatus_ -- so a move carries the just-edited
+ * values with it, not stale ones.
+ */
+function updateClientRecord(record) {
+  if (!record || !record.sheetName || !record.rowNumber) {
+    return { success: false, error: "Missing sheetName or rowNumber." };
+  }
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetName = String(record.sheetName).toUpperCase().trim();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { success: false, error: "Sheet not found: " + sheetName };
+
+  var cols = getColumnMap_(sheet);
+  var row = Number(record.rowNumber);
+  if (!row || row <= cols._headerRow || row > sheet.getLastRow()) {
+    return { success: false, error: "That row no longer exists on " + sheetName + " -- refresh and try again." };
+  }
+
+  if (cols.name > -1 && record.expectedName) {
+    var currentName = String(sheet.getRange(row, cols.name + 1).getValue()).trim();
+    if (currentName !== String(record.expectedName).trim()) {
+      return { success: false, error: "This client's row has changed since you opened it -- refresh and try again." };
+    }
+  }
+
+  function setIfPresent(field, value, isDate) {
+    if (cols[field] === -1 || value === undefined) return;
+    var cell = sheet.getRange(row, cols[field] + 1);
+    if (isDate) {
+      if (value) cell.setValue(new Date(value + "T00:00:00")).setNumberFormat("yyyy-mm-dd");
+      else cell.clearContent();
+    } else {
+      cell.setValue(value);
+    }
+  }
+
+  setIfPresent("name", record.name, false);
+  setIfPresent("contact", record.contact, false);
+  setIfPresent("policyNumber", record.policyNumber, false);
+  setIfPresent("productProposed", record.productProposed, false);
+  setIfPresent("nature", record.nature, false);
+  setIfPresent("percentage", record.percentage, false);
+  setIfPresent("remarks", record.remarks, false);
+  setIfPresent("followUpDate", record.followUpDate, true);
+  setIfPresent("birthday", record.birthday, true);
+  setIfPresent("paymentDue", record.paymentDue, true);
+
+  var newStatus = record.newStatus ? String(record.newStatus).toUpperCase().trim() : sheetName;
+  if (newStatus && newStatus !== sheetName) {
+    var moveResult = moveRowToStatus_(sheet, cols, row, newStatus);
+    if (!moveResult) {
+      return { success: false, error: "Could not move to " + newStatus + " -- check that tab exists." };
+    }
+    return { success: true, moved: true, newSheet: moveResult.targetSheetName, newRow: moveResult.targetRow };
+  }
+
+  return { success: true, moved: false };
 }
 
 function searchClients(query) {
