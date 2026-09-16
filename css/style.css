@@ -698,6 +698,7 @@ h3 {
 /* --- Filter Tabs --- */
 .filter-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 16px;
 }

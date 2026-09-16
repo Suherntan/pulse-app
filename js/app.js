@@ -416,7 +416,7 @@ function renderClientsTab(data) {
 function getClientCards(stage) {
     var data = lastFetchedData;
     if (!data) return [];
-    var sheetNameByStage = { closing: 'CLOSING', presentation: 'PRESENTATION', sr: 'SR' };
+    var sheetNameByStage = { approach: 'APPROACH', closing: 'CLOSING', presentation: 'PRESENTATION', sr: 'SR' };
     var rows = data[stage || currentClientStage] || [];
     return rows.map(function (row) {
         return {
@@ -443,7 +443,8 @@ function switchClientStage(stage) {
     });
     var heading = document.getElementById('clients-heading');
     if (heading) {
-        heading.textContent = stage === 'closing' ? 'Closed Clients' : stage === 'presentation' ? 'Presentation Clients' : 'SR Clients';
+        var headings = { approach: 'Approach Clients', closing: 'Closed Clients', presentation: 'Presentation Clients', sr: 'SR Clients' };
+        heading.textContent = headings[stage] || 'Clients';
     }
     renderClientsList();
 }
