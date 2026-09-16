@@ -162,7 +162,12 @@
 </main>
 <main id=tab-clients class="tab-content hidden">
 <section class=clients-section>
-<h2>Closed Clients</h2>
+<h2 id=clients-heading>Closed Clients</h2>
+<div class="filter-tabs stage-filter-tabs">
+<button class="filter-btn stage-filter-btn active" data-stage="closing" onclick="switchClientStage('closing')">Closing</button>
+<button class="filter-btn stage-filter-btn" data-stage="presentation" onclick="switchClientStage('presentation')">Presentation</button>
+<button class="filter-btn stage-filter-btn" data-stage="sr" onclick="switchClientStage('sr')">SR</button>
+</div>
 <div class=search-bar>
 <input type=text id=client-search placeholder=Search by name or policy number... oninput="filterClients()">
 </div>
@@ -174,6 +179,80 @@
 <div id=clients-list class=clients-list><p class=placeholder>Loading clients...</p></div>
 </section>
 </main>
+
+<div id=edit-client-modal class="modal hidden">
+<div class=modal-content>
+<div class=modal-header>
+<h2>Edit Client</h2>
+<button class=close-btn onclick="hideEditClientModal()">&#10005;</button>
+</div>
+<div class=modal-body>
+<form id=edit-client-form onsubmit="submitEditClient(event)">
+<input type=hidden id=edit-client-sheet>
+<input type=hidden id=edit-client-row>
+<input type=hidden id=edit-client-expected-name>
+<div class=form-group>
+<label for=edit-client-name>Client Name *</label>
+<input type=text id=edit-client-name required placeholder="Full name">
+</div>
+<div class=form-group>
+<label for=edit-client-contact>Contact Number</label>
+<input type=tel id=edit-client-contact placeholder="Phone number">
+</div>
+<div class=form-group>
+<label for=edit-client-policy>Policy Number</label>
+<input type=text id=edit-client-policy placeholder="Policy number">
+</div>
+<div class=form-group>
+<label for=edit-client-product>Product Proposed</label>
+<input type=text id=edit-client-product placeholder="Product proposed">
+</div>
+<div class=form-group>
+<label for=edit-client-nature>Nature</label>
+<select id=edit-client-nature>
+<option value="">-- Not set --</option>
+<option value=Hot>Hot</option>
+<option value=Warm>Warm</option>
+<option value=Cold>Cold</option>
+<option value=F2>F2</option>
+<option value=F3>F3</option>
+</select>
+</div>
+<div class=form-group>
+<label for=edit-client-percentage>Percentage</label>
+<input type=text id=edit-client-percentage placeholder="e.g. 50%">
+</div>
+<div class=form-group>
+<label for=edit-client-followup>Follow-up Date</label>
+<input type=date id=edit-client-followup>
+</div>
+<div class=form-group>
+<label for=edit-client-birthday>Birthday</label>
+<input type=date id=edit-client-birthday>
+</div>
+<div class=form-group>
+<label for=edit-client-payment-due>Payment Due Date</label>
+<input type=date id=edit-client-payment-due>
+</div>
+<div class=form-group>
+<label for=edit-client-remarks>Remarks</label>
+<textarea id=edit-client-remarks rows=3 placeholder="Any notes..."></textarea>
+</div>
+<div class=form-group>
+<label for=edit-client-status>Stage</label>
+<select id=edit-client-status>
+<option value=APPROACH>Approach</option>
+<option value=PRESENTATION>Presentation</option>
+<option value=CLOSING>Closing</option>
+<option value=SR>SR</option>
+</select>
+</div>
+<button type=submit class=submit-btn>Save Changes</button>
+</form>
+<div id=edit-client-message class=form-message></div>
+</div>
+</div>
+</div>
 <main id=tab-add class="tab-content hidden">
 <section class=add-section>
 <h2>Add New Activity</h2>
