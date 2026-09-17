@@ -517,39 +517,56 @@ function setupSheetProtection() {
       sheet.getRange(natureLetter + dataStart + ":" + natureLetter + "1000").setDataValidation(natureRule);
     }
 
-    var range = sheet.getRange(dataStart, 1, Math.max(1000 - dataStart + 1, 1), lastCol);
+    // Each indicator highlights only its OWN column now (Nature for hot/
+    // warm/cold, Follow-up Date for overdue) rather than the whole row --
+    // painting the entire row made a client's row look flagged/urgent
+    // even where the actual cause (nature, or an overdue date) was a
+    // single cell. `ownRanges` lists every range this function has ever
+    // used for its own rules (including the older whole-row one), so a
+    // re-run always finds and replaces its own prior rules cleanly no
+    // matter which version last set them up.
+    var wholeRowRange = sheet.getRange(dataStart, 1, Math.max(1000 - dataStart + 1, 1), lastCol);
+    var natureColRange = cols.nature > -1
+      ? sheet.getRange(dataStart, cols.nature + 1, Math.max(1000 - dataStart + 1, 1), 1)
+      : null;
+    var followUpColRange = cols.followUpDate > -1
+      ? sheet.getRange(dataStart, cols.followUpDate + 1, Math.max(1000 - dataStart + 1, 1), 1)
+      : null;
+    var ownRanges = [wholeRowRange, natureColRange, followUpColRange].filter(Boolean);
+    var ownRangeA1s = ownRanges.map(function (r) { return r.getA1Notation(); });
+
     var rules = sheet.getConditionalFormatRules();
     rules = rules.filter(function (r) {
       var ranges = r.getRanges();
-      return !ranges.some(function (rg) { return rg.getA1Notation() === range.getA1Notation(); });
+      return !ranges.some(function (rg) { return ownRangeA1s.indexOf(rg.getA1Notation()) > -1; });
     });
 
-    if (cols.followUpDate > -1) {
+    if (followUpColRange) {
       var fLetter = colToA1_(cols.followUpDate + 1);
       rules.push(SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=AND($' + fLetter + dataStart + '<>"", $' + fLetter + dataStart + '<TODAY())')
         .setBold(true)
         .setFontColor("#B71C1C")
-        .setRanges([range])
+        .setRanges([followUpColRange])
         .build());
     }
 
-    if (cols.nature > -1) {
+    if (natureColRange) {
       var nLetter = colToA1_(cols.nature + 1);
       rules.push(SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=LOWER($' + nLetter + dataStart + ')="hot"')
         .setBackground("#FFCDD2")
-        .setRanges([range])
+        .setRanges([natureColRange])
         .build());
       rules.push(SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=OR(LOWER($' + nLetter + dataStart + ')="warm", LOWER($' + nLetter + dataStart + ')="f2")')
         .setBackground("#FFE0B2")
-        .setRanges([range])
+        .setRanges([natureColRange])
         .build());
       rules.push(SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=OR(LOWER($' + nLetter + dataStart + ')="cold", LOWER($' + nLetter + dataStart + ')="f3")')
         .setBackground("#BBDEFB")
-        .setRanges([range])
+        .setRanges([natureColRange])
         .build());
     }
 
