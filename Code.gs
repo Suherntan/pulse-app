@@ -1000,6 +1000,13 @@ function updateClientRecord(record) {
 
   var newStatus = record.newStatus ? String(record.newStatus).toUpperCase().trim() : sheetName;
   if (newStatus && newStatus !== sheetName) {
+    // moveRowToStatus_()'s whole-row copy (used for every move except
+    // -> SR) just copies whatever is currently in the Status cell --
+    // when a person types the new status into that cell by hand, it's
+    // already correct by the time the copy runs, but a web-app-driven
+    // move never touched that cell, so the copied row kept showing the
+    // OLD stage. Write it first so the copy carries the right value.
+    if (cols.status > -1) sheet.getRange(row, cols.status + 1).setValue(newStatus);
     var moveResult = moveRowToStatus_(sheet, cols, row, newStatus);
     if (!moveResult) {
       return { success: false, error: "Could not move to " + newStatus + " -- check that tab exists." };
