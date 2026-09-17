@@ -642,8 +642,6 @@ function doGet(e) {
         return jsonResponse(getFundPipelineData());
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
-      case 'debugCalendarRaw':
-        return jsonResponse(debugCalendarRaw());
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -4256,39 +4254,6 @@ function getPipelineClientNames_() {
 // Upcoming CLIENT appointments for the app's Today tab -- next 7 days,
 // the same window getReminders() uses for birthdays/payments.
 // Non-F2F/OL events (personal appointments) are skipped entirely.
-// TEMPORARY diagnostic -- dumps every calendar event in a wide window
-// (3 days back to 14 days ahead) completely unfiltered, plus which
-// calendar/account Apps Script is actually reading, so a mismatch
-// between what the phone shows and what the script sees is visible
-// directly instead of guessed at. Safe to delete once the appointment
-// sync is confirmed working.
-function debugCalendarRaw() {
-  var cal = getAppointmentCalendar_();
-  var now = new Date();
-  var start = new Date(now); start.setDate(now.getDate() - 3);
-  var end = new Date(now); end.setDate(now.getDate() + 14);
-  var events = cal.getEvents(start, end);
-
-  return {
-    runningAsAccount: Session.getEffectiveUser().getEmail(),
-    calendarName: cal.getName(),
-    calendarId: cal.getId(),
-    windowStart: start.toISOString(),
-    windowEnd: end.toISOString(),
-    eventCount: events.length,
-    events: events.map(function (ev) {
-      var parsed = parseAppointmentTitle_(ev.getTitle());
-      return {
-        title: ev.getTitle(),
-        start: ev.getStartTime().toISOString(),
-        end: ev.getEndTime().toISOString(),
-        matchesF2fOlPrefix: !!parsed,
-        description: ev.getDescription()
-      };
-    })
-  };
-}
-
 function getUpcomingAppointments() {
   var cal = getAppointmentCalendar_();
   var now = new Date();
