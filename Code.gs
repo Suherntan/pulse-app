@@ -218,10 +218,18 @@ function stampDateAndWeekDay_(sheet, cols, rowNum, dateVal) {
  * hand in the Sheet. Factored out of onEdit() so both a live cell edit
  * AND updateClientRecord() (an edit made through the web app) share one
  * implementation instead of two copies that could quietly drift apart.
+ *
+ * Every stage EXCEPT SR is a true move: the row is copied to the
+ * target tab and removed from the source tab. Switching to SR is NOT a
+ * move -- it just adds a new row on the SR tab (Name/Contact only) and
+ * leaves the source row exactly where it was, with its Status cell put
+ * back to whatever it read before this edit (previousStatus), so the
+ * client stays visible and trackable on its original tab.
+ *
  * Returns { targetSheetName, targetRow } on success, or null if
  * statusValue doesn't name a real tab or is the row's current tab.
  */
-function moveRowToStatus_(sourceSheet, cols, row, statusValue) {
+function moveRowToStatus_(sourceSheet, cols, row, statusValue, previousStatus) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var targetSheet = ss.getSheetByName(statusValue);
   if (!targetSheet || sourceSheet.getName() === targetSheet.getName()) return null;
@@ -264,7 +272,15 @@ function moveRowToStatus_(sourceSheet, cols, row, statusValue) {
     preserveOriginalDate_(targetSheet, targetCols, nextRow, sourceOriginalDate);
     stampDateAndWeekDay_(targetSheet, targetCols, nextRow, moveDate);
     logActivity_("SR", nameValue, contactValue, moveDate);
-    sourceSheet.deleteRow(row);
+
+    // Not a move -- leave the source row in place. Put its Status cell
+    // back to what it read before this edit (falling back to the
+    // source tab's own name, since rows normally carry their tab name
+    // as their status) instead of leaving it stuck on "SR".
+    if (cols.status > -1) {
+      var restoredStatus = previousStatus || sourceSheet.getName();
+      sourceSheet.getRange(row, cols.status + 1).setValue(restoredStatus);
+    }
     return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
   }
 
@@ -393,7 +409,7 @@ function onEdit(e) {
   if (column === cols.status + 1) {
     var rawStatus = value;
     if (!rawStatus) return;
-    moveRowToStatus_(sheet, cols, row, String(rawStatus).toUpperCase().trim());
+    moveRowToStatus_(sheet, cols, row, String(rawStatus).toUpperCase().trim(), e.oldValue);
     return;
   }
 
@@ -1021,8 +1037,9 @@ function updateClientRecord(record) {
     // already correct by the time the copy runs, but a web-app-driven
     // move never touched that cell, so the copied row kept showing the
     // OLD stage. Write it first so the copy carries the right value.
+    var previousStatus = cols.status > -1 ? sheet.getRange(row, cols.status + 1).getValue() : sheetName;
     if (cols.status > -1) sheet.getRange(row, cols.status + 1).setValue(newStatus);
-    var moveResult = moveRowToStatus_(sheet, cols, row, newStatus);
+    var moveResult = moveRowToStatus_(sheet, cols, row, newStatus, previousStatus);
     if (!moveResult) {
       return { success: false, error: "Could not move to " + newStatus + " -- check that tab exists." };
     }
