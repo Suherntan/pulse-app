@@ -218,10 +218,18 @@ function stampDateAndWeekDay_(sheet, cols, rowNum, dateVal) {
  * hand in the Sheet. Factored out of onEdit() so both a live cell edit
  * AND updateClientRecord() (an edit made through the web app) share one
  * implementation instead of two copies that could quietly drift apart.
+ *
+ * Every stage EXCEPT SR is a true move: the row is copied to the
+ * target tab and removed from the source tab. Switching to SR is NOT a
+ * move -- it just adds a new row on the SR tab (Name/Contact only) and
+ * leaves the source row exactly where it was, with its Status cell put
+ * back to whatever it read before this edit (previousStatus), so the
+ * client stays visible and trackable on its original tab.
+ *
  * Returns { targetSheetName, targetRow } on success, or null if
  * statusValue doesn't name a real tab or is the row's current tab.
  */
-function moveRowToStatus_(sourceSheet, cols, row, statusValue) {
+function moveRowToStatus_(sourceSheet, cols, row, statusValue, previousStatus) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var targetSheet = ss.getSheetByName(statusValue);
   if (!targetSheet || sourceSheet.getName() === targetSheet.getName()) return null;
@@ -264,7 +272,15 @@ function moveRowToStatus_(sourceSheet, cols, row, statusValue) {
     preserveOriginalDate_(targetSheet, targetCols, nextRow, sourceOriginalDate);
     stampDateAndWeekDay_(targetSheet, targetCols, nextRow, moveDate);
     logActivity_("SR", nameValue, contactValue, moveDate);
-    sourceSheet.deleteRow(row);
+
+    // Not a move -- leave the source row in place. Put its Status cell
+    // back to what it read before this edit (falling back to the
+    // source tab's own name, since rows normally carry their tab name
+    // as their status) instead of leaving it stuck on "SR".
+    if (cols.status > -1) {
+      var restoredStatus = previousStatus || sourceSheet.getName();
+      sourceSheet.getRange(row, cols.status + 1).setValue(restoredStatus);
+    }
     return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
   }
 
@@ -393,7 +409,7 @@ function onEdit(e) {
   if (column === cols.status + 1) {
     var rawStatus = value;
     if (!rawStatus) return;
-    moveRowToStatus_(sheet, cols, row, String(rawStatus).toUpperCase().trim());
+    moveRowToStatus_(sheet, cols, row, String(rawStatus).toUpperCase().trim(), e.oldValue);
     return;
   }
 
@@ -1021,8 +1037,9 @@ function updateClientRecord(record) {
     // already correct by the time the copy runs, but a web-app-driven
     // move never touched that cell, so the copied row kept showing the
     // OLD stage. Write it first so the copy carries the right value.
+    var previousStatus = cols.status > -1 ? sheet.getRange(row, cols.status + 1).getValue() : sheetName;
     if (cols.status > -1) sheet.getRange(row, cols.status + 1).setValue(newStatus);
-    var moveResult = moveRowToStatus_(sheet, cols, row, newStatus);
+    var moveResult = moveRowToStatus_(sheet, cols, row, newStatus, previousStatus);
     if (!moveResult) {
       return { success: false, error: "Could not move to " + newStatus + " -- check that tab exists." };
     }
@@ -3520,6 +3537,13 @@ function importPaymentModeAndAddress() {
   var totalMatched = 0;
   var perTabReport = [];
 
+  // Rows that don't have a Policy Number yet (e.g. a prospect still in
+  // APPROACH) can't be found by the Policy Number matching below at all --
+  // without this fallback index, every import run would treat them as
+  // brand-new and add another duplicate row for the same client. Built
+  // from every tracker row regardless of whether it has a policy number.
+  var nameContactIndex = {};
+
   TRACKING_SHEETS.forEach(function (tabName) {
     var sheet = ss.getSheetByName(tabName);
     if (!sheet) return;
@@ -3543,6 +3567,15 @@ function importPaymentModeAndAddress() {
     var dueDatesFilled = 0;
 
     data.forEach(function (row, idx) {
+      var rowName = cols.name > -1 ? String(row[cols.name]).trim() : '';
+      if (rowName) {
+        var rowContact = cols.contact > -1 ? String(row[cols.contact]).trim() : '';
+        var ncKey = rowName.toUpperCase() + '|' + rowContact;
+        if (!nameContactIndex[ncKey]) {
+          nameContactIndex[ncKey] = { tabName: tabName, absoluteRow: cols._dataStartRow + idx, cols: cols };
+        }
+      }
+
       var cellRaw = cols.policyNumber > -1 ? row[cols.policyNumber] : '';
       if (!cellRaw) return;
 
@@ -3654,6 +3687,58 @@ function importPaymentModeAndAddress() {
     if (!g.birthday && e.birthday) g.birthday = e.birthday;
   });
 
+  // Before adding brand-new rows, try each still-unmatched group against
+  // an EXISTING tracker row by Name + Contact -- this is what catches a
+  // client (like a prospect with no Policy Number yet) who's already
+  // tracked but was invisible to the Policy Number matching above.
+  // Without it, they'd get a fresh duplicate row added every single time
+  // the import is run.
+  var filledExistingCount = 0;
+  var stillUnmatchedOrder = [];
+  unmatchedGroupOrder.forEach(function (key) {
+    var g = unmatchedGroups[key];
+    var existing = nameContactIndex[key];
+    if (!existing) {
+      stillUnmatchedOrder.push(key);
+      return;
+    }
+
+    var eSheet = ss.getSheetByName(existing.tabName);
+    var eCols = existing.cols;
+    var eRow = existing.absoluteRow;
+
+    if (eCols.policyNumber > -1 && g.policyNumbers.length) {
+      var existingPolicyRaw = String(eSheet.getRange(eRow, eCols.policyNumber + 1).getValue()).trim();
+      var combinedPolicies = existingPolicyRaw
+        ? existingPolicyRaw.split('/').map(function (p) { return p.trim(); }).filter(function (p) { return p; })
+        : [];
+      g.policyNumbers.forEach(function (p) { if (combinedPolicies.indexOf(p) === -1) combinedPolicies.push(p); });
+      eSheet.getRange(eRow, eCols.policyNumber + 1).setValue(combinedPolicies.join('/'));
+    }
+    if (eCols.paymentMode > -1 && g.paymentModes.length) {
+      eSheet.getRange(eRow, eCols.paymentMode + 1).setValue(g.paymentModes.join('/'));
+    }
+    if (eCols.mailingAddress > -1 && g.mailingAddress) {
+      eSheet.getRange(eRow, eCols.mailingAddress + 1).setValue(g.mailingAddress);
+    }
+    if (eCols.paymentDue > -1 && g.dueDate) {
+      var existingDue = (g.dueDate instanceof Date) ? g.dueDate : new Date(g.dueDate);
+      if (!isNaN(existingDue.getTime())) {
+        eSheet.getRange(eRow, eCols.paymentDue + 1).setValue(existingDue).setNumberFormat('yyyy-mm-dd');
+      }
+    }
+    if (eCols.birthday > -1 && g.birthday) {
+      var bdCell = eSheet.getRange(eRow, eCols.birthday + 1);
+      if (!bdCell.getValue()) {
+        var existingBd = (g.birthday instanceof Date) ? g.birthday : new Date(g.birthday);
+        if (!isNaN(existingBd.getTime())) bdCell.setValue(existingBd).setNumberFormat('yyyy-mm-dd');
+      }
+    }
+
+    filledExistingCount++;
+  });
+  unmatchedGroupOrder = stillUnmatchedOrder;
+
   var addedCount = addUnmatchedClientsToApproach_(ss, unmatchedGroupOrder, unmatchedGroups, modeCol, addressCol);
 
   var ambiguousCount = Object.keys(normalizedMap).filter(function (k) { return normalizedMap[k] === null; }).length;
@@ -3665,6 +3750,10 @@ function importPaymentModeAndAddress() {
   var addedNote = addedCount > 0
     ? "\n\nAdded " + addedCount + " new client(s)/policy group(s) to APPROACH that weren't in your tracker at all yet."
     : "";
+  var filledExistingNote = filledExistingCount > 0
+    ? "\n\nMatched " + filledExistingCount + " client(s) to an existing row by Name + Contact (no Policy Number was " +
+      "on file for them yet) and updated that row instead of adding a duplicate."
+    : "";
 
   // Stamp when this ran, so the monthly reminder email can say how long
   // it's been since the last refresh.
@@ -3674,7 +3763,7 @@ function importPaymentModeAndAddress() {
     "Import complete.\n\n" +
     perTabReport.join("\n") + "\n\n" +
     "Total: " + totalMatched + " row(s) updated, out of " + Object.keys(importMap).length + " policy number(s) in the import sheet." +
-    ambiguousNote + addedNote
+    ambiguousNote + filledExistingNote + addedNote
   );
 }
 
