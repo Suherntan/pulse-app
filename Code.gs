@@ -3537,6 +3537,13 @@ function importPaymentModeAndAddress() {
   var totalMatched = 0;
   var perTabReport = [];
 
+  // Rows that don't have a Policy Number yet (e.g. a prospect still in
+  // APPROACH) can't be found by the Policy Number matching below at all --
+  // without this fallback index, every import run would treat them as
+  // brand-new and add another duplicate row for the same client. Built
+  // from every tracker row regardless of whether it has a policy number.
+  var nameContactIndex = {};
+
   TRACKING_SHEETS.forEach(function (tabName) {
     var sheet = ss.getSheetByName(tabName);
     if (!sheet) return;
@@ -3560,6 +3567,15 @@ function importPaymentModeAndAddress() {
     var dueDatesFilled = 0;
 
     data.forEach(function (row, idx) {
+      var rowName = cols.name > -1 ? String(row[cols.name]).trim() : '';
+      if (rowName) {
+        var rowContact = cols.contact > -1 ? String(row[cols.contact]).trim() : '';
+        var ncKey = rowName.toUpperCase() + '|' + rowContact;
+        if (!nameContactIndex[ncKey]) {
+          nameContactIndex[ncKey] = { tabName: tabName, absoluteRow: cols._dataStartRow + idx, cols: cols };
+        }
+      }
+
       var cellRaw = cols.policyNumber > -1 ? row[cols.policyNumber] : '';
       if (!cellRaw) return;
 
@@ -3671,6 +3687,58 @@ function importPaymentModeAndAddress() {
     if (!g.birthday && e.birthday) g.birthday = e.birthday;
   });
 
+  // Before adding brand-new rows, try each still-unmatched group against
+  // an EXISTING tracker row by Name + Contact -- this is what catches a
+  // client (like a prospect with no Policy Number yet) who's already
+  // tracked but was invisible to the Policy Number matching above.
+  // Without it, they'd get a fresh duplicate row added every single time
+  // the import is run.
+  var filledExistingCount = 0;
+  var stillUnmatchedOrder = [];
+  unmatchedGroupOrder.forEach(function (key) {
+    var g = unmatchedGroups[key];
+    var existing = nameContactIndex[key];
+    if (!existing) {
+      stillUnmatchedOrder.push(key);
+      return;
+    }
+
+    var eSheet = ss.getSheetByName(existing.tabName);
+    var eCols = existing.cols;
+    var eRow = existing.absoluteRow;
+
+    if (eCols.policyNumber > -1 && g.policyNumbers.length) {
+      var existingPolicyRaw = String(eSheet.getRange(eRow, eCols.policyNumber + 1).getValue()).trim();
+      var combinedPolicies = existingPolicyRaw
+        ? existingPolicyRaw.split('/').map(function (p) { return p.trim(); }).filter(function (p) { return p; })
+        : [];
+      g.policyNumbers.forEach(function (p) { if (combinedPolicies.indexOf(p) === -1) combinedPolicies.push(p); });
+      eSheet.getRange(eRow, eCols.policyNumber + 1).setValue(combinedPolicies.join('/'));
+    }
+    if (eCols.paymentMode > -1 && g.paymentModes.length) {
+      eSheet.getRange(eRow, eCols.paymentMode + 1).setValue(g.paymentModes.join('/'));
+    }
+    if (eCols.mailingAddress > -1 && g.mailingAddress) {
+      eSheet.getRange(eRow, eCols.mailingAddress + 1).setValue(g.mailingAddress);
+    }
+    if (eCols.paymentDue > -1 && g.dueDate) {
+      var existingDue = (g.dueDate instanceof Date) ? g.dueDate : new Date(g.dueDate);
+      if (!isNaN(existingDue.getTime())) {
+        eSheet.getRange(eRow, eCols.paymentDue + 1).setValue(existingDue).setNumberFormat('yyyy-mm-dd');
+      }
+    }
+    if (eCols.birthday > -1 && g.birthday) {
+      var bdCell = eSheet.getRange(eRow, eCols.birthday + 1);
+      if (!bdCell.getValue()) {
+        var existingBd = (g.birthday instanceof Date) ? g.birthday : new Date(g.birthday);
+        if (!isNaN(existingBd.getTime())) bdCell.setValue(existingBd).setNumberFormat('yyyy-mm-dd');
+      }
+    }
+
+    filledExistingCount++;
+  });
+  unmatchedGroupOrder = stillUnmatchedOrder;
+
   var addedCount = addUnmatchedClientsToApproach_(ss, unmatchedGroupOrder, unmatchedGroups, modeCol, addressCol);
 
   var ambiguousCount = Object.keys(normalizedMap).filter(function (k) { return normalizedMap[k] === null; }).length;
@@ -3682,6 +3750,10 @@ function importPaymentModeAndAddress() {
   var addedNote = addedCount > 0
     ? "\n\nAdded " + addedCount + " new client(s)/policy group(s) to APPROACH that weren't in your tracker at all yet."
     : "";
+  var filledExistingNote = filledExistingCount > 0
+    ? "\n\nMatched " + filledExistingCount + " client(s) to an existing row by Name + Contact (no Policy Number was " +
+      "on file for them yet) and updated that row instead of adding a duplicate."
+    : "";
 
   // Stamp when this ran, so the monthly reminder email can say how long
   // it's been since the last refresh.
@@ -3691,7 +3763,7 @@ function importPaymentModeAndAddress() {
     "Import complete.\n\n" +
     perTabReport.join("\n") + "\n\n" +
     "Total: " + totalMatched + " row(s) updated, out of " + Object.keys(importMap).length + " policy number(s) in the import sheet." +
-    ambiguousNote + addedNote
+    ambiguousNote + filledExistingNote + addedNote
   );
 }
 
