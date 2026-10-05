@@ -1,7 +1,7 @@
 # PPT → Offer Doc → PULSE Automation (Plan)
 
 - **Created:** 5 Oct 2026
-- **Status:** Phase 1 (Connection) – waiting for answers
+- **Status:** Phase 1 (Connection) – decisions made, setting up Drive
 - **Budget goal:** $0 (free tools only)
 
 ## What we want
@@ -68,12 +68,19 @@ Sum Assured: 500,000
 5. Add new columns to the PULSE tab: **Offer Doc Link**, **Offer Date**, **Offer Status**.
 6. Claude adds the Apps Script code to `backend.gs` (new action `generateOffer`) and a test run.
 
+## Decisions (5 Oct 2026)
+
+- ✅ PPT will be made in **Google Slides** (we design the template together). No .pptx conversion needed → step 3 of Phase 1 can be skipped.
+- ✅ Update **both PRESENTATION and CLOSING** tabs.
+  - PRESENTATION: when the Offer Doc is made → Offer Doc Link, Offer Date, Offer Status = "Offer Sent".
+  - CLOSING: same columns; filled when the client closes (status changes to Closed). Script finds columns **by header name**, same as the existing "Check Column Mapping" in `Code.gs`, so moving columns won't break it.
+
 ## Questions to answer before details
 
-1. Is the PPT made in **PowerPoint (.pptx)** or **Google Slides**?
+1. ~~PowerPoint or Google Slides?~~ → Google Slides
 2. Is the Offer Doc **Word** or **Google Doc**? Can you share a sample (hide client info)?
 3. Which fields go from PPT → Offer Doc?
-4. Which PULSE tab gets updated — PRESENTATION, CLOSING, or both?
+4. ~~Which tab?~~ → both
 5. Start automatically (every 15 min) or by a **button** in PULSE?
 6. What is the 2nd Obsidian vault (BGL at `C:\BGL`?) so this note is copied there too.
 
