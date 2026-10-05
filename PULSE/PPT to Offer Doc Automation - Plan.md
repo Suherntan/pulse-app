@@ -1,7 +1,7 @@
 # PPT → Offer Doc → PULSE Automation (Plan)
 
 - **Created:** 5 Oct 2026
-- **Status:** Phase 1 (Connection) – decisions made, setting up Drive
+- **Status:** Phase 1 (Connection) – decisions made, next: Slides + Offer Doc templates
 - **Budget goal:** $0 (free tools only)
 
 ## What we want
@@ -75,13 +75,47 @@ Sum Assured: 500,000
   - PRESENTATION: when the Offer Doc is made → Offer Doc Link, Offer Date, Offer Status = "Offer Sent".
   - CLOSING: same columns; filled when the client closes (status changes to Closed). Script finds columns **by header name**, same as the existing "Check Column Mapping" in `Code.gs`, so moving columns won't break it.
 
+## Decisions (5 Oct 2026, part 2)
+
+### How it starts – "✅ Presented" button
+- Each client in the PULSE app (PRESENTATION list) gets one button: **✅ Presented – Make Offer**.
+- Press it **after** you finish presenting. One press does everything:
+  1. Reads the Data slide from that client's Google Slides.
+  2. Makes the Offer Doc + PDF in `3-Output`.
+  3. Saves one row in the **OFFERS** database tab.
+  4. Updates PRESENTATION (Offer Status = "Offer Sent") – and CLOSING later when the client closes.
+- A safety check: if the same client already has an offer for the same Slides file, it asks "Make again?" so you don't get duplicates.
+
+### Fields (Data slide = last slide of every deck)
+```
+Client Name:
+DOB:            (dd/mm/yyyy)
+Phone:
+Email:
+Plan:
+Premium:
+Sum Assured:
+```
+- **Age is worked out from DOB automatically** (less typing, no mistakes).
+- If a field is empty, the button stops and tells you which one is missing.
+
+### Database = new "OFFERS" tab in the PULSE Google Sheet (free)
+- The PULSE Sheet already lives in Google Drive, so this *is* a Drive database – no new tool, $0.
+- Columns: Offer ID · Date Presented · Client Name · DOB · Age · Phone · Email · Plan · Premium · Sum Assured · Slides Link · Offer Doc Link · PDF Link · Status (Offer Sent / Closed / Lost)
+- PULSE app gets a new **Offers** screen that pulls from this tab (new `fetchOffers` action), with tap-to-open links to the Slides / Doc / PDF.
+- Other options looked at: Airtable free (1,000 rows limit, another account), Firebase (more setup). Sheet tab wins: free, already connected.
+
+### Privacy note (do in Phase 4)
+- Phone, email and DOB are personal data. Keep the `PULSE/Proposals` Drive folder **private** (not "anyone with link").
+- The PULSE app currently has **no login** – anyone with the link could see data. Add a simple PIN before going live.
+
 ## Questions to answer before details
 
 1. ~~PowerPoint or Google Slides?~~ → Google Slides
 2. Is the Offer Doc **Word** or **Google Doc**? Can you share a sample (hide client info)?
-3. Which fields go from PPT → Offer Doc?
+3. ~~Fields?~~ → name, DOB (age auto), phone, email, plan, premium, sum assured
 4. ~~Which tab?~~ → both
-5. Start automatically (every 15 min) or by a **button** in PULSE?
+5. ~~Auto or button?~~ → button, pressed after presenting
 6. What is the 2nd Obsidian vault (BGL at `C:\BGL`?) so this note is copied there too.
 
 ## Next phases (later)
