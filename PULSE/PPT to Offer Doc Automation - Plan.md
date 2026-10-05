@@ -109,6 +109,25 @@ Sum Assured:
 - Phone, email and DOB are personal data. Keep the `PULSE/Proposals` Drive folder **private** (not "anyone with link").
 - The PULSE app currently has **no login** – anyone with the link could see data. Add a simple PIN before going live.
 
+## Sample deck review – CLIENT_ANT_PRESENTATION_DECK_v1 (5 Oct 2026)
+
+- 3 slides, ~26 MB (mostly pictures). Fine for Google Slides (limit 100 MB).
+  1. Cover – "Helping professionals & business owners build lasting wealth & a legacy through A-N-T System"
+  2. Lifestyle / Earning / Plan A / Plan B / Financial Planning / Income
+  3. **L.I.F.E needs table** – Current Status + L.I.F.E (gap) = Financial Goals, for 6 areas:
+
+| Area (top→bottom) | Current | L.I.F.E (gap) | Goal |
+|---|---|---|---|
+| Investment | 500,000 | = | 4,500,000 |
+| Education | – | – | – |
+| Death | 5,000 | 95,000 | 100,000 |
+| Critical Illness | 100,000 | 900,000 | 1,000,000 |
+| Disability | 100,000 | 90,000 | 1,000,000 ⚠️ adds up to 190,000, not 1,000,000 – check |
+| Hospitalization | 750,000 | 250,000 | 1,000,000 |
+
+- **No client details in the deck yet** → we add slide 4 "Data slide" (set to **Skip slide** in Google Slides so the client never sees it when presenting).
+- Idea (optional): also save the 6 L.I.F.E gaps into the OFFERS tab, so PULSE shows each client's coverage gap.
+
 ## Questions to answer before details
 
 1. ~~PowerPoint or Google Slides?~~ → Google Slides
@@ -116,7 +135,7 @@ Sum Assured:
 3. ~~Fields?~~ → name, DOB (age auto), phone, email, plan, premium, sum assured
 4. ~~Which tab?~~ → both
 5. ~~Auto or button?~~ → button, pressed after presenting
-6. What is the 2nd Obsidian vault (BGL at `C:\BGL`?) so this note is copied there too.
+6. ~~2nd vault?~~ → PULSE vault **only**. Nothing about PULSE goes to BGL.
 
 ## Next phases (later)
 
