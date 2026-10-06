@@ -5,149 +5,121 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A-N-T Deck Preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#0B2545; --navy-deep:#010C21; --navy-mid:#001D4E; --teal:#0E5E63;
-  --gold:#B8860B; --gold-soft:#F3AF3D; --cream:#F9DAAE;
-  --text:#F5F3EE; --text-dim:rgba(245,243,238,.66); --line:rgba(245,243,238,.14);
-  --danger:#E5533D; --ok:#5DBB63;
-  --t1:#C0392B; --t2:#D35400; --t3:#E67E22; --t4:#B8860B; --t5:#2E86AB; --t6:#1B998B;
+  --navy:#0B2545; --navy-deep:#010C21; --navy-line:#1E3A66;
+  --gold-soft:#F3AF3D; --cream:#F9DAAE;
+  --white:#F7F5F0; --red:#E5533D; --ok:#5DBB63;
+  --head:'Oswald','Arial Narrow',sans-serif; --body:'Work Sans',system-ui,sans-serif;
+  --ease:cubic-bezier(.23,1,.32,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:#000;color:var(--text);font-family:'Work Sans',system-ui,sans-serif;overflow:hidden}
-.viewport{position:fixed;inset:0;display:grid;place-items:center}
-.stage{width:1280px;height:720px;position:relative;transform-origin:center center;overflow:hidden;border-radius:6px;
-  background:radial-gradient(120% 90% at 20% 0%,#123764 0%,var(--navy) 40%,var(--navy-deep) 100%)}
-.waves{position:absolute;left:0;right:0;bottom:0;height:200px;opacity:.55;pointer-events:none}
-.slide{position:absolute;inset:0;padding:56px 72px;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}
+html,body{height:100%;background:#000;color:var(--white);font-family:var(--body);overflow:hidden}
+.viewport{position:fixed;inset:0 0 48px 0}
+.stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;overflow:hidden;
+  background:radial-gradient(110% 90% at 25% 0%,#14396a 0%,var(--navy) 45%,var(--navy-deep) 100%)}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s}
 .slide.active{opacity:1;visibility:visible}
-.eyebrow{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:500;letter-spacing:.32em;font-size:14px;color:var(--gold-soft);text-transform:uppercase}
-h1{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;font-size:46px;letter-spacing:.02em;line-height:1.05;margin-top:8px}
-h1 span{color:var(--gold-soft)}
-.brand{position:absolute;top:28px;right:40px;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;letter-spacing:.3em;font-size:13px;color:var(--text-dim)}
-.brand b{color:var(--gold-soft)}
-.pageno{position:absolute;bottom:22px;right:40px;font-size:12px;color:var(--text-dim);letter-spacing:.1em}
+.abs{position:absolute}
+.logo{left:42px;top:24px;width:200px;height:200px;border-radius:22px;background:#fff;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:4}
+.logo img{width:100%;height:100%;object-fit:contain}
+.step{opacity:0;transform:translateY(28px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.step.on{opacity:1;transform:none}
+.bar{display:grid;place-items:center;font-family:var(--head);font-weight:700;letter-spacing:.08em;border-radius:10px;line-height:1;text-align:center}
 
-/* ---------- Slide 2 ---------- */
-.flow{display:grid;grid-template-columns:1fr 70px 1fr 70px 1fr;align-items:center;margin-top:56px}
-.card{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:26px 24px;min-height:230px;
-  backdrop-filter:blur(4px);opacity:0;transform:translateY(24px)}
-.card .ic{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:rgba(243,175,61,.14);margin-bottom:16px}
-.card h3{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;font-size:24px;letter-spacing:.06em}
-.card p{color:var(--text-dim);font-size:15px;line-height:1.5;margin-top:10px}
-.card.planb{border-color:rgba(243,175,61,.55);background:linear-gradient(160deg,rgba(243,175,61,.16),rgba(255,255,255,.03))}
-.arrow{display:grid;place-items:center;opacity:0}
-.stop{position:relative;margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
-  color:var(--danger);background:rgba(229,83,61,.12);border:1px solid rgba(229,83,61,.4);padding:6px 10px;border-radius:999px}
-.tagline{margin-top:44px;text-align:center;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:500;font-size:22px;letter-spacing:.06em;color:var(--text-dim);opacity:0}
-.tagline b{color:var(--gold-soft);font-weight:600}
-.slide.active .reveal{animation:rise .7s cubic-bezier(.23,1,.32,1) forwards}
-@keyframes rise{to{opacity:1;transform:none}}
+/* ---------- Slide 2 (original layout, new colours) ---------- */
+.pic img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))}
+.lifestyle{left:146px;top:503px;width:1628px;height:104px;font-size:84px;color:var(--navy-deep);
+  background:linear-gradient(90deg,#B98522,var(--gold-soft) 50%,#B98522);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.plan{width:448px;height:123px;font-size:76px;color:var(--white);background:rgba(255,255,255,.06);border:3px solid var(--gold-soft)}
+.fill{color:var(--navy-deep);background:var(--cream);font-size:64px}
+.income{left:741px;top:782px;width:473px;height:104px;font-size:80px;color:var(--navy-deep);background:var(--gold-soft)}
+.uparrow{left:933px;top:633px;width:103px;height:133px}
+.xmark{left:210px;top:607px;width:356px;height:335px;display:grid;place-items:center;font-family:var(--head);font-weight:700;
+  font-size:340px;line-height:1;color:var(--red);text-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transform:scale(1.8) rotate(-8deg);
+  transition:opacity .35s ease,transform .45s cubic-bezier(.34,1.56,.64,1)}
+.xmark.on{opacity:1;transform:none}
 
 /* ---------- Slide 3 ---------- */
-.s3{display:grid;grid-template-columns:420px 1fr;gap:36px;margin-top:26px}
-.pyr{display:flex;flex-direction:column;gap:5px;position:relative}
-.tier{height:66px;position:relative;opacity:0;transform:translateY(30px) scale(.96);transition:opacity .55s cubic-bezier(.23,1,.32,1),transform .55s cubic-bezier(.23,1,.32,1)}
-.tier.on{opacity:1;transform:none}
-.tier .shape{position:absolute;inset:0;display:grid;place-items:center;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;letter-spacing:.08em;font-size:15px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-.tier.on .shape{animation:glow 1.2s ease 1}
-@keyframes glow{0%{filter:brightness(1.6)}100%{filter:none}}
-.pyr-note{font-size:12px;letter-spacing:.12em;color:var(--text-dim);text-align:center;font-family:'Oswald','Arial Narrow',sans-serif}
-.pyr-note b{color:var(--t1)}
-table{width:100%;border-collapse:separate;border-spacing:0 5px;font-size:14px}
-thead th{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:500;letter-spacing:.14em;font-size:12px;color:var(--gold-soft);text-align:left;padding:0 10px 2px}
-thead th small{display:block;font-family:'Work Sans',system-ui,sans-serif;letter-spacing:0;font-size:11px;color:var(--text-dim);font-weight:400}
-tbody tr{height:66px;opacity:0;transform:translateX(24px);transition:opacity .5s cubic-bezier(.23,1,.32,1) .08s,transform .5s cubic-bezier(.23,1,.32,1) .08s}
-tbody tr.on{opacity:1;transform:none}
-tbody td{background:rgba(255,255,255,.05);padding:6px 10px;vertical-align:middle}
-tbody td:first-child{border-radius:10px 0 0 10px;border-left:4px solid var(--c)}
-tbody td:last-child{border-radius:0 10px 10px 0}
-.area{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;letter-spacing:.06em;font-size:15px}
-.hint{display:block;font-size:11.5px;color:var(--text-dim);margin-top:3px;line-height:1.3}
-.hint em{font-style:normal;color:var(--cream)}
-input.money{width:118px;background:rgba(1,12,33,.55);border:1px solid var(--line);color:var(--text);border-radius:8px;
-  padding:9px 10px;font:600 15px 'Work Sans',system-ui,sans-serif;text-align:right;outline:none;transition:border-color .2s}
+.title3{left:289px;top:40px;width:575px;font-family:var(--head);font-weight:700;font-size:130px;letter-spacing:.12em;text-align:center;color:var(--gold-soft);
+  text-shadow:0 6px 24px rgba(0,0,0,.5);z-index:3}
+.tri{left:100px;top:80px;width:854px;height:854px}
+.tier{height:66px;z-index:2}
+.tier .band{position:absolute;inset:0;border-radius:6px;background:var(--c);transform:scaleX(0);transform-origin:left center;
+  box-shadow:0 8px 22px rgba(0,0,0,.35)}
+.tier .mark{position:absolute;left:0;top:-14px;height:94px;overflow:visible;pointer-events:none}
+.tier .mark path{fill:none;stroke:var(--white);stroke-width:7;stroke-linecap:round;opacity:.9}
+.tier .word{position:absolute;left:24px;top:0;height:66px;display:flex;align-items:center;white-space:nowrap;
+  font-family:var(--head);font-weight:700;font-size:52px;letter-spacing:.06em;color:#fff;text-shadow:0 3px 10px rgba(0,0,0,.55);
+  clip-path:inset(0 100% 0 0);transform:translateX(-30px)}
+.tier.on .band{animation:band .45s var(--ease) forwards}
+.tier.on .mark path{animation:draw .7s var(--ease) .35s forwards}
+.tier.on .word{animation:drag .75s var(--ease) .4s forwards}
+@keyframes band{to{transform:scaleX(1)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes drag{to{clip-path:inset(0 -80% 0 0);transform:none}}
+.tier.done .band{animation:none;transform:scaleX(1)}
+.tier.done .mark path{animation:none;stroke-dashoffset:0}
+.tier.done .word{animation:none;clip-path:inset(0 -80% 0 0);transform:none}
+
+.th{top:150px;font-family:var(--head);font-weight:600;font-size:32px;line-height:1.1;letter-spacing:.1em;color:var(--gold-soft);text-align:center;width:240px}
+.cell{width:240px;height:66px;display:flex;align-items:center;justify-content:center}
+.row{opacity:0;transform:translateX(30px);transition:opacity .5s var(--ease) .5s,transform .5s var(--ease) .5s}
+.row.on{opacity:1;transform:none}
+input.money{width:100%;height:58px;background:rgba(1,12,33,.6);border:2px solid var(--navy-line);color:var(--white);border-radius:10px;
+  padding:0 16px;font:600 30px var(--body);text-align:right;outline:none;transition:border-color .2s}
 input.money:focus{border-color:var(--gold-soft)}
-input.money::placeholder{color:rgba(245,243,238,.3);font-weight:400}
-.gap{font-weight:700;font-size:16px;min-width:118px;display:inline-block;text-align:right;transition:color .3s}
-.gap.short{color:var(--danger)} .gap.ok{color:var(--ok)} .gap.empty{color:rgba(245,243,238,.3);font-weight:400}
-.gap.pop{animation:pop .45s cubic-bezier(.23,1,.32,1)}
-@keyframes pop{0%{transform:scale(1.25)}100%{transform:none}}
-tfoot td{padding:10px 10px 0;font-family:'Oswald','Arial Narrow',sans-serif;letter-spacing:.08em;font-size:14px;color:var(--text-dim)}
-tfoot .gap{font-size:18px}
-.legend{margin-top:10px;font-size:11.5px;color:var(--text-dim)}
+.gap{font:700 34px var(--body);transition:color .3s}
+.gap.short{color:var(--red)} .gap.ok{color:var(--ok)}
+.gap.pop{animation:pop .45s var(--ease)}
+@keyframes pop{0%{transform:scale(1.3)}100%{transform:none}}
 
 /* ---------- controls ---------- */
-.nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
-.nav button{font:600 13px 'Work Sans',system-ui,sans-serif;color:var(--text);background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
+.nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.nav button{font:600 13px var(--body);color:var(--white);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:8px 16px;cursor:pointer}
 .nav button:hover{background:rgba(255,255,255,.18)}
-.note{position:fixed;top:10px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--text-dim);z-index:5;text-align:center;padding:0 16px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card,.arrow,.tagline,.tier,tbody tr{opacity:1!important;transform:none!important}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="note">Preview only · → / tap to go next · slide 3 builds the pyramid step by step</div>
 <div class="viewport"><div class="stage" id="stage">
-  <svg class="waves" viewBox="0 0 1280 200" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 120 C 220 60 420 170 640 110 S 1060 50 1280 120 V200 H0Z" fill="#0E5E63" opacity=".55"/>
-    <path d="M0 150 C 260 100 480 190 720 140 S 1100 110 1280 160 V200 H0Z" fill="#0B4F55" opacity=".7"/>
-  </svg>
-  <div class="brand">A · N · T <b>SYSTEM</b></div>
 
-  <!-- SLIDE 2 -->
+  <!-- SLIDE 2 – same layout & wording as the original, A-N-T colours -->
   <section class="slide" data-slide="2">
-    <div class="eyebrow">Knowledge sharing</div>
-    <h1>Your lifestyle runs on <span>income</span>.<br>What is your Plan B?</h1>
-    <div class="flow">
-      <div class="card reveal" style="animation-delay:.15s">
-        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3AF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></div>
-        <h3>LIFESTYLE</h3>
-        <p>Home, family, car, holidays, the future you want. All of it needs a steady income.</p>
-      </div>
-      <div class="arrow reveal" style="animation-delay:.45s"><svg width="44" height="20" viewBox="0 0 44 20"><path d="M42 10H4m0 0 8-7M4 10l8 7" stroke="#F3AF3D" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
-      <div class="card reveal" style="animation-delay:.6s">
-        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3AF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-        <h3>PLAN A · EARNING</h3>
-        <p>You work, you earn. Income only comes in while you are healthy and able to work.</p>
-        <span class="stop"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>Stops if: sickness · accident · death · retirement</span>
-      </div>
-      <div class="arrow reveal" style="animation-delay:.95s"><svg width="44" height="20" viewBox="0 0 44 20"><path d="M42 10H4m0 0 8-7M4 10l8 7" stroke="#F3AF3D" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="4 4"/></svg></div>
-      <div class="card planb reveal" style="animation-delay:1.1s">
-        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3AF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
-        <h3>PLAN B · FINANCIAL PLANNING</h3>
-        <p>When Plan A stops, Plan B keeps the income flowing, so the lifestyle doesn't have to change.</p>
-      </div>
-    </div>
-    <div class="tagline reveal" style="animation-delay:1.5s">Plan A builds your lifestyle. <b>Plan B protects it.</b></div>
-    <div class="pageno">02</div>
+    <div class="abs logo"><img src="ant-assets/logo.png" alt="ANT Wealth System"></div>
+    <div class="abs pic step" data-step="1" style="left:157px;top:143px;width:409px;height:409px"><img src="ant-assets/food.png" alt=""></div>
+    <div class="abs pic step" data-step="2" style="left:635px;top:179px;width:325px;height:325px"><img src="ant-assets/clothes.png" alt=""></div>
+    <div class="abs pic step" data-step="3" style="left:1004px;top:126px;width:419px;height:419px"><img src="ant-assets/house.png" alt=""></div>
+    <div class="abs pic step" data-step="4" style="left:1410px;top:158px;width:379px;height:379px"><img src="ant-assets/education.png" alt=""></div>
+
+    <div class="abs bar lifestyle">LIFESTYLE</div>
+
+    <div class="abs bar plan step" data-step="6" style="left:146px;top:651px">PLAN A</div>
+    <div class="abs bar fill step" data-step="5" style="left:146px;top:789px;width:448px;height:98px">EARNING</div>
+    <div class="abs xmark" data-step="7">X</div>
+
+    <svg class="abs uparrow" viewBox="0 0 103 133" aria-hidden="true"><path d="M51.5 4 99 58H72v71H31V58H4z" fill="#F3AF3D"/></svg>
+    <div class="abs bar income">INCOME</div>
+
+    <div class="abs bar plan step" data-step="8" style="left:1375px;top:651px">PLAN B</div>
+    <div class="abs bar fill step" data-step="9" style="left:1375px;top:791px;width:448px;height:155px;font-size:58px;line-height:1.05">FINANCIAL<br>PLANNING</div>
   </section>
 
-  <!-- SLIDE 3 -->
+  <!-- SLIDE 3 – L.I.F.E -->
   <section class="slide" data-slide="3">
-    <div class="eyebrow">L.I.F.E · Needs analysis</div>
-    <h1>Build from the <span>base</span> up</h1>
-    <div class="s3">
-      <div>
-        <div class="pyr-note" style="margin-bottom:6px">★ TOP · RETIREMENT</div>
-        <div class="pyr" id="pyr"></div>
-        <div class="pyr-note" style="margin-top:8px"><b>▲ START HERE</b> · MOST URGENT</div>
-      </div>
-      <div>
-        <table>
-          <thead><tr>
-            <th>AREA</th>
-            <th>CURRENT<small>What you have now</small></th>
-            <th>GAP<small>Ideal − Current</small></th>
-            <th>IDEAL<small>We decide together</small></th>
-          </tr></thead>
-          <tbody id="rows"></tbody>
-          <tfoot><tr><td colspan="2">TOTAL GAP</td><td><span class="gap empty" id="total">—</span></td><td></td></tr></tfoot>
-        </table>
-        <div class="legend">Gap appears once Current and Ideal are filled. <span style="color:var(--danger)">Red</span> = still short · <span style="color:var(--ok)">Green</span> = covered.</div>
-      </div>
-    </div>
-    <div class="pageno">03</div>
+    <div class="abs logo"><img src="ant-assets/logo.png" alt="ANT Wealth System"></div>
+    <svg class="abs tri" viewBox="0 0 854 854" aria-hidden="true">
+      <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F2C55"/><stop offset="1" stop-color="#010C21"/></linearGradient></defs>
+      <polygon points="427,0 854,854 0,854" fill="url(#tg)" stroke="#F3AF3D" stroke-width="4" stroke-linejoin="round"/>
+    </svg>
+    <div class="abs title3">L.I.F.E</div>
+    <div id="tiers"></div>
+
+    <div class="abs th" style="left:1080px">CURRENT<br>STATUS</div>
+    <div class="abs th" style="left:1340px">L.I.F.E</div>
+    <div class="abs th" style="left:1600px">FINANCIAL<br>GOALS</div>
+    <div id="rows"></div>
   </section>
 </div></div>
 
@@ -158,109 +130,108 @@ tfoot .gap{font-size:18px}
 </div>
 
 <script>
-// Top → bottom. Return % for Education / Investment are placeholders to fill in later.
-const AREAS = [
-  {name:'INVESTMENT',       color:'var(--t6)', hint:'Retirement · long term · higher risk · return <em>~__%</em>'},
-  {name:'EDUCATION',        color:'var(--t5)', hint:'Children\'s fund · short term · least risk · return <em>~__%</em>'},
-  {name:'DEATH',            color:'var(--t4)', hint:'Income for the family if you are gone'},
-  {name:'CRITICAL ILLNESS', color:'var(--t3)', hint:'Lump sum to recover without touching savings'},
-  {name:'DISABILITY',       color:'var(--t2)', hint:'Replaces income if you can no longer work'},
-  {name:'HOSPITALIZATION',  color:'var(--t1)', hint:'Most urgent · hospital bills from day one'}
+// Bottom → top = reveal order (most urgent first). Banner width follows the triangle;
+// a word that is too long simply runs out past the right-hand side.
+const TRI = {apexX: 527, top: 80, h: 854};
+const TIERS = [
+  {name:'HOSPITALIZATION',  y:860, c:'#C0392B'},
+  {name:'DISABILITY',       y:742, c:'#D35400'},
+  {name:'CRITICAL ILLNESS', y:624, c:'#E67E22'},
+  {name:'DEATH',            y:506, c:'#C9962B'},
+  {name:'EDUCATION',        y:388, c:'#2E86AB'},
+  {name:'INVESTMENT',       y:270, c:'#1B998B'}
 ];
-const N = AREAS.length;
-const pyr = document.getElementById('pyr'), rows = document.getElementById('rows');
+const tiersEl = document.getElementById('tiers'), rowsEl = document.getElementById('rows');
 
-AREAS.forEach((a, i) => {
-  const t1 = 50 - 50 * i / N, t2 = 50 + 50 * i / N;
-  const b1 = 50 - 50 * (i + 1) / N, b2 = 50 + 50 * (i + 1) / N;
-  const tier = document.createElement('div');
-  tier.className = 'tier';
-  tier.innerHTML = `<div class="shape" style="background:${a.color};clip-path:polygon(${t1}% 0,${t2}% 0,${b2}% 100%,${b1}% 100%)">${i === 0 ? '★' : a.name}</div>`;
-  pyr.appendChild(tier);
+TIERS.forEach(t => {
+  const w = Math.round((t.y + 33 - TRI.top) * 854 / TRI.h) + 40;   // triangle width at the banner's middle
+  const x = TRI.apexX - w / 2;
+  const len = w + 200;                                            // brush runs past the banner's right edge
+  const d = document.createElement('div');
+  d.className = 'abs tier';
+  d.style.cssText = `left:${x}px;top:${t.y}px;width:${w}px;--c:${t.c}`;
+  d.innerHTML = `<div class="band"></div>
+    <svg class="mark" width="${len}" height="94" viewBox="0 0 ${len} 94" aria-hidden="true">
+      <path d="M10 84 C ${len*.25} 70, ${len*.55} 92, ${len-14} 72" stroke-dasharray="${len*1.1}" stroke-dashoffset="${len*1.1}"/></svg>
+    <div class="word">${t.name}</div>`;
+  tiersEl.appendChild(d);
 
-  const tr = document.createElement('tr');
-  tr.style.setProperty('--c', a.color);
-  tr.innerHTML = `<td><span class="area">${a.name}</span><span class="hint">${a.hint}</span></td>
-    <td><input class="money" inputmode="numeric" placeholder="0" data-k="cur"></td>
-    <td><span class="gap empty">—</span></td>
-    <td><input class="money" inputmode="numeric" placeholder="0" data-k="ideal"></td>`;
-  rows.appendChild(tr);
+  const r = document.createElement('div');
+  r.className = 'row';
+  r.innerHTML = `<div class="abs cell" style="left:1080px;top:${t.y}px"><input class="money" inputmode="numeric" aria-label="${t.name} current status"></div>
+    <div class="abs cell" style="left:1340px;top:${t.y}px"><span class="gap"></span></div>
+    <div class="abs cell" style="left:1600px;top:${t.y}px"><input class="money" inputmode="numeric" aria-label="${t.name} financial goal"></div>`;
+  rowsEl.appendChild(r);
 });
 
 const num = v => { const n = Number(String(v).replace(/[^0-9.-]/g, '')); return isFinite(n) ? n : 0; };
 const fmt = n => Math.round(n).toLocaleString('en-US');
 
+// L.I.F.E (gap) = Financial Goals − Current Status, shown once both are filled
 function recalc() {
-  let total = 0, any = false;
-  [...rows.children].forEach(tr => {
-    const [cur, ideal] = tr.querySelectorAll('input');
-    const g = tr.querySelector('.gap');
-    const prev = g.textContent;
-    if (cur.value.trim() === '' || ideal.value.trim() === '') {
-      g.className = 'gap empty'; g.textContent = '—';
-      return;
-    }
-    const gap = num(ideal.value) - num(cur.value);
-    any = true; total += Math.max(gap, 0);
+  [...rowsEl.children].forEach(r => {
+    const [cur, goal] = r.querySelectorAll('input');
+    const g = r.querySelector('.gap'), before = g.textContent;
+    if (!cur.value.trim() || !goal.value.trim()) { g.className = 'gap'; g.textContent = ''; return; }
+    const gap = num(goal.value) - num(cur.value);
     g.className = 'gap ' + (gap > 0 ? 'short' : 'ok');
-    g.textContent = gap > 0 ? fmt(gap) : '✓ Covered';
-    if (g.textContent !== prev) { void g.offsetWidth; g.classList.add('pop'); }
+    g.textContent = gap > 0 ? fmt(gap) : '✓';
+    if (g.textContent !== before) { void g.offsetWidth; g.classList.add('pop'); }
   });
-  const t = document.getElementById('total');
-  t.className = 'gap ' + (any ? (total > 0 ? 'short' : 'ok') : 'empty');
-  t.textContent = any ? (total > 0 ? fmt(total) : '✓ Fully covered') : '—';
 }
-rows.addEventListener('input', recalc);
-rows.addEventListener('focusout', e => {
-  if (e.target.matches('input.money') && e.target.value.trim() !== '') e.target.value = fmt(num(e.target.value));
+rowsEl.addEventListener('input', recalc);
+rowsEl.addEventListener('focusout', e => {
+  if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = fmt(num(e.target.value));
 });
 
-// ---- Slide + step navigation ----
+// ---- Click-by-click steps, same order as the original deck ----
 const slides = [...document.querySelectorAll('.slide')];
-const tiers = [...pyr.querySelectorAll('.tier')], trs = [...rows.children];
-let cur = 0, step = 0; // step = tiers shown on slide 3 (built bottom → top)
+let cur = 0, step = 0;
 
-function showStep(n) {
-  step = n;
-  for (let k = 0; k < N; k++) {
-    const idx = N - 1 - k, on = k < n;           // bottom tier first
-    tiers[idx].classList.toggle('on', on);
-    trs[idx].classList.toggle('on', on);
+function groups(s) {
+  if (s.dataset.slide === '3') {
+    const r = [...rowsEl.children];
+    return [...tiersEl.children].map((el, i) => [el, r[i]]);
   }
+  const els = [...s.querySelectorAll('[data-step]')];
+  const max = Math.max(...els.map(e => +e.dataset.step));
+  return Array.from({length: max}, (_, i) => els.filter(e => +e.dataset.step === i + 1));
 }
-function go(i) {
+const maxSteps = () => groups(slides[cur]).length;
+function showStep(n, instant) {
+  step = n;
+  groups(slides[cur]).forEach((g, i) => g.forEach(el => {
+    el.classList.toggle('on', i < n);
+    el.classList.toggle('done', !!instant && i < n);
+  }));
+}
+function go(i, toEnd) {
   cur = Math.max(0, Math.min(slides.length - 1, i));
   slides.forEach((s, k) => s.classList.toggle('active', k === cur));
-  if (slides[cur].dataset.slide === '3') showStep(0);
+  showStep(toEnd ? maxSteps() : 0, toEnd);
 }
-function next() {
-  if (slides[cur].dataset.slide === '3' && step < N) return showStep(step + 1);
-  go(cur + 1);
-}
-function prev() {
-  if (slides[cur].dataset.slide === '3' && step > 0) return showStep(step - 1);
-  go(cur - 1);
-}
+function next() { if (step < maxSteps()) showStep(step + 1); else if (cur < slides.length - 1) go(cur + 1); }
+function prev() { if (step > 0) showStep(step - 1, true); else if (cur > 0) go(cur - 1, true); }
+
 document.getElementById('next').onclick = next;
 document.getElementById('prev').onclick = prev;
-document.getElementById('all').onclick = () => { if (slides[cur].dataset.slide === '3') showStep(N); };
+document.getElementById('all').onclick = () => showStep(maxSteps(), true);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input')) return;
-  if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); next(); }
+  if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
   if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
 });
 let sx = null;
-document.addEventListener('touchstart', e => { if (!e.target.matches('input,button')) sx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchstart', e => { if (!e.target.closest('input,button')) sx = e.touches[0].clientX; }, {passive:true});
 document.addEventListener('touchend', e => {
   if (sx === null) return;
   const dx = e.changedTouches[0].clientX - sx; sx = null;
   if (Math.abs(dx) > 40) dx < 0 ? next() : prev();
 });
 
-// Fit the 16:9 stage to any screen
 function fit() {
-  const s = Math.min(innerWidth / 1280, (innerHeight - 70) / 720);
-  document.getElementById('stage').style.transform = `scale(${s})`;
+  const s = Math.min(innerWidth / 1920, (innerHeight - 48) / 1080);
+  document.getElementById('stage').style.transform = `translate(-50%,-50%) scale(${s})`;
 }
 addEventListener('resize', fit); fit();
 go(0);

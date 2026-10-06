@@ -229,7 +229,12 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
   - Animation: pyramid builds **one tier per click, from the bottom up**; matching table row slides in.
   - Table: **Current** (what client has) · **Gap = Ideal − Current (automatic)** · **Ideal** (decided together). Gap shows only when Current + Ideal are filled; red = short, green = covered; total gap at bottom.
   - Hints under each area. Education = short term, least risk, return ~__%; Investment = long term, higher risk, return ~__%. **% to be filled later.**
-- Preview file: `design-mockups/ant-deck-slides-2-3.html`
+- Preview file: `design-mockups/ant-deck-slides-2-3.html` (pictures in `design-mockups/ant-assets/`)
+
+### Update (6 Oct 2026, part 4) – back to original layout
+- Keep the **original slide layout, wording and click order**; only colours/design change (navy + gold, ANT logo, Oswald font). No small explanation text – the agent explains.
+- Slide 2 click order (matches the agent's script): food → clothes → house → education → EARNING → PLAN A → red X → PLAN B → FINANCIAL PLANNING. LIFESTYLE, INCOME and the arrow are there from the start. Typo "PLANING" fixed to "PLANNING".
+- Slide 3: title L.I.F.E; columns CURRENT STATUS · L.I.F.E (gap, automatic) · FINANCIAL GOALS. Each click: banner sweeps in (bottom first), a white brush mark drags the word out – long words run past the right side of the triangle. Return-% hints removed.
 
 ### ⚠️ Google Slides can't do live maths
 Google Slides tables have **no formulas**, so the automatic Gap needs one of:
