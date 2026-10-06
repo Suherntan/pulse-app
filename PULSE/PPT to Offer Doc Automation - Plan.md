@@ -229,13 +229,14 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
   - Animation: pyramid builds **one tier per click, from the bottom up**; matching table row slides in.
   - Table: **Current** (what client has) · **Gap = Ideal − Current (automatic)** · **Ideal** (decided together). Gap shows only when Current + Ideal are filled; red = short, green = covered; total gap at bottom.
   - Hints under each area. Education = short term, least risk, return ~__%; Investment = long term, higher risk, return ~__%. **% to be filled later.**
-- Preview file: `design-mockups/ant-deck-slides-2-3.html` (pictures in `design-mockups/ant-assets/`)
+- Preview file: `design-mockups/ant-deck-preview.html` (pictures in `design-mockups/ant-assets/`)
 
 ### Update (6 Oct 2026, part 4) – back to original layout
 - Keep the **original slide layout, wording and click order**; only colours/design change (navy + gold, ANT logo, Oswald font). No small explanation text – the agent explains.
 - Slide 2 click order (matches the agent's script): food → clothes → house → education → EARNING → PLAN A → red X → PLAN B → FINANCIAL PLANNING. LIFESTYLE, INCOME and the arrow are there from the start. Typo "PLANING" fixed to "PLANNING".
 - Slide 3: title L.I.F.E; columns CURRENT STATUS · L.I.F.E (gap, automatic) · FINANCIAL GOALS. Each click: banner sweeps in (bottom first), a white brush mark drags the word out – long words run past the right side of the triangle. Return-% hints removed.
 - Part 5: **solid colours** (no gradients/see-through), the 4 photos above LIFESTYLE replaced by a **gold icon diagram** (food · clothing · house · education, linked to LIFESTYLE), **ANT logo redrawn on the navy background** (`ant-assets/logo-light.png`).
+- Part 6: keep the banner colours. **Slide 1 cover restyled** (Your wealth. Our purpose. + original tagline, growth chart, A·N·T blocks, 4 pillars). Slide 2 gold given depth (darker bottom edge + shadow) and a soft spotlight background. Slide 3: smaller triangle, **L.I.F.E title** bigger with gold 3D edge + underline, logo moved to bottom-left.
 
 ### ⚠️ Google Slides can't do live maths
 Google Slides tables have **no formulas**, so the automatic Gap needs one of:
