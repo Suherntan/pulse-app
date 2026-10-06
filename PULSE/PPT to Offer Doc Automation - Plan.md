@@ -52,7 +52,9 @@ Sum Assured: 500,000
 
 …then plain Apps Script can read it reliably — **no AI needed, $0 per run**.
 
-## Sharing the budget between "agents"
+## Sharing the budget between "agents" (tools)
+
+> Note 6 Oct: "agents" here = software tools. For **human insurance agents** sharing the system, see "Master account" below.
 
 - **One source of truth:** the PULSE Google Sheet. Every agent (Apps Script, Claude, Zapier if ever used) reads and writes the same sheet. No duplicate databases.
 - **Apps Script = daily worker (free).** Does the repeat work.
@@ -155,6 +157,46 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 ### Watch out (free storage)
 - Free Google Drive = 15 GB. The sample deck is ~26 MB (big photos). One copy per client → ~500 decks fills the drive.
 - Fix (free): compress the deck photos once (target 3–5 MB), and keep only the PDF for old clients.
+
+## 🔐 Master account for a team of agents (6 Oct 2026)
+
+"Agents" = the insurance agents in your team. Everything they enter must also live in one **master account** (backup + overview).
+
+| Option | Cost | Agents see others' clients? | Backup | Verdict |
+|---|---|---|---|---|
+| 1. One Google Sheet shared with all agents | Free | **Yes** – everyone sees & can delete everything | Weak (1 bad delete hits all) | ❌ Not safe for client data |
+| 2. Each agent own Sheet, copied up to master | Free | No | Good | ⚠️ Works, but many sheets to set up & keep in sync |
+| **3. Master owns everything, agents use PULSE app only** | **Free** | **No** – app shows each agent only their own clients | **Best** – all in one place | ✅ **Recommended** |
+| 4. Google Workspace (paid) + Shared Drive | ~US$7 per user / month | Controlled by admin | Best | Later, when the team grows |
+
+### How Option 3 works
+- One **master Google account** (e.g. a new Gmail just for the agency). It owns the PULSE Sheet, the Drive folders, the Slides/Offer templates and the script.
+- Agents **never get the Sheet link**. They open the PULSE app and log in with their **Agent ID + PIN** (AGENTS tab in the master Sheet).
+- Every row saved gets an **Agent ID** column. The script only sends back rows that belong to that agent. Master/leader sees all.
+- Client folders: `PULSE/Agents/<Agent>/Clients/<Client ID – Name>/`.
+- **Automatic backup (free):** every Sunday the script copies the whole master Sheet into `PULSE/Backups/` (keep last 8 weeks). Code is already backed up on GitHub.
+- Agent leaves the team → turn off their PIN. Their clients stay with the master.
+
+### Limits to watch (master account, free)
+- **Storage 15 GB shared by all agents.** Big decks fill it fast → compress decks, keep PDFs. If needed, Google One 100 GB is a low monthly cost.
+- Script limits are per master account – fine for a small team (each action takes a few seconds).
+- Client data = personal data: agents should tell clients their info is stored by the agency (consent line on the form).
+
+## Full flow (review – 6 Oct 2026)
+
+```
+0. Master setup (once): master Gmail, PULSE Sheet + Drive folders + templates, add agents (ID + PIN)
+1. Agent logs in to PULSE app (Agent ID + PIN)
+2. New client → Fact-Find FORM → Save
+      → CLIENTS row (with Agent ID) + client folder in master Drive + SESSIONS log
+3. "Make Slides" → A-N-T deck copied & filled from the form → saved in client folder
+4. Agent presents the deck
+5. "✅ Presented – Make Offer" → Offer Doc + PDF in client folder
+      → OFFERS row + PRESENTATION tab updated
+6. Client closes → status Closed → CLOSING tab updated
+7. Next session → search client → form pre-filled → update → new slides / offer
+8. Every Sunday → automatic backup copy of master Sheet
+```
 
 ## Questions to answer before details
 
