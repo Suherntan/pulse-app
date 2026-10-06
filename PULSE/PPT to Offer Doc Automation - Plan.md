@@ -218,6 +218,25 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 
 **Recommendation:** build on Google now (free, fastest). Design the data (Client ID, Agent ID, same columns) so we can move the master to **Supabase** later without redoing the agents' side.
 
+## ✅ Decisions (6 Oct 2026, part 3)
+
+- **Platform:** Google now, Supabase later (keep Client ID / Agent ID / same columns so the move is easy).
+- **Master gets data only** – no files, no PDFs.
+- Form: **no** Occupation / Monthly Income.
+- **Slide 2** = knowledge sharing, same for every client. Redesigned in A-N-T style: Lifestyle ← Plan A (Earning, stops if sickness/accident/death/retirement) ← Plan B (Financial Planning). Tagline: "Plan A builds your lifestyle. Plan B protects it."
+- **Slide 3** = half concept, half questionnaire.
+  - Pyramid = risk hierarchy. **Bottom = most urgent (Hospitalization)** → Disability → Critical Illness → Death → Education → **top = Investment (retirement)**.
+  - Animation: pyramid builds **one tier per click, from the bottom up**; matching table row slides in.
+  - Table: **Current** (what client has) · **Gap = Ideal − Current (automatic)** · **Ideal** (decided together). Gap shows only when Current + Ideal are filled; red = short, green = covered; total gap at bottom.
+  - Hints under each area. Education = short term, least risk, return ~__%; Investment = long term, higher risk, return ~__%. **% to be filled later.**
+- Preview file: `design-mockups/ant-deck-slides-2-3.html`
+
+### ⚠️ Google Slides can't do live maths
+Google Slides tables have **no formulas**, so the automatic Gap needs one of:
+1. **Present slide 3 from the PULSE app** ("Present mode", like the preview) – live maths + animation, and the numbers save straight to the client record → master. ✅ Recommended
+2. Type numbers in the Fact-Find form first, script fills the slide (gap pre-calculated) – not live in front of the client.
+3. Linked Google Sheets table in Slides – must press "Update" after each change; clunky.
+
 ## Full flow (review – 6 Oct 2026)
 
 ```

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-N-T Deck Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2545; --navy-deep:#010C21; --navy-mid:#001D4E; --teal:#0E5E63;
+  --gold:#B8860B; --gold-soft:#F3AF3D; --cream:#F9DAAE;
+  --text:#F5F3EE; --text-dim:rgba(245,243,238,.66); --line:rgba(245,243,238,.14);
+  --danger:#E5533D; --ok:#5DBB63;
+  --t1:#C0392B; --t2:#D35400; --t3:#E67E22; --t4:#B8860B; --t5:#2E86AB; --t6:#1B998B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;color:var(--text);font-family:'Work Sans',system-ui,sans-serif;overflow:hidden}
+.viewport{position:fixed;inset:0;display:grid;place-items:center}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center;overflow:hidden;border-radius:6px;
+  background:radial-gradient(120% 90% at 20% 0%,#123764 0%,var(--navy) 40%,var(--navy-deep) 100%)}
+.waves{position:absolute;left:0;right:0;bottom:0;height:200px;opacity:.55;pointer-events:none}
+.slide{position:absolute;inset:0;padding:56px 72px;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}
+.slide.active{opacity:1;visibility:visible}
+.eyebrow{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:500;letter-spacing:.32em;font-size:14px;color:var(--gold-soft);text-transform:uppercase}
+h1{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;font-size:46px;letter-spacing:.02em;line-height:1.05;margin-top:8px}
+h1 span{color:var(--gold-soft)}
+.brand{position:absolute;top:28px;right:40px;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;letter-spacing:.3em;font-size:13px;color:var(--text-dim)}
+.brand b{color:var(--gold-soft)}
+.pageno{position:absolute;bottom:22px;right:40px;font-size:12px;color:var(--text-dim);letter-spacing:.1em}
+
+/* ---------- Slide 2 ---------- */
+.flow{display:grid;grid-template-columns:1fr 70px 1fr 70px 1fr;align-items:center;margin-top:56px}
+.card{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:26px 24px;min-height:230px;
+  backdrop-filter:blur(4px);opacity:0;transform:translateY(24px)}
+.card .ic{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:rgba(243,175,61,.14);margin-bottom:16px}
+.card h3{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;font-size:24px;letter-spacing:.06em}
+.card p{color:var(--text-dim);font-size:15px;line-height:1.5;margin-top:10px}
+.card.planb{border-color:rgba(243,175,61,.55);background:linear-gradient(160deg,rgba(243,175,61,.16),rgba(255,255,255,.03))}
+.arrow{display:grid;place-items:center;opacity:0}
+.stop{position:relative;margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
+  color:var(--danger);background:rgba(229,83,61,.12);border:1px solid rgba(229,83,61,.4);padding:6px 10px;border-radius:999px}
+.tagline{margin-top:44px;text-align:center;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:500;font-size:22px;letter-spacing:.06em;color:var(--text-dim);opacity:0}
+.tagline b{color:var(--gold-soft);font-weight:600}
+.slide.active .reveal{animation:rise .7s cubic-bezier(.23,1,.32,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ---------- Slide 3 ---------- */
+.s3{display:grid;grid-template-columns:420px 1fr;gap:36px;margin-top:26px}
+.pyr{display:flex;flex-direction:column;gap:5px;position:relative}
+.tier{height:66px;position:relative;opacity:0;transform:translateY(30px) scale(.96);transition:opacity .55s cubic-bezier(.23,1,.32,1),transform .55s cubic-bezier(.23,1,.32,1)}
+.tier.on{opacity:1;transform:none}
+.tier .shape{position:absolute;inset:0;display:grid;place-items:center;font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;letter-spacing:.08em;font-size:15px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.tier.on .shape{animation:glow 1.2s ease 1}
+@keyframes glow{0%{filter:brightness(1.6)}100%{filter:none}}
+.pyr-note{font-size:12px;letter-spacing:.12em;color:var(--text-dim);text-align:center;font-family:'Oswald','Arial Narrow',sans-serif}
+.pyr-note b{color:var(--t1)}
+table{width:100%;border-collapse:separate;border-spacing:0 5px;font-size:14px}
+thead th{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:500;letter-spacing:.14em;font-size:12px;color:var(--gold-soft);text-align:left;padding:0 10px 2px}
+thead th small{display:block;font-family:'Work Sans',system-ui,sans-serif;letter-spacing:0;font-size:11px;color:var(--text-dim);font-weight:400}
+tbody tr{height:66px;opacity:0;transform:translateX(24px);transition:opacity .5s cubic-bezier(.23,1,.32,1) .08s,transform .5s cubic-bezier(.23,1,.32,1) .08s}
+tbody tr.on{opacity:1;transform:none}
+tbody td{background:rgba(255,255,255,.05);padding:6px 10px;vertical-align:middle}
+tbody td:first-child{border-radius:10px 0 0 10px;border-left:4px solid var(--c)}
+tbody td:last-child{border-radius:0 10px 10px 0}
+.area{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:600;letter-spacing:.06em;font-size:15px}
+.hint{display:block;font-size:11.5px;color:var(--text-dim);margin-top:3px;line-height:1.3}
+.hint em{font-style:normal;color:var(--cream)}
+input.money{width:118px;background:rgba(1,12,33,.55);border:1px solid var(--line);color:var(--text);border-radius:8px;
+  padding:9px 10px;font:600 15px 'Work Sans',system-ui,sans-serif;text-align:right;outline:none;transition:border-color .2s}
+input.money:focus{border-color:var(--gold-soft)}
+input.money::placeholder{color:rgba(245,243,238,.3);font-weight:400}
+.gap{font-weight:700;font-size:16px;min-width:118px;display:inline-block;text-align:right;transition:color .3s}
+.gap.short{color:var(--danger)} .gap.ok{color:var(--ok)} .gap.empty{color:rgba(245,243,238,.3);font-weight:400}
+.gap.pop{animation:pop .45s cubic-bezier(.23,1,.32,1)}
+@keyframes pop{0%{transform:scale(1.25)}100%{transform:none}}
+tfoot td{padding:10px 10px 0;font-family:'Oswald','Arial Narrow',sans-serif;letter-spacing:.08em;font-size:14px;color:var(--text-dim)}
+tfoot .gap{font-size:18px}
+.legend{margin-top:10px;font-size:11.5px;color:var(--text-dim)}
+
+/* ---------- controls ---------- */
+.nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.nav button{font:600 13px 'Work Sans',system-ui,sans-serif;color:var(--text);background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
+.nav button:hover{background:rgba(255,255,255,.18)}
+.note{position:fixed;top:10px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--text-dim);z-index:5;text-align:center;padding:0 16px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card,.arrow,.tagline,.tier,tbody tr{opacity:1!important;transform:none!important}}
+</style>
+</head>
+<body>
+<div class="note">Preview only · → / tap to go next · slide 3 builds the pyramid step by step</div>
+<div class="viewport"><div class="stage" id="stage">
+  <svg class="waves" viewBox="0 0 1280 200" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 120 C 220 60 420 170 640 110 S 1060 50 1280 120 V200 H0Z" fill="#0E5E63" opacity=".55"/>
+    <path d="M0 150 C 260 100 480 190 720 140 S 1100 110 1280 160 V200 H0Z" fill="#0B4F55" opacity=".7"/>
+  </svg>
+  <div class="brand">A · N · T <b>SYSTEM</b></div>
+
+  <!-- SLIDE 2 -->
+  <section class="slide" data-slide="2">
+    <div class="eyebrow">Knowledge sharing</div>
+    <h1>Your lifestyle runs on <span>income</span>.<br>What is your Plan B?</h1>
+    <div class="flow">
+      <div class="card reveal" style="animation-delay:.15s">
+        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3AF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></div>
+        <h3>LIFESTYLE</h3>
+        <p>Home, family, car, holidays, the future you want. All of it needs a steady income.</p>
+      </div>
+      <div class="arrow reveal" style="animation-delay:.45s"><svg width="44" height="20" viewBox="0 0 44 20"><path d="M42 10H4m0 0 8-7M4 10l8 7" stroke="#F3AF3D" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="card reveal" style="animation-delay:.6s">
+        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3AF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+        <h3>PLAN A · EARNING</h3>
+        <p>You work, you earn. Income only comes in while you are healthy and able to work.</p>
+        <span class="stop"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>Stops if: sickness · accident · death · retirement</span>
+      </div>
+      <div class="arrow reveal" style="animation-delay:.95s"><svg width="44" height="20" viewBox="0 0 44 20"><path d="M42 10H4m0 0 8-7M4 10l8 7" stroke="#F3AF3D" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="4 4"/></svg></div>
+      <div class="card planb reveal" style="animation-delay:1.1s">
+        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F3AF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>PLAN B · FINANCIAL PLANNING</h3>
+        <p>When Plan A stops, Plan B keeps the income flowing, so the lifestyle doesn't have to change.</p>
+      </div>
+    </div>
+    <div class="tagline reveal" style="animation-delay:1.5s">Plan A builds your lifestyle. <b>Plan B protects it.</b></div>
+    <div class="pageno">02</div>
+  </section>
+
+  <!-- SLIDE 3 -->
+  <section class="slide" data-slide="3">
+    <div class="eyebrow">L.I.F.E · Needs analysis</div>
+    <h1>Build from the <span>base</span> up</h1>
+    <div class="s3">
+      <div>
+        <div class="pyr-note" style="margin-bottom:6px">★ TOP · RETIREMENT</div>
+        <div class="pyr" id="pyr"></div>
+        <div class="pyr-note" style="margin-top:8px"><b>▲ START HERE</b> · MOST URGENT</div>
+      </div>
+      <div>
+        <table>
+          <thead><tr>
+            <th>AREA</th>
+            <th>CURRENT<small>What you have now</small></th>
+            <th>GAP<small>Ideal − Current</small></th>
+            <th>IDEAL<small>We decide together</small></th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+          <tfoot><tr><td colspan="2">TOTAL GAP</td><td><span class="gap empty" id="total">—</span></td><td></td></tr></tfoot>
+        </table>
+        <div class="legend">Gap appears once Current and Ideal are filled. <span style="color:var(--danger)">Red</span> = still short · <span style="color:var(--ok)">Green</span> = covered.</div>
+      </div>
+    </div>
+    <div class="pageno">03</div>
+  </section>
+</div></div>
+
+<div class="nav">
+  <button id="prev">← Back</button>
+  <button id="all">Show all</button>
+  <button id="next">Next →</button>
+</div>
+
+<script>
+// Top → bottom. Return % for Education / Investment are placeholders to fill in later.
+const AREAS = [
+  {name:'INVESTMENT',       color:'var(--t6)', hint:'Retirement · long term · higher risk · return <em>~__%</em>'},
+  {name:'EDUCATION',        color:'var(--t5)', hint:'Children\'s fund · short term · least risk · return <em>~__%</em>'},
+  {name:'DEATH',            color:'var(--t4)', hint:'Income for the family if you are gone'},
+  {name:'CRITICAL ILLNESS', color:'var(--t3)', hint:'Lump sum to recover without touching savings'},
+  {name:'DISABILITY',       color:'var(--t2)', hint:'Replaces income if you can no longer work'},
+  {name:'HOSPITALIZATION',  color:'var(--t1)', hint:'Most urgent · hospital bills from day one'}
+];
+const N = AREAS.length;
+const pyr = document.getElementById('pyr'), rows = document.getElementById('rows');
+
+AREAS.forEach((a, i) => {
+  const t1 = 50 - 50 * i / N, t2 = 50 + 50 * i / N;
+  const b1 = 50 - 50 * (i + 1) / N, b2 = 50 + 50 * (i + 1) / N;
+  const tier = document.createElement('div');
+  tier.className = 'tier';
+  tier.innerHTML = `<div class="shape" style="background:${a.color};clip-path:polygon(${t1}% 0,${t2}% 0,${b2}% 100%,${b1}% 100%)">${i === 0 ? '★' : a.name}</div>`;
+  pyr.appendChild(tier);
+
+  const tr = document.createElement('tr');
+  tr.style.setProperty('--c', a.color);
+  tr.innerHTML = `<td><span class="area">${a.name}</span><span class="hint">${a.hint}</span></td>
+    <td><input class="money" inputmode="numeric" placeholder="0" data-k="cur"></td>
+    <td><span class="gap empty">—</span></td>
+    <td><input class="money" inputmode="numeric" placeholder="0" data-k="ideal"></td>`;
+  rows.appendChild(tr);
+});
+
+const num = v => { const n = Number(String(v).replace(/[^0-9.-]/g, '')); return isFinite(n) ? n : 0; };
+const fmt = n => Math.round(n).toLocaleString('en-US');
+
+function recalc() {
+  let total = 0, any = false;
+  [...rows.children].forEach(tr => {
+    const [cur, ideal] = tr.querySelectorAll('input');
+    const g = tr.querySelector('.gap');
+    const prev = g.textContent;
+    if (cur.value.trim() === '' || ideal.value.trim() === '') {
+      g.className = 'gap empty'; g.textContent = '—';
+      return;
+    }
+    const gap = num(ideal.value) - num(cur.value);
+    any = true; total += Math.max(gap, 0);
+    g.className = 'gap ' + (gap > 0 ? 'short' : 'ok');
+    g.textContent = gap > 0 ? fmt(gap) : '✓ Covered';
+    if (g.textContent !== prev) { void g.offsetWidth; g.classList.add('pop'); }
+  });
+  const t = document.getElementById('total');
+  t.className = 'gap ' + (any ? (total > 0 ? 'short' : 'ok') : 'empty');
+  t.textContent = any ? (total > 0 ? fmt(total) : '✓ Fully covered') : '—';
+}
+rows.addEventListener('input', recalc);
+rows.addEventListener('focusout', e => {
+  if (e.target.matches('input.money') && e.target.value.trim() !== '') e.target.value = fmt(num(e.target.value));
+});
+
+// ---- Slide + step navigation ----
+const slides = [...document.querySelectorAll('.slide')];
+const tiers = [...pyr.querySelectorAll('.tier')], trs = [...rows.children];
+let cur = 0, step = 0; // step = tiers shown on slide 3 (built bottom → top)
+
+function showStep(n) {
+  step = n;
+  for (let k = 0; k < N; k++) {
+    const idx = N - 1 - k, on = k < n;           // bottom tier first
+    tiers[idx].classList.toggle('on', on);
+    trs[idx].classList.toggle('on', on);
+  }
+}
+function go(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('active', k === cur));
+  if (slides[cur].dataset.slide === '3') showStep(0);
+}
+function next() {
+  if (slides[cur].dataset.slide === '3' && step < N) return showStep(step + 1);
+  go(cur + 1);
+}
+function prev() {
+  if (slides[cur].dataset.slide === '3' && step > 0) return showStep(step - 1);
+  go(cur - 1);
+}
+document.getElementById('next').onclick = next;
+document.getElementById('prev').onclick = prev;
+document.getElementById('all').onclick = () => { if (slides[cur].dataset.slide === '3') showStep(N); };
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input')) return;
+  if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); next(); }
+  if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+});
+let sx = null;
+document.addEventListener('touchstart', e => { if (!e.target.matches('input,button')) sx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  if (sx === null) return;
+  const dx = e.changedTouches[0].clientX - sx; sx = null;
+  if (Math.abs(dx) > 40) dx < 0 ? next() : prev();
+});
+
+// Fit the 16:9 stage to any screen
+function fit() {
+  const s = Math.min(innerWidth / 1280, (innerHeight - 70) / 720);
+  document.getElementById('stage').style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+go(0);
+</script>
+</body>
+</html>
