@@ -19,6 +19,8 @@ body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:1
 header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
 header img{height:40px}
 header h1{font-family:var(--head);font-weight:600;font-size:20px;letter-spacing:.08em;white-space:nowrap}
+header .conn{border:1px solid rgba(255,255,255,.35);background:none;color:#fff;border-radius:999px;padding:5px 10px;font:600 11px var(--body);letter-spacing:.08em;cursor:pointer;white-space:nowrap}
+header .conn.on{border-color:#5DBB63;color:#9BE3A1}
 header .cid{margin-left:auto;white-space:nowrap;font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.06em}
 main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .search{position:relative;margin-bottom:16px}
@@ -86,7 +88,8 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 <header>
   <img src="ant-assets/logo-light.png" alt="ANT Wealth System">
   <h1>FACT-FIND</h1>
-  <span class="cid" id="cid">NEW · C-0003</span>
+  <span class="cid" id="cid">NEW</span>
+  <button type="button" class="conn" id="conn" title="Connect to my Google Sheet">DEMO</button>
 </header>
 
 <main>
@@ -163,8 +166,9 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 
     <section class="card saved" id="saved">
       <h2><span class="n">✓</span>SAVED</h2>
-      <div>This is what will be saved (preview only – nothing is sent yet):</div>
+      <div id="savedMsg">This is what will be saved (demo – nothing is sent):</div>
       <pre id="out"></pre>
+      <a id="folderLink" class="note" target="_blank" rel="noopener" style="display:none">Open client folder in Google Drive ↗</a>
       <div class="row">
         <a class="btn primary" href="ant-deck-preview.html">PRESENT SLIDES →</a>
         <button type="button" class="btn ghost" id="newBtn">NEW CLIENT</button>
@@ -180,6 +184,7 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="ant-api.js"></script>
 <script>
 // Demo records so "Find existing client" can be tried. Real ones come from the agent's sheet.
 const DEMO = [
@@ -189,9 +194,10 @@ const DEMO = [
      parentsDepend:'Partly', otherPeople:''}},
   {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:''}
 ];
-let currentId = 'C-0003';
+let currentId = '';            // empty = new client; the sheet gives the ID on save
 // Agent profile – set once per agent in PULSE settings (demo values here)
-const AGENT = {agentId:'AG-001', agentName:'Demo Agent', agentPhone:'012-000 0000'};
+let AGENT = {agentId:'AG-001', agentName:'Demo Agent', agentPhone:'012-000 0000'};
+const LIVE = AntApi.connected();
 
 const $ = id => document.getElementById(id);
 
@@ -275,18 +281,33 @@ function getBackground() {
 
 // ---- Find existing client ----
 const results = $('results');
-$('q').addEventListener('input', () => {
-  const q = $('q').value.trim().toLowerCase();
-  const hits = q ? DEMO.filter(c => c.name.toLowerCase().includes(q) || c.phone.replace(/\D/g, '').includes(q.replace(/\D/g, '') || '§')) : [];
-  results.innerHTML = hits.map((c, i) => `<button type="button" data-i="${DEMO.indexOf(c)}"><span>${c.name}</span><small>${c.clientId} · ${c.phone}</small></button>`).join('')
+let searchTimer;
+const esc = t => String(t ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+function showResults(list, q) {
+  results.innerHTML = list.map(c => `<button type="button" data-id="${esc(c.clientId)}"><span>${esc(c.name)}</span><small>${esc(c.clientId)} · ${esc(c.phone)}</small></button>`).join('')
     || (q ? '<button type="button" disabled><small>No client found – fill in below as new</small></button>' : '');
   results.style.display = q ? 'block' : 'none';
+}
+$('q').addEventListener('input', () => {
+  const q = $('q').value.trim();
+  clearTimeout(searchTimer);
+  if (!q) return showResults([], '');
+  if (!LIVE) {
+    const ql = q.toLowerCase(), d = q.replace(/\D/g, '');
+    return showResults(DEMO.filter(c => c.name.toLowerCase().includes(ql) || (d && c.phone.replace(/\D/g, '').includes(d))), q);
+  }
+  searchTimer = setTimeout(async () => {
+    try { const r = await AntApi.get('antSearchClients', {q}); if ($('q').value.trim() === q) showResults(r.clients, q); }
+    catch (err) { toast(err.message); }
+  }, 300);
 });
-results.addEventListener('click', e => {
-  const b = e.target.closest('button[data-i]'); if (!b) return;
-  fill(DEMO[+b.dataset.i]);
+results.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
   results.style.display = 'none'; $('q').value = '';
-  toast('Loaded ' + DEMO[+b.dataset.i].name + ' – update and save');
+  try {
+    const c = LIVE ? (await AntApi.get('antGetClient', {id: b.dataset.id})).client : DEMO.find(x => x.clientId === b.dataset.id);
+    fill(c); toast('Loaded ' + c.name + ' – update and save');
+  } catch (err) { toast(err.message); }
 });
 
 function fill(c) {
@@ -303,7 +324,7 @@ function fill(c) {
 function setBad(id, bad) { $(id).closest('.fg').classList.toggle('bad', bad); return bad; }
 function clearErrors() { document.querySelectorAll('.fg.bad').forEach(f => f.classList.remove('bad')); $('consentWrap').classList.remove('bad'); }
 
-$('ff').addEventListener('submit', e => {
+$('ff').addEventListener('submit', async e => {
   e.preventDefault(); clearErrors();
   let bad = false;
   bad = setBad('name', !$('name').value.trim()) || bad;
@@ -326,7 +347,22 @@ $('ff').addEventListener('submit', e => {
     background: getBackground(),
     consent: true
   };
-  // Preview hand-off: the A-N-T Analysis page reads this for the client details.
+  if (LIVE) {
+    const btn = document.querySelector('.bar .primary');
+    btn.disabled = true; btn.textContent = 'SAVING…';
+    try {
+      const r = await AntApi.post('antSaveClient', record);
+      currentId = record.clientId = r.clientId;
+      $('cid').textContent = 'EDIT · ' + r.clientId;
+      $('folderLink').href = r.folderUrl; $('folderLink').style.display = 'block';
+      $('savedMsg').textContent = 'Saved to your Google Sheet (tab ANT_CLIENTS):';
+    } catch (err) {
+      toast('Not saved: ' + err.message); return;
+    } finally { btn.disabled = false; btn.textContent = 'SAVE CLIENT'; }
+  } else if (!record.clientId) {
+    record.clientId = 'C-DEMO';
+  }
+  // Hand-off: the A-N-T Analysis page reads this for the client details.
   try { localStorage.setItem('ant-factfind-current', JSON.stringify(record)); } catch (_) {}
   $('out').textContent = JSON.stringify(record, null, 2);
   $('saved').classList.add('show');
@@ -335,12 +371,23 @@ $('ff').addEventListener('submit', e => {
 });
 
 function reset() {
-  $('ff').reset(); currentId = 'C-0003'; $('cid').textContent = 'NEW · C-0003';
+  $('ff').reset(); currentId = ''; $('cid').textContent = 'NEW'; $('folderLink').style.display = 'none';
   $('age').textContent = '—'; setBackground(); clearErrors(); $('saved').classList.remove('show');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 $('clearBtn').onclick = reset;
 $('newBtn').onclick = reset;
+
+// ---- Connection: demo or the agent's own Google Sheet ----
+$('conn').onclick = () => { if (AntApi.promptUrl()) location.reload(); };
+if (LIVE) {
+  $('conn').textContent = 'CONNECTING…';
+  AntApi.get('antProfile').then(p => {
+    AGENT = {agentId: p.agentId, agentName: p.agentName, agentPhone: p.agentPhone};
+    $('conn').textContent = p.agentId ? 'CONNECTED · ' + p.agentId : 'CONNECTED – RUN A-N-T SETUP';
+    $('conn').classList.add('on');
+  }).catch(err => { $('conn').textContent = 'NOT CONNECTED'; toast(err.message); });
+}
 
 let tt;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }

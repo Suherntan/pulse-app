@@ -18,6 +18,12 @@ body{font-family:var(--body);background:#E9E6DF;color:var(--text);-webkit-print-
 .tools button,.tools a{border:0;border-radius:12px;padding:12px 18px;font:700 14px var(--head);letter-spacing:.1em;cursor:pointer;text-decoration:none}
 .tools .primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark)}
 .tools .ghost{background:#fff;color:var(--navy)}
+.tools button:disabled{opacity:.6;cursor:wait}
+.status{max-width:210mm;margin:0 auto 12px;padding:0 16px;font-size:14px;text-align:center;color:var(--navy)}
+.status a{color:var(--navy);font-weight:700}
+body.capturing{overflow:hidden}
+body.capturing .page{width:794px;min-height:1123px;height:1123px;margin:0;box-shadow:none}
+body.capturing .notes:empty::before{content:''}
 .page{width:210mm;min-height:297mm;margin:0 auto 24px;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.15);display:flex;flex-direction:column}
 .band{background:var(--navy);color:#fff;padding:22px 28px;display:flex;align-items:center;gap:20px}
 .band img{height:56px}
@@ -57,13 +63,13 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
 .notes:empty::before{content:attr(data-ph);color:#A9A396}
 .foot{padding:10px 28px;font-size:10px;color:var(--text-light);border-top:1px solid var(--line);display:flex;justify-content:space-between}
 @media screen and (max-width:820px){
-  .page{width:100%;min-height:0;margin:0 0 16px}
-  .client{grid-template-columns:1fr 1fr}
-  .client div:nth-child(2){border-right:0}
-  .client div:nth-child(-n+2){border-bottom:1px solid var(--line)}
-  .life{grid-template-columns:1fr}
-  .pyr{max-width:220px;margin:0 auto}
-  .prio{grid-template-columns:1fr}
+  body:not(.capturing) .page{width:100%;min-height:0;margin:0 0 16px}
+  body:not(.capturing) .client{grid-template-columns:1fr 1fr}
+  body:not(.capturing) .client div:nth-child(2){border-right:0}
+  body:not(.capturing) .client div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  body:not(.capturing) .life{grid-template-columns:1fr}
+  body:not(.capturing) .pyr{max-width:220px;margin:0 auto}
+  body:not(.capturing) .prio{grid-template-columns:1fr}
 }
 @page{size:A4;margin:0}
 @media print{
@@ -77,8 +83,10 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
 <body>
 <div class="tools">
   <a class="ghost" href="ant-deck-preview.html">← BACK TO SLIDES</a>
-  <button class="primary" onclick="window.print()">SAVE AS PDF</button>
+  <button class="ghost" id="printBtn">DOWNLOAD PDF</button>
+  <button class="primary" id="driveBtn" style="display:none">SAVE TO DRIVE</button>
 </div>
+<div class="status" id="status"></div>
 
 <article class="page">
   <header class="band">
@@ -126,6 +134,7 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
   <div class="foot"><span id="prep">ANT Wealth System · Analyze. Navigate. Transform.</span><span id="ref"></span></div>
 </article>
 
+<script src="ant-api.js"></script>
 <script>
 // Top → bottom of the pyramid; priority runs the other way (most urgent first).
 const AREAS = [
@@ -211,6 +220,54 @@ const prio = AREAS.slice().reverse().map(a => ({a, v: analysis.life[a.k] || {}})
 $('prio').innerHTML = prio.length
   ? prio.map((x, i) => `<div><span class="n">${i + 1}</span><b>${x.a.name}</b><span>${fmt(x.v.goal - x.v.current)}</span></div>`).join('')
   : '<p class="none">No gaps – all areas covered.</p>';
+
+// ---- Save: download on this device, or into the client's Drive folder ----
+document.getElementById('printBtn').onclick = () => window.print();
+
+function loadScript(src) {
+  return new Promise((ok, fail) => { const t = document.createElement('script'); t.src = src; t.onload = ok; t.onerror = () => fail(new Error('Could not load ' + src)); document.head.appendChild(t); });
+}
+// Render the A4 page to a PDF (base64) in the browser – keeps the exact look.
+async function makePdfBase64() {
+  if (!window.html2canvas) await loadScript('vendor/html2canvas.min.js');
+  if (!window.jspdf) await loadScript('vendor/jspdf.umd.min.js');
+  document.body.classList.add('capturing');
+  try {
+    await document.fonts?.ready;
+    const canvas = await html2canvas(document.querySelector('.page'), {scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: 794});
+    const pdf = new jspdf.jsPDF({unit: 'mm', format: 'a4'});
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+    return pdf.output('datauristring').split(',')[1];
+  } finally {
+    document.body.classList.remove('capturing');
+  }
+}
+
+const driveBtn = $('driveBtn'), status = $('status');
+const canSave = AntApi.connected() && client.clientId && !/DEMO|0000/.test(client.clientId);
+if (canSave) driveBtn.style.display = '';
+else if (AntApi.connected()) status.textContent = 'Save the client in the Fact-Find form first to keep this in Google Drive.';
+
+driveBtn.onclick = async () => {
+  driveBtn.disabled = true; driveBtn.textContent = 'SAVING…'; status.textContent = 'Making the PDF…';
+  try {
+    const pdfBase64 = await makePdfBase64();
+    status.textContent = 'Uploading to Google Drive…';
+    const r = await AntApi.post('antSaveAnalysis', {
+      clientId: client.clientId,
+      life: analysis.life,
+      notes: $('notes').innerText.trim(),
+      pdfBase64,
+      fileName: document.title
+    });
+    status.innerHTML = '✓ Saved (' + r.analysisId + '). <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
+    status.querySelector('a').href = r.pdfUrl;
+    driveBtn.textContent = 'SAVED ✓';
+  } catch (err) {
+    status.textContent = 'Not saved: ' + err.message;
+    driveBtn.disabled = false; driveBtn.textContent = 'SAVE TO DRIVE';
+  }
+};
 </script>
 </body>
 </html>

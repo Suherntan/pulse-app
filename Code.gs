@@ -658,6 +658,13 @@ function doGet(e) {
         return jsonResponse(getFundPipelineData());
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
+      // A-N-T (see ANT.gs)
+      case 'antProfile':
+        return jsonResponse(antProfile());
+      case 'antSearchClients':
+        return jsonResponse(antSearchClients(e.parameter.q));
+      case 'antGetClient':
+        return jsonResponse(antGetClient(e.parameter.id));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -685,6 +692,11 @@ function doPost(e) {
         return jsonResponse(addPipelineClient(data));
       case 'importFundData':
         return jsonResponse(importFundData(data));
+      // A-N-T (see ANT.gs)
+      case 'antSaveClient':
+        return jsonResponse(antSaveClient(data));
+      case 'antSaveAnalysis':
+        return jsonResponse(antSaveAnalysis(data));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -1252,6 +1264,7 @@ function onOpen() {
     .addItem("Turn Off Monthly Manulife Import Reminder", "removeMonthlyManulifeReminder")
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
     .addToUi();
+  antAddMenu_(); // A-N-T menu (ANT.gs)
 }
 
 

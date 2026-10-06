@@ -264,6 +264,14 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - **Save as PDF** button (free, phone or laptop print → Save as PDF). File name: `A-N-T Analysis – <client> – <date>`.
 - Next build step: script saves the PDF into the client's Drive folder automatically and sends the numbers to the master.
 
+## ✅ Step 1 built (6 Oct 2026) – agent's own Google account
+- New `ANT.gs` + 3 small additions in `Code.gs`. Tabs ANT_CLIENTS / ANT_ANALYSIS / ANT_LOG, Drive folder per client.
+- Form: real search/load/save (C-0001 IDs from the sheet). Header shows DEMO / CONNECTED.
+- Analysis page: **Save to Drive** makes the PDF in the browser (exact look, A4) and stores it in the client's folder; **Download PDF** still works offline.
+- Tested end-to-end against the real script logic (fake Google in the test).
+- Setup steps: see [[A-N-T Step 1 - Setup Guide]].
+- **Next: Step 2** – send each saved row to the manager's master sheet.
+
 ## Full flow (review – 6 Oct 2026)
 
 ```
