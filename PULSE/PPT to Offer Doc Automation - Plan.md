@@ -251,7 +251,10 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 ### Fact-Find form – `design-mockups/fact-find-form.html`
 - Only **client background** now (L.I.F.E and Recommendation sections removed).
 - Now: Name*, DOB* (age auto), Phone*, Email, consent tick. Find existing client at top.
-- **More background questions (family members etc.) – Su will send the list.**
+- **B · Goals:** What motivated you to meet up with me? (text) · What financial goals? tap **Retirement** → retire at age + monthly cash flow wanted; tap **Kids' education** → children question · What other financial goals? (text)
+- **C · Family:** Most important people? tap **Spouse/Partner** → what do they do · **Children** → number (− / +) + age of each · **Parents** → depending on you? Yes / Partly / No · Anyone else?
+- Children are asked only once even if both "Kids' education" and "Children" are tapped.
+- The A-N-T Analysis PDF now has a short **Background** part (motivation, goals, other goals, family).
 
 ### A-N-T Analysis PDF – `design-mockups/ant-analysis.html`
 - Opened from the slides with the **Save A-N-T Analysis** button.

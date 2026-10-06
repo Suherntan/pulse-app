@@ -42,6 +42,25 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .fg .err{display:none;color:var(--red);font-size:12px;margin-top:4px}
 .fg.bad .err{display:block}
 .age{display:flex;align-items:center;justify-content:center;height:46px;border-radius:10px;background:#F7F1E3;font-family:var(--head);font-weight:600;font-size:20px;color:var(--navy)}
+.fg textarea{width:100%;min-height:76px;padding:12px;border:1px solid var(--border);border-radius:10px;font:500 16px var(--body);color:var(--text);resize:vertical}
+.fg textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,175,61,.25)}
+.q{font-weight:600;font-size:15px;color:var(--navy);margin:4px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:10px 16px;font:600 14px var(--body);color:var(--text);cursor:pointer;transition:all .15s}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.follow{display:none;margin-top:12px;padding:12px;border-left:4px solid var(--gold);background:#FBF6EA;border-radius:0 10px 10px 0}
+.follow.show{display:block}
+.follow .grid{gap:10px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:#fff;font:700 20px var(--body);color:var(--navy);cursor:pointer}
+.stepper output{min-width:28px;text-align:center;font:700 20px var(--head);color:var(--navy)}
+.ages{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ages input{width:76px;padding:10px;border:1px solid var(--border);border-radius:9px;font:600 15px var(--body);text-align:center}
+.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:max-content}
+.seg button{border:0;background:#fff;padding:10px 18px;font:600 14px var(--body);cursor:pointer;color:var(--text)}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.block{margin-top:16px}
 .consent{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45}
 .consent input{width:22px;height:22px;accent-color:var(--navy);flex:none;margin-top:1px}
 .consent.bad{color:var(--red)}
@@ -86,8 +105,53 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
         <div class="fg"><label>Age</label><div class="age" id="age">—</div></div>
         <div class="fg"><label for="phone">Phone *</label><input id="phone" type="tel" inputmode="tel" required placeholder="e.g. 012-345 6789"><div class="err">Please enter a valid phone number</div></div>
         <div class="fg"><label for="email">Email</label><input id="email" type="email" inputmode="email" placeholder="name@email.com"><div class="err">Please check the email</div></div>
-        <!-- More background questions (family members etc.) will be added here -->
       </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">B</span>GOALS</h2>
+      <div class="fg"><div class="q">What motivated you to meet up with me?</div><textarea id="motivation" placeholder="Client's answer"></textarea></div>
+
+      <div class="block">
+        <div class="q">What financial goals do you want to achieve?</div>
+        <div class="chips" data-group="goals">
+          <button type="button" class="chip" data-v="retire" aria-pressed="false">Retirement</button>
+          <button type="button" class="chip" data-v="education" aria-pressed="false">Kids' education</button>
+        </div>
+        <div class="follow" data-for="retire">
+          <div class="grid">
+            <div class="fg"><label for="retireAge">Retire at age</label><input id="retireAge" inputmode="numeric" placeholder="e.g. 55"></div>
+            <div class="fg"><label for="retireCash">Cash flow wanted every month</label><input id="retireCash" class="money" inputmode="numeric" placeholder="e.g. 5,000"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg block"><div class="q">What other financial goals do you have?</div><textarea id="otherGoals" placeholder="Client's answer"></textarea></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">C</span>FAMILY</h2>
+      <div class="q">Who are the most important people in your life right now?</div>
+      <div class="chips" data-group="people">
+        <button type="button" class="chip" data-v="spouse" aria-pressed="false">Spouse / Partner</button>
+        <button type="button" class="chip" data-v="children" aria-pressed="false">Children</button>
+        <button type="button" class="chip" data-v="parents" aria-pressed="false">Parents</button>
+      </div>
+      <div class="follow" data-for="spouse">
+        <div class="fg"><label for="spouseJob">What does your spouse / partner do?</label><input id="spouseJob" placeholder="e.g. Teacher"></div>
+      </div>
+      <div class="follow" data-for="kids">
+        <div class="fg"><label>How many children do you have? What are their ages?</label>
+          <div class="stepper"><button type="button" id="kidMinus" aria-label="Fewer children">−</button><output id="kidCount">0</output><button type="button" id="kidPlus" aria-label="More children">+</button></div>
+          <div class="ages" id="ages"></div>
+        </div>
+      </div>
+      <div class="follow" data-for="parents">
+        <div class="fg"><label>Are your parents depending on you?</label>
+          <div class="seg" id="parentsDep"><button type="button" data-v="Yes" aria-pressed="false">Yes</button><button type="button" data-v="Partly" aria-pressed="false">Partly</button><button type="button" data-v="No" aria-pressed="false">No</button></div>
+        </div>
+      </div>
+      <div class="fg block"><label for="otherPeople">Anyone else?</label><input id="otherPeople" placeholder="Optional"></div>
     </section>
 
 
@@ -119,7 +183,10 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 <script>
 // Demo records so "Find existing client" can be tried. Real ones come from the agent's sheet.
 const DEMO = [
-  {clientId:'C-0001', name:'Tan Ah Kow', dob:'1985-04-12', phone:'012-345 6789', email:'ahkow@example.com'},
+  {clientId:'C-0001', name:'Tan Ah Kow', dob:'1985-04-12', phone:'012-345 6789', email:'ahkow@example.com',
+   background:{motivation:'Friend recommended – wants a proper plan for the family', goals:['retire','education'], retireAge:55, retireCash:6000,
+     otherGoals:'Buy a bigger house in 5 years', people:['spouse','children','parents'], spouseJob:'Teacher', childrenAges:[6, 9],
+     parentsDepend:'Partly', otherPeople:''}},
   {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:''}
 ];
 let currentId = 'C-0003';
@@ -135,6 +202,74 @@ function calcAge(iso) {
   return a;
 }
 $('dob').addEventListener('input', () => { const a = calcAge($('dob').value); $('age').textContent = a === null ? '—' : a; });
+
+// ---- Goals & family: tap answers, follow-up questions appear ----
+const picked = g => [...document.querySelectorAll(`[data-group="${g}"] .chip[aria-pressed="true"]`)].map(c => c.dataset.v);
+function updateFollowUps() {
+  const goals = picked('goals'), people = picked('people');
+  document.querySelector('[data-for="retire"]').classList.toggle('show', goals.includes('retire'));
+  document.querySelector('[data-for="spouse"]').classList.toggle('show', people.includes('spouse'));
+  document.querySelector('[data-for="parents"]').classList.toggle('show', people.includes('parents'));
+  // Children are asked once, whether they came up under goals or family
+  document.querySelector('[data-for="kids"]').classList.toggle('show', goals.includes('education') || people.includes('children'));
+}
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  updateFollowUps();
+}));
+function setChips(g, vals) {
+  document.querySelectorAll(`[data-group="${g}"] .chip`).forEach(c => c.setAttribute('aria-pressed', vals.includes(c.dataset.v) ? 'true' : 'false'));
+}
+
+function setKids(n, ages = []) {
+  n = Math.max(0, Math.min(12, n));
+  const keep = [...$('ages').querySelectorAll('input')].map(i => i.value);
+  $('kidCount').textContent = n;
+  $('ages').innerHTML = Array.from({length: n}, (_, i) =>
+    `<input inputmode="numeric" placeholder="Age" aria-label="Child ${i + 1} age" value="${ages[i] ?? keep[i] ?? ''}">`).join('');
+}
+$('kidPlus').onclick = () => setKids(+$('kidCount').textContent + 1);
+$('kidMinus').onclick = () => setKids(+$('kidCount').textContent - 1);
+
+$('parentsDep').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('parentsDep').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+});
+const parentsDep = () => $('parentsDep').querySelector('[aria-pressed="true"]')?.dataset.v || '';
+const toNum = v => { const d = String(v ?? '').replace(/[^0-9.]/g, ''); return d === '' ? null : Number(d); };
+document.addEventListener('focusout', e => {
+  if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = Math.round(toNum(e.target.value)).toLocaleString('en-US');
+});
+
+function setBackground(b = {}) {
+  $('motivation').value = b.motivation || '';
+  setChips('goals', b.goals || []);
+  $('retireAge').value = b.retireAge ?? '';
+  $('retireCash').value = b.retireCash != null ? Math.round(b.retireCash).toLocaleString('en-US') : '';
+  $('otherGoals').value = b.otherGoals || '';
+  setChips('people', b.people || []);
+  $('spouseJob').value = b.spouseJob || '';
+  $('ages').innerHTML = ''; setKids((b.childrenAges || []).length, b.childrenAges || []);
+  $('parentsDep').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === b.parentsDepend ? 'true' : 'false'));
+  $('otherPeople').value = b.otherPeople || '';
+  updateFollowUps();
+}
+function getBackground() {
+  const goals = picked('goals'), people = picked('people');
+  const kidsAsked = goals.includes('education') || people.includes('children');
+  return {
+    motivation: $('motivation').value.trim(),
+    goals,
+    retireAge: goals.includes('retire') ? toNum($('retireAge').value) : null,
+    retireCash: goals.includes('retire') ? toNum($('retireCash').value) : null,
+    otherGoals: $('otherGoals').value.trim(),
+    people,
+    spouseJob: people.includes('spouse') ? $('spouseJob').value.trim() : '',
+    childrenAges: kidsAsked ? [...$('ages').querySelectorAll('input')].map(i => toNum(i.value)) : [],
+    parentsDepend: people.includes('parents') ? parentsDep() : '',
+    otherPeople: $('otherPeople').value.trim()
+  };
+}
 
 // ---- Find existing client ----
 const results = $('results');
@@ -157,6 +292,7 @@ function fill(c) {
   $('cid').textContent = 'EDIT · ' + c.clientId;
   $('name').value = c.name; $('dob').value = c.dob; $('phone').value = c.phone; $('email').value = c.email || '';
   $('dob').dispatchEvent(new Event('input'));
+  setBackground(c.background);
   $('consent').checked = true;
   clearErrors(); $('saved').classList.remove('show');
 }
@@ -185,6 +321,7 @@ $('ff').addEventListener('submit', e => {
     age: calcAge($('dob').value),
     phone: $('phone').value.trim(),
     email: em,
+    background: getBackground(),
     consent: true
   };
   // Preview hand-off: the A-N-T Analysis page reads this for the client details.
@@ -197,7 +334,7 @@ $('ff').addEventListener('submit', e => {
 
 function reset() {
   $('ff').reset(); currentId = 'C-0003'; $('cid').textContent = 'NEW · C-0003';
-  $('age').textContent = '—'; clearErrors(); $('saved').classList.remove('show');
+  $('age').textContent = '—'; setBackground(); clearErrors(); $('saved').classList.remove('show');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 $('clearBtn').onclick = reset;

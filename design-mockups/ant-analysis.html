@@ -25,7 +25,7 @@ body{font-family:var(--body);background:#E9E6DF;color:var(--text);-webkit-print-
 .band h1 span{color:var(--gold)}
 .band .date{margin-left:auto;text-align:right;font-size:12px;color:#C9D2E0;line-height:1.5}
 .band .date b{display:block;color:#fff;font-size:14px}
-.body{padding:24px 28px;flex:1;display:flex;flex-direction:column;gap:20px}
+.body{padding:20px 28px;flex:1;display:flex;flex-direction:column;gap:16px}
 .client{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .client div{padding:10px 14px;border-right:1px solid var(--line)}
 .client div:last-child{border-right:0}
@@ -49,7 +49,10 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
 .prio b{font-family:var(--head);letter-spacing:.04em;color:var(--navy)}
 .prio span{margin-left:auto;color:var(--red);font-weight:700}
 .none{font-size:13px;color:var(--text-light)}
-.notes{border:1px solid var(--line);border-radius:10px;min-height:90px;padding:10px 12px;font-size:13px;outline:none;white-space:pre-wrap}
+.bg{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;font-size:12.5px;margin-top:12px}
+.bg dt{font-family:var(--head);font-weight:600;font-size:11px;letter-spacing:.1em;color:var(--gold-dark);padding-top:2px}
+.bg dd{color:var(--text)}
+.notes{border:1px solid var(--line);border-radius:10px;min-height:70px;padding:10px 12px;font-size:13px;outline:none;white-space:pre-wrap}
 .notes:empty::before{content:attr(data-ph);color:#A9A396}
 .sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:auto;padding-top:20px}
 .sign div{border-top:1.5px solid var(--text);padding-top:6px;font-size:11px;color:var(--text-light);letter-spacing:.08em;text-transform:uppercase}
@@ -92,6 +95,11 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
       <div><small>Age</small><b id="cAge">—</b></div>
       <div><small>Agent</small><b id="cAgent">—</b></div>
     </div>
+
+    <section id="bgSec">
+      <h2>BACKGROUND</h2>
+      <dl class="bg" id="bg"></dl>
+    </section>
 
     <section>
       <h2>L.I.F.E</h2>
@@ -150,6 +158,25 @@ $('cAge').textContent = client.age ?? '—';
 $('cAgent').textContent = client.agentId || '—';
 $('ref').textContent = (client.clientId || '') + ' · ' + now.toISOString().slice(0, 10);
 document.title = `A-N-T Analysis – ${client.name || 'Client'} – ${now.toISOString().slice(0, 10)}`;
+
+// Background from the Fact-Find form
+const b = client.background;
+if (b) {
+  const esc = t => String(t).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  const goals = [];
+  if (b.goals?.includes('retire')) goals.push('Retire' + (b.retireAge ? ' at ' + b.retireAge : '') + (b.retireCash ? ' · ' + fmt(b.retireCash) + ' / month' : ''));
+  if (b.goals?.includes('education')) goals.push("Kids' education");
+  const fam = [];
+  if (b.people?.includes('spouse')) fam.push('Spouse / partner' + (b.spouseJob ? ' (' + b.spouseJob + ')' : ''));
+  const ages = (b.childrenAges || []).filter(a => a != null);
+  if ((b.childrenAges || []).length) fam.push(b.childrenAges.length + (b.childrenAges.length === 1 ? ' child' : ' children') + (ages.length ? ' – age ' + ages.join(', ') : ''));
+  if (b.people?.includes('parents')) fam.push('Parents' + (b.parentsDepend ? ' – depending: ' + b.parentsDepend : ''));
+  if (b.otherPeople) fam.push(b.otherPeople);
+  const rows = [['MOTIVATION', b.motivation], ['GOALS', goals.join(' · ')], ['OTHER GOALS', b.otherGoals], ['FAMILY', fam.join(' · ')]]
+    .filter(([, v]) => v);
+  $('bg').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
+  if (!rows.length) $('bgSec').remove();
+} else { $('bgSec').remove(); }
 
 // Table + totals
 let tCur = 0, tGoal = 0, tGap = 0, anyGap = false;
