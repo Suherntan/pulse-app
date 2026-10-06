@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#0B2545; --navy-deep:#010C21; --navy-line:#1E3A66;
+  --navy:#0B2545; --navy-deep:#010C21; --navy-mid:#1A4478; --navy-line:#2A5288;
   --gold-soft:#F3AF3D; --cream:#F9DAAE;
   --white:#F7F5F0; --red:#E5533D; --ok:#5DBB63;
   --head:'Oswald','Arial Narrow',sans-serif; --body:'Work Sans',system-ui,sans-serif;
@@ -18,36 +18,39 @@
 html,body{height:100%;background:#000;color:var(--white);font-family:var(--body);overflow:hidden}
 .viewport{position:fixed;inset:0 0 48px 0}
 .stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;overflow:hidden;
-  background:radial-gradient(110% 90% at 25% 0%,#14396a 0%,var(--navy) 45%,var(--navy-deep) 100%)}
+  background:var(--navy)}
 .slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s}
 .slide.active{opacity:1;visibility:visible}
 .abs{position:absolute}
-.logo{left:42px;top:24px;width:200px;height:200px;border-radius:22px;background:#fff;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:4}
+.logo{left:42px;top:30px;width:240px;height:120px;z-index:4}
 .logo img{width:100%;height:100%;object-fit:contain}
 .step{opacity:0;transform:translateY(28px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
 .step.on{opacity:1;transform:none}
 .bar{display:grid;place-items:center;font-family:var(--head);font-weight:700;letter-spacing:.08em;border-radius:10px;line-height:1;text-align:center}
 
 /* ---------- Slide 2 (original layout, new colours) ---------- */
-.pic img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))}
+.need{width:240px;height:323px;display:flex;flex-direction:column;align-items:center}
+.need .dot{width:240px;height:240px;border-radius:50%;background:var(--gold-soft);display:grid;place-items:center}
+.need .dot svg{width:130px;height:130px}
+.need .line{width:6px;flex:1;background:var(--gold-soft)}
 .lifestyle{left:146px;top:503px;width:1628px;height:104px;font-size:84px;color:var(--navy-deep);
-  background:linear-gradient(90deg,#B98522,var(--gold-soft) 50%,#B98522);box-shadow:0 12px 30px rgba(0,0,0,.35)}
-.plan{width:448px;height:123px;font-size:76px;color:var(--white);background:rgba(255,255,255,.06);border:3px solid var(--gold-soft)}
-.fill{color:var(--navy-deep);background:var(--cream);font-size:64px}
+  background:var(--gold-soft)}
+.plan{width:448px;height:123px;font-size:76px;color:var(--white);background:var(--navy-mid)}
+.fill{color:var(--navy-deep);background:var(--white);font-size:64px}
 .income{left:741px;top:782px;width:473px;height:104px;font-size:80px;color:var(--navy-deep);background:var(--gold-soft)}
 .uparrow{left:933px;top:633px;width:103px;height:133px}
 .xmark{left:210px;top:607px;width:356px;height:335px;display:grid;place-items:center;font-family:var(--head);font-weight:700;
-  font-size:340px;line-height:1;color:var(--red);text-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transform:scale(1.8) rotate(-8deg);
+  font-size:340px;line-height:1;color:var(--red);opacity:0;transform:scale(1.8) rotate(-8deg);
   transition:opacity .35s ease,transform .45s cubic-bezier(.34,1.56,.64,1)}
 .xmark.on{opacity:1;transform:none}
 
 /* ---------- Slide 3 ---------- */
 .title3{left:289px;top:40px;width:575px;font-family:var(--head);font-weight:700;font-size:130px;letter-spacing:.12em;text-align:center;color:var(--gold-soft);
-  text-shadow:0 6px 24px rgba(0,0,0,.5);z-index:3}
+  z-index:3}
 .tri{left:100px;top:80px;width:854px;height:854px}
 .tier{height:66px;z-index:2}
 .tier .band{position:absolute;inset:0;border-radius:6px;background:var(--c);transform:scaleX(0);transform-origin:left center;
-  box-shadow:0 8px 22px rgba(0,0,0,.35)}
+  }
 .tier .mark{position:absolute;left:0;top:-14px;height:94px;overflow:visible;pointer-events:none}
 .tier .mark path{fill:none;stroke:var(--white);stroke-width:7;stroke-linecap:round;opacity:.9}
 .tier .word{position:absolute;left:24px;top:0;height:66px;display:flex;align-items:center;white-space:nowrap;
@@ -67,7 +70,7 @@ html,body{height:100%;background:#000;color:var(--white);font-family:var(--body)
 .cell{width:240px;height:66px;display:flex;align-items:center;justify-content:center}
 .row{opacity:0;transform:translateX(30px);transition:opacity .5s var(--ease) .5s,transform .5s var(--ease) .5s}
 .row.on{opacity:1;transform:none}
-input.money{width:100%;height:58px;background:rgba(1,12,33,.6);border:2px solid var(--navy-line);color:var(--white);border-radius:10px;
+input.money{width:100%;height:58px;background:#06182F;border:2px solid var(--navy-line);color:var(--white);border-radius:10px;
   padding:0 16px;font:600 30px var(--body);text-align:right;outline:none;transition:border-color .2s}
 input.money:focus{border-color:var(--gold-soft)}
 .gap{font:700 34px var(--body);transition:color .3s}
@@ -87,11 +90,11 @@ input.money:focus{border-color:var(--gold-soft)}
 
   <!-- SLIDE 2 – same layout & wording as the original, A-N-T colours -->
   <section class="slide" data-slide="2">
-    <div class="abs logo"><img src="ant-assets/logo.png" alt="ANT Wealth System"></div>
-    <div class="abs pic step" data-step="1" style="left:157px;top:143px;width:409px;height:409px"><img src="ant-assets/food.png" alt=""></div>
-    <div class="abs pic step" data-step="2" style="left:635px;top:179px;width:325px;height:325px"><img src="ant-assets/clothes.png" alt=""></div>
-    <div class="abs pic step" data-step="3" style="left:1004px;top:126px;width:419px;height:419px"><img src="ant-assets/house.png" alt=""></div>
-    <div class="abs pic step" data-step="4" style="left:1410px;top:158px;width:379px;height:379px"><img src="ant-assets/education.png" alt=""></div>
+    <div class="abs logo"><img src="ant-assets/logo-light.png" alt="ANT Wealth System"></div>
+    <div class="abs need step" data-step="1" style="left:241px;top:180px"><div class="dot"><svg viewBox="0 0 64 64" fill="none" stroke="#0B2545" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-label="food"><circle cx="32" cy="36" r="14"/><path d="M10 10v12a4 4 0 0 0 8 0V10M14 10v44M54 10c-6 4-6 16 0 18v26"/></svg></div><div class="line"></div></div>
+    <div class="abs need step" data-step="2" style="left:677px;top:180px"><div class="dot"><svg viewBox="0 0 64 64" fill="none" stroke="#0B2545" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-label="clothes"><path d="M22 10 10 18l6 10 6-3v29h20V25l6 3 6-10-12-8c-2 5-6 7-10 7s-8-2-10-7z"/></svg></div><div class="line"></div></div>
+    <div class="abs need step" data-step="3" style="left:1093px;top:180px"><div class="dot"><svg viewBox="0 0 64 64" fill="none" stroke="#0B2545" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-label="house"><path d="M6 30 32 9l26 21M13 25v29h38V25M26 54V39h12v15"/></svg></div><div class="line"></div></div>
+    <div class="abs need step" data-step="4" style="left:1479px;top:180px"><div class="dot"><svg viewBox="0 0 64 64" fill="none" stroke="#0B2545" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-label="education"><path d="M4 24 32 12l28 12-28 12z"/><path d="M16 30v12c0 6 32 6 32 0V30M58 25v15"/></svg></div><div class="line"></div></div>
 
     <div class="abs bar lifestyle">LIFESTYLE</div>
 
@@ -108,10 +111,10 @@ input.money:focus{border-color:var(--gold-soft)}
 
   <!-- SLIDE 3 – L.I.F.E -->
   <section class="slide" data-slide="3">
-    <div class="abs logo"><img src="ant-assets/logo.png" alt="ANT Wealth System"></div>
+    <div class="abs logo"><img src="ant-assets/logo-light.png" alt="ANT Wealth System"></div>
     <svg class="abs tri" viewBox="0 0 854 854" aria-hidden="true">
       <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F2C55"/><stop offset="1" stop-color="#010C21"/></linearGradient></defs>
-      <polygon points="427,0 854,854 0,854" fill="url(#tg)" stroke="#F3AF3D" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="427,0 854,854 0,854" fill="#06182F" stroke="#F3AF3D" stroke-width="4" stroke-linejoin="round"/>
     </svg>
     <div class="abs title3">L.I.F.E</div>
     <div id="tiers"></div>

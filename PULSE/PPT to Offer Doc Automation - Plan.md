@@ -235,6 +235,7 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 - Keep the **original slide layout, wording and click order**; only colours/design change (navy + gold, ANT logo, Oswald font). No small explanation text – the agent explains.
 - Slide 2 click order (matches the agent's script): food → clothes → house → education → EARNING → PLAN A → red X → PLAN B → FINANCIAL PLANNING. LIFESTYLE, INCOME and the arrow are there from the start. Typo "PLANING" fixed to "PLANNING".
 - Slide 3: title L.I.F.E; columns CURRENT STATUS · L.I.F.E (gap, automatic) · FINANCIAL GOALS. Each click: banner sweeps in (bottom first), a white brush mark drags the word out – long words run past the right side of the triangle. Return-% hints removed.
+- Part 5: **solid colours** (no gradients/see-through), the 4 photos above LIFESTYLE replaced by a **gold icon diagram** (food · clothing · house · education, linked to LIFESTYLE), **ANT logo redrawn on the navy background** (`ant-assets/logo-light.png`).
 
 ### ⚠️ Google Slides can't do live maths
 Google Slides tables have **no formulas**, so the automatic Gap needs one of:
