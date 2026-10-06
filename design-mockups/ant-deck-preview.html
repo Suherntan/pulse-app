@@ -185,6 +185,7 @@ input.money:focus{border-color:var(--gold-soft)}
   <button id="prev">← Back</button>
   <button id="all">Show all</button>
   <button id="next">Next →</button>
+  <button id="analysis">Save A-N-T Analysis</button>
 </div>
 
 <script>
@@ -237,19 +238,18 @@ function recalc() {
     if (g.textContent !== before) { void g.offsetWidth; g.classList.add('pop'); }
   });
 }
-// Pre-fill from the Fact-Find form (same order: hospitalization → investment)
-try {
-  const ff = JSON.parse(localStorage.getItem('ant-factfind-current') || 'null');
-  if (ff && ff.life) {
-    const keys = ['hospitalization', 'disability', 'criticalIllness', 'death', 'education', 'investment'];
-    [...rowsEl.children].forEach((r, i) => {
-      const v = ff.life[keys[i]] || {}, [cur, goal] = r.querySelectorAll('input');
-      if (v.current != null) cur.value = fmt(v.current);
-      if (v.goal != null) goal.value = fmt(v.goal);
-    });
-    recalc();
-  }
-} catch (_) {}
+// Keep the slide 3 outcome so the A-N-T Analysis PDF can be made from it
+const KEYS = ['hospitalization', 'disability', 'criticalIllness', 'death', 'education', 'investment'];
+function saveAnalysis() {
+  const life = {};
+  [...rowsEl.children].forEach((r, i) => {
+    const [cur, goal] = r.querySelectorAll('input');
+    const c = cur.value.trim() ? num(cur.value) : null, g = goal.value.trim() ? num(goal.value) : null;
+    life[KEYS[i]] = {current: c, goal: g, gap: c !== null && g !== null ? g - c : null};
+  });
+  try { localStorage.setItem('ant-analysis-current', JSON.stringify({savedAt: new Date().toISOString(), life})); } catch (_) {}
+}
+rowsEl.addEventListener('input', saveAnalysis);
 rowsEl.addEventListener('input', recalc);
 rowsEl.addEventListener('focusout', e => {
   if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = fmt(num(e.target.value));
@@ -287,6 +287,7 @@ function prev() { if (step > 0) showStep(step - 1, true); else if (cur > 0) go(c
 
 document.getElementById('next').onclick = next;
 document.getElementById('prev').onclick = prev;
+document.getElementById('analysis').onclick = () => { saveAnalysis(); location.href = 'ant-analysis.html'; };
 document.getElementById('all').onclick = () => showStep(maxSteps(), true);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input')) return;

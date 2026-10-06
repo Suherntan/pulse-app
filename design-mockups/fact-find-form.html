@@ -42,15 +42,6 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .fg .err{display:none;color:var(--red);font-size:12px;margin-top:4px}
 .fg.bad .err{display:block}
 .age{display:flex;align-items:center;justify-content:center;height:46px;border-radius:10px;background:#F7F1E3;font-family:var(--head);font-weight:600;font-size:20px;color:var(--navy)}
-.life{display:grid;grid-template-columns:1.25fr 1fr .9fr 1fr;gap:8px;align-items:center}
-.life .hd{font-family:var(--head);font-weight:500;font-size:12px;letter-spacing:.1em;color:var(--gold-dark);text-align:center}
-.life .hd:first-child{text-align:left}
-.life .area{display:flex;align-items:center;gap:8px;font-family:var(--head);font-weight:600;font-size:14px;letter-spacing:.04em;color:var(--navy)}
-.life .area i{width:10px;height:28px;border-radius:3px;background:var(--c);flex:none}
-.life input{width:100%;padding:10px 8px;border:1px solid var(--border);border-radius:9px;font:600 15px var(--body);text-align:right;background:#fff}
-.life input:focus{outline:none;border-color:var(--gold)}
-.gap{text-align:center;font-weight:700;font-size:15px;color:#B8B2A6}
-.gap.short{color:var(--red)} .gap.ok{color:var(--ok)}
 .consent{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45}
 .consent input{width:22px;height:22px;accent-color:var(--navy);flex:none;margin-top:1px}
 .consent.bad{color:var(--red)}
@@ -69,9 +60,6 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .note{font-size:12px;color:var(--text-light);margin-top:10px}
 @media (max-width:520px){
   .grid{grid-template-columns:1fr}
-  .life{grid-template-columns:1fr 1fr 1fr;row-gap:6px}
-  .life .hd:first-child{display:none}
-  .life .area{grid-column:1/-1;margin-top:8px}
 }
 </style>
 </head>
@@ -91,31 +79,18 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 
   <form id="ff" novalidate>
     <section class="card">
-      <h2><span class="n">A</span>CLIENT</h2>
+      <h2><span class="n">A</span>CLIENT BACKGROUND</h2>
       <div class="grid">
         <div class="fg full"><label for="name">Client Name *</label><input id="name" required placeholder="Full name"><div class="err">Please enter the client's name</div></div>
         <div class="fg"><label for="dob">Date of Birth *</label><input id="dob" type="date" required><div class="err">Please enter a valid date of birth</div></div>
         <div class="fg"><label>Age</label><div class="age" id="age">—</div></div>
         <div class="fg"><label for="phone">Phone *</label><input id="phone" type="tel" inputmode="tel" required placeholder="e.g. 012-345 6789"><div class="err">Please enter a valid phone number</div></div>
         <div class="fg"><label for="email">Email</label><input id="email" type="email" inputmode="email" placeholder="name@email.com"><div class="err">Please check the email</div></div>
+        <!-- More background questions (family members etc.) will be added here -->
       </div>
     </section>
 
-    <section class="card">
-      <h2><span class="n">B</span>L.I.F.E <span class="opt">Goals can be filled during the presentation</span></h2>
-      <div class="life" id="life">
-        <div class="hd">AREA</div><div class="hd">CURRENT STATUS</div><div class="hd">L.I.F.E</div><div class="hd">FINANCIAL GOALS</div>
-      </div>
-    </section>
 
-    <section class="card">
-      <h2><span class="n">C</span>RECOMMENDATION <span class="opt">After presenting</span></h2>
-      <div class="grid">
-        <div class="fg full"><label for="plan">Plan</label><input id="plan" placeholder="Plan name"></div>
-        <div class="fg"><label for="premium">Premium</label><input id="premium" class="money" inputmode="numeric" placeholder="0"></div>
-        <div class="fg"><label for="sa">Sum Assured</label><input id="sa" class="money" inputmode="numeric" placeholder="0"></div>
-      </div>
-    </section>
 
     <section class="card">
       <label class="consent" id="consentWrap"><input type="checkbox" id="consent">
@@ -130,7 +105,7 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
         <a class="btn primary" href="ant-deck-preview.html">PRESENT SLIDES →</a>
         <button type="button" class="btn ghost" id="newBtn">NEW CLIENT</button>
       </div>
-      <div class="note">Slide 3 opens with this client's L.I.F.E numbers already filled in.</div>
+      <div class="note">After the slides, the A-N-T Analysis PDF uses this client's details.</div>
     </section>
   </form>
 </main>
@@ -142,55 +117,14 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 <div class="toast" id="toast"></div>
 
 <script>
-// Same order as the pyramid: most urgent first.
-const AREAS = [
-  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#C0392B'},
-  {k:'disability',      name:'DISABILITY',       c:'#D35400'},
-  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#E67E22'},
-  {k:'death',           name:'DEATH',            c:'#C9962B'},
-  {k:'education',       name:'EDUCATION',        c:'#2E86AB'},
-  {k:'investment',      name:'INVESTMENT',       c:'#1B998B'}
-];
 // Demo records so "Find existing client" can be tried. Real ones come from the agent's sheet.
 const DEMO = [
-  {clientId:'C-0001', name:'Tan Ah Kow', dob:'1985-04-12', phone:'012-345 6789', email:'ahkow@example.com',
-   life:{hospitalization:[750000,1000000],disability:[100000,1000000],criticalIllness:[100000,1000000],death:[5000,100000],education:[null,null],investment:[500000,4500000]},
-   plan:'', premium:'', sumAssured:''},
-  {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:'',
-   life:{hospitalization:[0,null],disability:[0,null],criticalIllness:[50000,null],death:[100000,null],education:[null,null],investment:[20000,null]},
-   plan:'', premium:'', sumAssured:''}
+  {clientId:'C-0001', name:'Tan Ah Kow', dob:'1985-04-12', phone:'012-345 6789', email:'ahkow@example.com'},
+  {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:''}
 ];
 let currentId = 'C-0003';
 
 const $ = id => document.getElementById(id);
-const num = v => { const s = String(v ?? '').replace(/[^0-9.]/g, ''); return s === '' ? null : Number(s); };
-const fmt = n => n === null || n === undefined || n === '' ? '' : Math.round(n).toLocaleString('en-US');
-
-// Build L.I.F.E rows
-const life = $('life');
-AREAS.forEach(a => {
-  life.insertAdjacentHTML('beforeend', `
-    <div class="area" style="--c:${a.c}"><i></i>${a.name}</div>
-    <input class="money" data-a="${a.k}" data-f="cur" inputmode="numeric" placeholder="0" aria-label="${a.name} current status">
-    <div class="gap" data-gap="${a.k}">—</div>
-    <input class="money" data-a="${a.k}" data-f="goal" inputmode="numeric" placeholder="0" aria-label="${a.name} financial goal">`);
-});
-
-function recalcGaps() {
-  AREAS.forEach(a => {
-    const cur = num(life.querySelector(`[data-a="${a.k}"][data-f="cur"]`).value);
-    const goal = num(life.querySelector(`[data-a="${a.k}"][data-f="goal"]`).value);
-    const g = life.querySelector(`[data-gap="${a.k}"]`);
-    if (cur === null || goal === null) { g.className = 'gap'; g.textContent = '—'; return; }
-    const gap = goal - cur;
-    g.className = 'gap ' + (gap > 0 ? 'short' : 'ok');
-    g.textContent = gap > 0 ? fmt(gap) : '✓';
-  });
-}
-life.addEventListener('input', recalcGaps);
-document.addEventListener('focusout', e => {
-  if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = fmt(num(e.target.value));
-});
 
 function calcAge(iso) {
   if (!iso) return null;
@@ -223,14 +157,8 @@ function fill(c) {
   $('cid').textContent = 'EDIT · ' + c.clientId;
   $('name').value = c.name; $('dob').value = c.dob; $('phone').value = c.phone; $('email').value = c.email || '';
   $('dob').dispatchEvent(new Event('input'));
-  AREAS.forEach(a => {
-    const [cur, goal] = c.life[a.k] || [null, null];
-    life.querySelector(`[data-a="${a.k}"][data-f="cur"]`).value = fmt(cur);
-    life.querySelector(`[data-a="${a.k}"][data-f="goal"]`).value = fmt(goal);
-  });
-  $('plan').value = c.plan || ''; $('premium').value = fmt(num(c.premium)); $('sa').value = fmt(num(c.sumAssured));
   $('consent').checked = true;
-  recalcGaps(); clearErrors(); $('saved').classList.remove('show');
+  clearErrors(); $('saved').classList.remove('show');
 }
 
 // ---- Validation + save ----
@@ -257,17 +185,9 @@ $('ff').addEventListener('submit', e => {
     age: calcAge($('dob').value),
     phone: $('phone').value.trim(),
     email: em,
-    life: Object.fromEntries(AREAS.map(a => {
-      const cur = num(life.querySelector(`[data-a="${a.k}"][data-f="cur"]`).value);
-      const goal = num(life.querySelector(`[data-a="${a.k}"][data-f="goal"]`).value);
-      return [a.k, {current: cur, goal: goal, gap: cur !== null && goal !== null ? goal - cur : null}];
-    })),
-    plan: $('plan').value.trim(),
-    premium: num($('premium').value),
-    sumAssured: num($('sa').value),
     consent: true
   };
-  // Preview hand-off: the deck reads this to pre-fill slide 3.
+  // Preview hand-off: the A-N-T Analysis page reads this for the client details.
   try { localStorage.setItem('ant-factfind-current', JSON.stringify(record)); } catch (_) {}
   $('out').textContent = JSON.stringify(record, null, 2);
   $('saved').classList.add('show');
@@ -277,7 +197,7 @@ $('ff').addEventListener('submit', e => {
 
 function reset() {
   $('ff').reset(); currentId = 'C-0003'; $('cid').textContent = 'NEW · C-0003';
-  $('age').textContent = '—'; recalcGaps(); clearErrors(); $('saved').classList.remove('show');
+  $('age').textContent = '—'; clearErrors(); $('saved').classList.remove('show');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 $('clearBtn').onclick = reset;

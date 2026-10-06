@@ -244,16 +244,20 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 2. Type numbers in the Fact-Find form first, script fills the slide (gap pre-calculated) – not live in front of the client.
 3. Linked Google Sheets table in Slides – must press "Update" after each change; clunky.
 
-## Fact-Find form preview (6 Oct 2026)
+## Fact-Find form + A-N-T Analysis PDF (6 Oct 2026)
 
-File: `design-mockups/fact-find-form.html` – phone-first, PULSE look in ANT navy/gold.
-- Top: **Find existing client** (name or phone) → form opens pre-filled (next session).
-- **A · Client:** Name*, DOB* (age auto), Phone*, Email. Client ID shown (NEW / EDIT).
-- **B · L.I.F.E:** 6 areas, most urgent first. Current Status · L.I.F.E (auto) · Financial Goals (can be left for the presentation).
-- **C · Recommendation** (after presenting): Plan, Premium, Sum Assured.
-- **Consent** tick box (required).
-- Save → checks red fields → shows exactly what will be saved (with Agent ID) → **Present Slides** opens the deck with slide 3 already filled.
-- Preview only: demo clients, nothing is sent to Google yet.
+**Order:** Fact-Find form (client background) → Slides 1-3 → **A-N-T Analysis PDF** (outcome of slide 3).
+
+### Fact-Find form – `design-mockups/fact-find-form.html`
+- Only **client background** now (L.I.F.E and Recommendation sections removed).
+- Now: Name*, DOB* (age auto), Phone*, Email, consent tick. Find existing client at top.
+- **More background questions (family members etc.) – Su will send the list.**
+
+### A-N-T Analysis PDF – `design-mockups/ant-analysis.html`
+- Opened from the slides with the **Save A-N-T Analysis** button.
+- One A4 page: navy header with logo + date · client box (name, Client ID, age, agent) · L.I.F.E pyramid + table (Current Status, L.I.F.E, Financial Goals, totals) · **Priority** list (gaps, most urgent first) · Notes box (type before saving) · client & agent signature lines.
+- **Save as PDF** button (free, phone or laptop print → Save as PDF). File name: `A-N-T Analysis – <client> – <date>`.
+- Next build step: script saves the PDF into the client's Drive folder automatically and sends the numbers to the master.
 
 ## Full flow (review – 6 Oct 2026)
 
