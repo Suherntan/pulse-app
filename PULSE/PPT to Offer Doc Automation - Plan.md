@@ -182,19 +182,43 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 - Script limits are per master account – fine for a small team (each action takes a few seconds).
 - Client data = personal data: agents should tell clients their info is stored by the agency (consent line on the form).
 
+## ✅ Decision (6 Oct 2026): each agent hosts, manager only collects DATA
+
+- 10+ agents → plan big.
+- **Each agent uses their own Google account** for everything: own PULSE Sheet, Drive, form, slides, offer docs, script. (Replaces Option 3 above.)
+- **Agency manager's account = master DATA only.** No forms, slides or docs there. Manager sees all agents.
+- Bonus: each agent has their own free 15 GB → the storage problem goes away.
+
+### How data reaches the master (free)
+- Manager deploys a small **"Receiver"** script on the master Sheet (runs as the manager).
+- When an agent presses Save / Make Offer / Closed, the agent's script **sends the row** to the Receiver with the agent's **Agent ID + secret key**.
+- Receiver checks the key and writes the row into the master tabs: **CLIENTS, OFFERS, SESSIONS, AGENTS** (each row tagged with Agent ID, upsert by Client ID so no duplicates).
+- Agents **never get the master Sheet link** → they can't see each other's clients.
+- If the internet fails, the row waits in an "Outbox" tab on the agent's Sheet; a free nightly timer re-sends it.
+- Manager kicks out an agent → turn off their key. Data already sent stays in master.
+
+### Planning big (10+ agents)
+- **One shared code library ("PULSE Core")** owned by the manager. Each agent's script just calls it. Fix a bug once → all agents get it. (Without this, 10+ copies must be updated by hand.)
+- **Setup kit for new agents:** a template Sheet → "Make a copy" → menu **PULSE ▸ Setup** asks for Agent ID + key → done in ~5 minutes. One PULSE app website for everyone; each agent's own link is saved in the app's Settings.
+- **Size:** a Google Sheet holds 10 million cells ≈ 200,000+ client rows at ~40 columns. Fine for years. If it ever gets close, move old years to an archive Sheet.
+- **Weekly backup** of the master Sheet (Sunday, keep 8 weeks) – free.
+- **Policy point for the agency:** client files stay in each agent's own Drive. If an agent leaves, the agency keeps the *data* (in master) but not the files. Decide if that's OK.
+
 ## Full flow (review – 6 Oct 2026)
 
 ```
-0. Master setup (once): master Gmail, PULSE Sheet + Drive folders + templates, add agents (ID + PIN)
-1. Agent logs in to PULSE app (Agent ID + PIN)
+0. Manager setup (once): master Sheet + Receiver + PULSE Core library; give each agent an ID + key
+   Agent setup (once): copy template Sheet → PULSE ▸ Setup
+1. Agent opens PULSE app (their own)
 2. New client → Fact-Find FORM → Save
-      → CLIENTS row (with Agent ID) + client folder in master Drive + SESSIONS log
+      → saved in agent's own Sheet + Drive folder  ──copy of data──▶ master
 3. "Make Slides" → A-N-T deck copied & filled from the form → saved in client folder
 4. Agent presents the deck
 5. "✅ Presented – Make Offer" → Offer Doc + PDF in client folder
       → OFFERS row + PRESENTATION tab updated
 6. Client closes → status Closed → CLOSING tab updated
 7. Next session → search client → form pre-filled → update → new slides / offer
+   (steps 2, 5, 6 each send the data row to the master)
 8. Every Sunday → automatic backup copy of master Sheet
 ```
 
