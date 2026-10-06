@@ -244,6 +244,17 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 2. Type numbers in the Fact-Find form first, script fills the slide (gap pre-calculated) – not live in front of the client.
 3. Linked Google Sheets table in Slides – must press "Update" after each change; clunky.
 
+## Fact-Find form preview (6 Oct 2026)
+
+File: `design-mockups/fact-find-form.html` – phone-first, PULSE look in ANT navy/gold.
+- Top: **Find existing client** (name or phone) → form opens pre-filled (next session).
+- **A · Client:** Name*, DOB* (age auto), Phone*, Email. Client ID shown (NEW / EDIT).
+- **B · L.I.F.E:** 6 areas, most urgent first. Current Status · L.I.F.E (auto) · Financial Goals (can be left for the presentation).
+- **C · Recommendation** (after presenting): Plan, Premium, Sum Assured.
+- **Consent** tick box (required).
+- Save → checks red fields → shows exactly what will be saved (with Agent ID) → **Present Slides** opens the deck with slide 3 already filled.
+- Preview only: demo clients, nothing is sent to Google yet.
+
 ## Full flow (review – 6 Oct 2026)
 
 ```

@@ -237,6 +237,19 @@ function recalc() {
     if (g.textContent !== before) { void g.offsetWidth; g.classList.add('pop'); }
   });
 }
+// Pre-fill from the Fact-Find form (same order: hospitalization → investment)
+try {
+  const ff = JSON.parse(localStorage.getItem('ant-factfind-current') || 'null');
+  if (ff && ff.life) {
+    const keys = ['hospitalization', 'disability', 'criticalIllness', 'death', 'education', 'investment'];
+    [...rowsEl.children].forEach((r, i) => {
+      const v = ff.life[keys[i]] || {}, [cur, goal] = r.querySelectorAll('input');
+      if (v.current != null) cur.value = fmt(v.current);
+      if (v.goal != null) goal.value = fmt(v.goal);
+    });
+    recalc();
+  }
+} catch (_) {}
 rowsEl.addEventListener('input', recalc);
 rowsEl.addEventListener('focusout', e => {
   if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = fmt(num(e.target.value));

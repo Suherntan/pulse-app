@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Fact-Find</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2545; --navy-mid:#1A4478; --gold:#F3AF3D; --gold-dark:#A86F14;
+  --bg:#F4F2EC; --card:#fff; --text:#1B2433; --text-light:#5F6673; --border:#DAD6CC;
+  --red:#C9402B; --ok:#2E8B3E;
+  --head:'Oswald','Arial Narrow',sans-serif; --body:'Work Sans',system-ui,sans-serif;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
+header img{height:40px}
+header h1{font-family:var(--head);font-weight:600;font-size:20px;letter-spacing:.08em;white-space:nowrap}
+header .cid{margin-left:auto;white-space:nowrap;font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.06em}
+main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
+.search{position:relative;margin-bottom:16px}
+.search input{width:100%;padding:13px 14px 13px 42px;border-radius:12px;border:1px solid var(--border);font:500 15px var(--body);background:#fff}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%)}
+.results{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 12px 30px rgba(11,37,69,.15);display:none}
+.results button{display:flex;justify-content:space-between;width:100%;padding:12px 14px;border:0;background:none;font:500 15px var(--body);text-align:left;cursor:pointer}
+.results button:hover{background:#FBF4E6}
+.results small{color:var(--text-light)}
+.card{background:var(--card);border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(11,37,69,.04),0 6px 18px rgba(11,37,69,.06)}
+.card h2{font-family:var(--head);font-weight:600;font-size:17px;letter-spacing:.1em;color:var(--navy);display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card h2 .n{width:28px;height:28px;border-radius:8px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--gold-dark)}
+.card h2 .opt{margin-left:auto;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:0;color:var(--text-light)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.fg label{display:block;font-size:13px;font-weight:600;color:var(--text-light);margin-bottom:6px}
+.fg input{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font:500 16px var(--body);color:var(--text);background:#fff;transition:border-color .2s}
+.fg input.money{text-align:right}
+.fg input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,175,61,.25)}
+.fg.bad input{border-color:var(--red)}
+.fg .err{display:none;color:var(--red);font-size:12px;margin-top:4px}
+.fg.bad .err{display:block}
+.age{display:flex;align-items:center;justify-content:center;height:46px;border-radius:10px;background:#F7F1E3;font-family:var(--head);font-weight:600;font-size:20px;color:var(--navy)}
+.life{display:grid;grid-template-columns:1.25fr 1fr .9fr 1fr;gap:8px;align-items:center}
+.life .hd{font-family:var(--head);font-weight:500;font-size:12px;letter-spacing:.1em;color:var(--gold-dark);text-align:center}
+.life .hd:first-child{text-align:left}
+.life .area{display:flex;align-items:center;gap:8px;font-family:var(--head);font-weight:600;font-size:14px;letter-spacing:.04em;color:var(--navy)}
+.life .area i{width:10px;height:28px;border-radius:3px;background:var(--c);flex:none}
+.life input{width:100%;padding:10px 8px;border:1px solid var(--border);border-radius:9px;font:600 15px var(--body);text-align:right;background:#fff}
+.life input:focus{outline:none;border-color:var(--gold)}
+.gap{text-align:center;font-weight:700;font-size:15px;color:#B8B2A6}
+.gap.short{color:var(--red)} .gap.ok{color:var(--ok)}
+.consent{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45}
+.consent input{width:22px;height:22px;accent-color:var(--navy);flex:none;margin-top:1px}
+.consent.bad{color:var(--red)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;justify-content:center;z-index:5}
+.btn{border:0;border-radius:12px;padding:14px 22px;font:700 15px var(--head);letter-spacing:.1em;cursor:pointer;transition:transform .15s var(--ease)}
+.btn:active{transform:translateY(2px)}
+.btn.primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark);flex:1;max-width:340px}
+.btn.ghost{background:#EEF1F6;color:var(--navy)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:all .35s var(--ease);max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.saved{display:none}
+.saved.show{display:block}
+.saved pre{background:#0B2545;color:#E9E4D8;border-radius:12px;padding:14px;font-size:12px;overflow:auto;max-height:300px}
+.saved .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.saved a{text-decoration:none}
+.note{font-size:12px;color:var(--text-light);margin-top:10px}
+@media (max-width:520px){
+  .grid{grid-template-columns:1fr}
+  .life{grid-template-columns:1fr 1fr 1fr;row-gap:6px}
+  .life .hd:first-child{display:none}
+  .life .area{grid-column:1/-1;margin-top:8px}
+}
+</style>
+</head>
+<body>
+<header>
+  <img src="ant-assets/logo-light.png" alt="ANT Wealth System">
+  <h1>FACT-FIND</h1>
+  <span class="cid" id="cid">NEW · C-0003</span>
+</header>
+
+<main>
+  <div class="search">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5F6673" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Find existing client (name or phone)" autocomplete="off">
+    <div class="results" id="results"></div>
+  </div>
+
+  <form id="ff" novalidate>
+    <section class="card">
+      <h2><span class="n">A</span>CLIENT</h2>
+      <div class="grid">
+        <div class="fg full"><label for="name">Client Name *</label><input id="name" required placeholder="Full name"><div class="err">Please enter the client's name</div></div>
+        <div class="fg"><label for="dob">Date of Birth *</label><input id="dob" type="date" required><div class="err">Please enter a valid date of birth</div></div>
+        <div class="fg"><label>Age</label><div class="age" id="age">—</div></div>
+        <div class="fg"><label for="phone">Phone *</label><input id="phone" type="tel" inputmode="tel" required placeholder="e.g. 012-345 6789"><div class="err">Please enter a valid phone number</div></div>
+        <div class="fg"><label for="email">Email</label><input id="email" type="email" inputmode="email" placeholder="name@email.com"><div class="err">Please check the email</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">B</span>L.I.F.E <span class="opt">Goals can be filled during the presentation</span></h2>
+      <div class="life" id="life">
+        <div class="hd">AREA</div><div class="hd">CURRENT STATUS</div><div class="hd">L.I.F.E</div><div class="hd">FINANCIAL GOALS</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">C</span>RECOMMENDATION <span class="opt">After presenting</span></h2>
+      <div class="grid">
+        <div class="fg full"><label for="plan">Plan</label><input id="plan" placeholder="Plan name"></div>
+        <div class="fg"><label for="premium">Premium</label><input id="premium" class="money" inputmode="numeric" placeholder="0"></div>
+        <div class="fg"><label for="sa">Sum Assured</label><input id="sa" class="money" inputmode="numeric" placeholder="0"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <label class="consent" id="consentWrap"><input type="checkbox" id="consent">
+        <span>Client agrees that these details are kept by the agency for financial planning and follow-up.</span></label>
+    </section>
+
+    <section class="card saved" id="saved">
+      <h2><span class="n">✓</span>SAVED</h2>
+      <div>This is what will be saved (preview only – nothing is sent yet):</div>
+      <pre id="out"></pre>
+      <div class="row">
+        <a class="btn primary" href="ant-deck-preview.html">PRESENT SLIDES →</a>
+        <button type="button" class="btn ghost" id="newBtn">NEW CLIENT</button>
+      </div>
+      <div class="note">Slide 3 opens with this client's L.I.F.E numbers already filled in.</div>
+    </section>
+  </form>
+</main>
+
+<div class="bar">
+  <button type="button" class="btn ghost" id="clearBtn">CLEAR</button>
+  <button type="submit" form="ff" class="btn primary">SAVE CLIENT</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// Same order as the pyramid: most urgent first.
+const AREAS = [
+  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#C0392B'},
+  {k:'disability',      name:'DISABILITY',       c:'#D35400'},
+  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#E67E22'},
+  {k:'death',           name:'DEATH',            c:'#C9962B'},
+  {k:'education',       name:'EDUCATION',        c:'#2E86AB'},
+  {k:'investment',      name:'INVESTMENT',       c:'#1B998B'}
+];
+// Demo records so "Find existing client" can be tried. Real ones come from the agent's sheet.
+const DEMO = [
+  {clientId:'C-0001', name:'Tan Ah Kow', dob:'1985-04-12', phone:'012-345 6789', email:'ahkow@example.com',
+   life:{hospitalization:[750000,1000000],disability:[100000,1000000],criticalIllness:[100000,1000000],death:[5000,100000],education:[null,null],investment:[500000,4500000]},
+   plan:'', premium:'', sumAssured:''},
+  {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:'',
+   life:{hospitalization:[0,null],disability:[0,null],criticalIllness:[50000,null],death:[100000,null],education:[null,null],investment:[20000,null]},
+   plan:'', premium:'', sumAssured:''}
+];
+let currentId = 'C-0003';
+
+const $ = id => document.getElementById(id);
+const num = v => { const s = String(v ?? '').replace(/[^0-9.]/g, ''); return s === '' ? null : Number(s); };
+const fmt = n => n === null || n === undefined || n === '' ? '' : Math.round(n).toLocaleString('en-US');
+
+// Build L.I.F.E rows
+const life = $('life');
+AREAS.forEach(a => {
+  life.insertAdjacentHTML('beforeend', `
+    <div class="area" style="--c:${a.c}"><i></i>${a.name}</div>
+    <input class="money" data-a="${a.k}" data-f="cur" inputmode="numeric" placeholder="0" aria-label="${a.name} current status">
+    <div class="gap" data-gap="${a.k}">—</div>
+    <input class="money" data-a="${a.k}" data-f="goal" inputmode="numeric" placeholder="0" aria-label="${a.name} financial goal">`);
+});
+
+function recalcGaps() {
+  AREAS.forEach(a => {
+    const cur = num(life.querySelector(`[data-a="${a.k}"][data-f="cur"]`).value);
+    const goal = num(life.querySelector(`[data-a="${a.k}"][data-f="goal"]`).value);
+    const g = life.querySelector(`[data-gap="${a.k}"]`);
+    if (cur === null || goal === null) { g.className = 'gap'; g.textContent = '—'; return; }
+    const gap = goal - cur;
+    g.className = 'gap ' + (gap > 0 ? 'short' : 'ok');
+    g.textContent = gap > 0 ? fmt(gap) : '✓';
+  });
+}
+life.addEventListener('input', recalcGaps);
+document.addEventListener('focusout', e => {
+  if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = fmt(num(e.target.value));
+});
+
+function calcAge(iso) {
+  if (!iso) return null;
+  const d = new Date(iso + 'T00:00:00'), t = new Date();
+  if (isNaN(d) || d > t) return null;
+  let a = t.getFullYear() - d.getFullYear();
+  if (t.getMonth() < d.getMonth() || (t.getMonth() === d.getMonth() && t.getDate() < d.getDate())) a--;
+  return a;
+}
+$('dob').addEventListener('input', () => { const a = calcAge($('dob').value); $('age').textContent = a === null ? '—' : a; });
+
+// ---- Find existing client ----
+const results = $('results');
+$('q').addEventListener('input', () => {
+  const q = $('q').value.trim().toLowerCase();
+  const hits = q ? DEMO.filter(c => c.name.toLowerCase().includes(q) || c.phone.replace(/\D/g, '').includes(q.replace(/\D/g, '') || '§')) : [];
+  results.innerHTML = hits.map((c, i) => `<button type="button" data-i="${DEMO.indexOf(c)}"><span>${c.name}</span><small>${c.clientId} · ${c.phone}</small></button>`).join('')
+    || (q ? '<button type="button" disabled><small>No client found – fill in below as new</small></button>' : '');
+  results.style.display = q ? 'block' : 'none';
+});
+results.addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  fill(DEMO[+b.dataset.i]);
+  results.style.display = 'none'; $('q').value = '';
+  toast('Loaded ' + DEMO[+b.dataset.i].name + ' – update and save');
+});
+
+function fill(c) {
+  currentId = c.clientId;
+  $('cid').textContent = 'EDIT · ' + c.clientId;
+  $('name').value = c.name; $('dob').value = c.dob; $('phone').value = c.phone; $('email').value = c.email || '';
+  $('dob').dispatchEvent(new Event('input'));
+  AREAS.forEach(a => {
+    const [cur, goal] = c.life[a.k] || [null, null];
+    life.querySelector(`[data-a="${a.k}"][data-f="cur"]`).value = fmt(cur);
+    life.querySelector(`[data-a="${a.k}"][data-f="goal"]`).value = fmt(goal);
+  });
+  $('plan').value = c.plan || ''; $('premium').value = fmt(num(c.premium)); $('sa').value = fmt(num(c.sumAssured));
+  $('consent').checked = true;
+  recalcGaps(); clearErrors(); $('saved').classList.remove('show');
+}
+
+// ---- Validation + save ----
+function setBad(id, bad) { $(id).closest('.fg').classList.toggle('bad', bad); return bad; }
+function clearErrors() { document.querySelectorAll('.fg.bad').forEach(f => f.classList.remove('bad')); $('consentWrap').classList.remove('bad'); }
+
+$('ff').addEventListener('submit', e => {
+  e.preventDefault(); clearErrors();
+  let bad = false;
+  bad = setBad('name', !$('name').value.trim()) || bad;
+  bad = setBad('dob', calcAge($('dob').value) === null) || bad;
+  bad = setBad('phone', $('phone').value.replace(/\D/g, '').length < 9) || bad;
+  const em = $('email').value.trim();
+  bad = setBad('email', !!em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) || bad;
+  if (!$('consent').checked) { $('consentWrap').classList.add('bad'); bad = true; }
+  if (bad) { toast('Please check the fields in red'); document.querySelector('.bad')?.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+
+  const record = {
+    clientId: currentId,
+    agentId: 'AG-001',
+    updatedAt: new Date().toISOString(),
+    name: $('name').value.trim(),
+    dob: $('dob').value,
+    age: calcAge($('dob').value),
+    phone: $('phone').value.trim(),
+    email: em,
+    life: Object.fromEntries(AREAS.map(a => {
+      const cur = num(life.querySelector(`[data-a="${a.k}"][data-f="cur"]`).value);
+      const goal = num(life.querySelector(`[data-a="${a.k}"][data-f="goal"]`).value);
+      return [a.k, {current: cur, goal: goal, gap: cur !== null && goal !== null ? goal - cur : null}];
+    })),
+    plan: $('plan').value.trim(),
+    premium: num($('premium').value),
+    sumAssured: num($('sa').value),
+    consent: true
+  };
+  // Preview hand-off: the deck reads this to pre-fill slide 3.
+  try { localStorage.setItem('ant-factfind-current', JSON.stringify(record)); } catch (_) {}
+  $('out').textContent = JSON.stringify(record, null, 2);
+  $('saved').classList.add('show');
+  $('saved').scrollIntoView({behavior:'smooth'});
+  toast('Saved ' + record.name + ' (' + record.clientId + ')');
+});
+
+function reset() {
+  $('ff').reset(); currentId = 'C-0003'; $('cid').textContent = 'NEW · C-0003';
+  $('age').textContent = '—'; recalcGaps(); clearErrors(); $('saved').classList.remove('show');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+$('clearBtn').onclick = reset;
+$('newBtn').onclick = reset;
+
+let tt;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }
+</script>
+</body>
+</html>
