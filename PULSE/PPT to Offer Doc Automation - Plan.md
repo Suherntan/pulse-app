@@ -204,6 +204,20 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 - **Weekly backup** of the master Sheet (Sunday, keep 8 weeks) – free.
 - **Policy point for the agency:** client files stay in each agent's own Drive. If an agent leaves, the agency keeps the *data* (in master) but not the files. Decide if that's OK.
 
+## Other options besides Google (6 Oct 2026)
+
+| Option | Free plan (check before sign-up) | Good | Not so good | Verdict |
+|---|---|---|---|---|
+| **Google (current plan)** | Free, 15 GB per account | Already built, Slides/Docs native, agents know it | Not a "real" database; logins are DIY | ✅ Start here |
+| **Supabase** (real database) | ~500 MB database + 1 GB files, real logins | Built for many users; "each agent sees only own rows, manager sees all" is built-in | Big rebuild of PULSE; free project pauses if unused ~1 week; still need Google for Slides/Docs | ⭐ Upgrade path when team grows (30+) |
+| Firebase (Google) | Free database + logins; file storage needs paid plan | Similar to Supabase | Files not free anymore; more setup | Maybe |
+| Cloudflare D1 + Workers (already used in `small-dew-3892`) | 5 GB database, 100k requests/day | Very cheap, fast, already have account | Most coding work, no Slides/Docs | Later, techy option |
+| Airtable | 1,000 records per base | Easy | Far too small for 10+ agents; paid ~US$20/user/month | ❌ |
+| Zoho CRM | Free for ~3 users only | Real CRM | Paid for 10+ agents | ❌ |
+| Microsoft 365 / OneDrive | Mostly paid | Word/PowerPoint native | Power Automate paid | ❌ |
+
+**Recommendation:** build on Google now (free, fastest). Design the data (Client ID, Agent ID, same columns) so we can move the master to **Supabase** later without redoing the agents' side.
+
 ## Full flow (review – 6 Oct 2026)
 
 ```
