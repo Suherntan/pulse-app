@@ -190,6 +190,8 @@ const DEMO = [
   {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:''}
 ];
 let currentId = 'C-0003';
+// Agent profile – set once per agent in PULSE settings (demo values here)
+const AGENT = {agentId:'AG-001', agentName:'Demo Agent', agentPhone:'012-000 0000'};
 
 const $ = id => document.getElementById(id);
 
@@ -314,7 +316,7 @@ $('ff').addEventListener('submit', e => {
 
   const record = {
     clientId: currentId,
-    agentId: 'AG-001',
+    ...AGENT,
     updatedAt: new Date().toISOString(),
     name: $('name').value.trim(),
     dob: $('dob').value,

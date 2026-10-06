@@ -258,7 +258,9 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 
 ### A-N-T Analysis PDF – `design-mockups/ant-analysis.html`
 - Opened from the slides with the **Save A-N-T Analysis** button.
-- One A4 page: navy header with logo + date · client box (name, Client ID, age, agent) · L.I.F.E pyramid + table (Current Status, L.I.F.E, Financial Goals, totals) · **Priority** list (gaps, most urgent first) · Notes box (type before saving) · client & agent signature lines.
+- One A4 page: navy header with logo + date · client box (name, Client ID, age, agent) · L.I.F.E pyramid + table (Current Status, L.I.F.E, Financial Goals, totals) · **Priority** list (gaps, most urgent first) · Notes box (type before saving). **No signature lines.** Agent **name + phone** shown in the client box and footer (from the agent's profile, set once in PULSE settings).
+- PDF is **for records only** – not sent to the client.
+- Logo position on slides 1 & 2: **on hold**.
 - **Save as PDF** button (free, phone or laptop print → Save as PDF). File name: `A-N-T Analysis – <client> – <date>`.
 - Next build step: script saves the PDF into the client's Drive folder automatically and sends the numbers to the master.
 
