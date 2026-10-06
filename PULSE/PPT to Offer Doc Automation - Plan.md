@@ -128,6 +128,34 @@ Sum Assured:
 - **No client details in the deck yet** → we add slide 4 "Data slide" (set to **Skip slide** in Google Slides so the client never sees it when presenting).
 - Idea (optional): also save the 6 L.I.F.E gaps into the OFFERS tab, so PULSE shows each client's coverage gap.
 
+## ⭐ New direction (6 Oct 2026): Form first, Google Drive as the base
+
+**Flow is now:** Fact-Find **Form** (in PULSE app) → saved to **Google Drive** → Slides + Offer Doc are **filled from Drive** → next session, pull the same client back out.
+
+This replaces the "Data slide" idea: data no longer has to be read *out of* the slides – it goes *into* the slides from the form. Simpler, fewer mistakes, still free.
+
+### The form ("Client Fact-Find")
+- Same look as the existing **Add Pipeline Client** form in PULSE, following the PULSE Ant Design mockup (`design-mockups/pulse-ant-design-redesign.html`) and the navy/gold A-N-T colours.
+- Section A – Client: Name, DOB (age auto), Phone, Email (+ maybe Occupation, Monthly Income – to confirm)
+- Section B – L.I.F.E needs: for Investment, Education, Death, Critical Illness, Disability, Hospitalization → **Current** + **Goal**. The **gap is calculated automatically** (Goal − Current), so the slide-3 maths can't go wrong.
+- Section C – Recommendation (filled after presenting): Plan, Premium, Sum Assured.
+
+### Google Drive = the base
+```
+PULSE Google Sheet  (already in Drive)
+  └ CLIENTS tab   ← one row per client, Client ID (e.g. C-0001). The master record.
+  └ OFFERS tab    ← one row per offer, linked by Client ID
+  └ SESSIONS tab  ← log: date, client, what was done (form saved / slides made / offer made)
+Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
+  └ Slides, Offer Docs, PDFs for that client
+```
+- **Next session:** search the client in PULSE → form opens **pre-filled** → change what's new → press Save → make new Slides / Offer Doc.
+- **Future tools** (WhatsApp reminders, reports, etc.) all read the same CLIENTS tab – one source of truth.
+
+### Watch out (free storage)
+- Free Google Drive = 15 GB. The sample deck is ~26 MB (big photos). One copy per client → ~500 decks fills the drive.
+- Fix (free): compress the deck photos once (target 3–5 MB), and keep only the PDF for old clients.
+
 ## Questions to answer before details
 
 1. ~~PowerPoint or Google Slides?~~ → Google Slides
