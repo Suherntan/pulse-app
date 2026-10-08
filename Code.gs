@@ -201,7 +201,7 @@ function findFieldColumns_(sheet) {
  */
 function stampDateAndWeekDay_(sheet, cols, rowNum, dateVal) {
   if (cols.dateOfAction === -1) return;
-  sheet.getRange(rowNum, cols.dateOfAction + 1).setValue(dateVal).setNumberFormat("yyyy-mm-dd");
+  sheet.getRange(rowNum, cols.dateOfAction + 1).setValue(dateVal).setNumberFormat("dd/mm/yyyy");
 
   var firstDay = new Date(dateVal.getFullYear(), dateVal.getMonth(), 1).getDay();
   var offset = (firstDay + 6) % 7;
@@ -284,15 +284,9 @@ function moveRowToStatus_(sourceSheet, cols, row, statusValue, previousStatus) {
     return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
   }
 
-  // Whole-row copy: works as long as this tab and the target tab share
-  // the same column layout as each other (they're meant to mirror one
-  // another). If you reorder columns, do it identically across
-  // APPROACH / PRESENTATION / CLOSING so this stays correct.
-  var numCols = sourceSheet.getLastColumn();
-  if (numCols < 1) numCols = 1;
-  var sourceRange = sourceSheet.getRange(row, 1, 1, numCols);
-  var destination = targetSheet.getRange(nextRow, 1);
-  sourceRange.copyTo(destination);
+  // Copy by column TITLE, not position, so each tab can keep its own
+  // column order (e.g. CLOSING arranged differently from APPROACH).
+  copyRowByHeader_(sourceSheet, cols, row, targetSheet, targetCols, nextRow);
 
   // Before we overwrite Date of Action with today, capture whatever it
   // currently holds (copied over from the source row) into "DATE FIRST
@@ -315,6 +309,48 @@ function moveRowToStatus_(sourceSheet, cols, row, statusValue, previousStatus) {
 
   sourceSheet.deleteRow(row);
   return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
+}
+
+/**
+ * Copies one row from sourceSheet to targetSheet matching columns by
+ * their header title instead of by position. A column is matched by the
+ * field it means (COLUMN_HEADER_LABELS – so "PAYMENT DUE" on one tab
+ * still lands in "PREMIUM DUE DATE" on another), otherwise by the exact
+ * same header text. Columns the target tab doesn't have are skipped.
+ * Values and their number formats (dates etc.) are copied.
+ */
+function copyRowByHeader_(sourceSheet, sourceCols, sourceRow, targetSheet, targetCols, targetRow) {
+  var srcLast = Math.max(sourceSheet.getLastColumn(), 1);
+  var tgtLast = Math.max(targetSheet.getLastColumn(), 1);
+  var norm = function (h) { return String(h).trim().toUpperCase(); };
+  var srcHead = sourceSheet.getRange(sourceCols._headerRow, 1, 1, srcLast).getValues()[0].map(norm);
+  var tgtHead = targetSheet.getRange(targetCols._headerRow, 1, 1, tgtLast).getValues()[0].map(norm);
+
+  // source column index -> target column index
+  var map = {};
+  for (var field in COLUMN_HEADER_LABELS) {
+    if (sourceCols[field] > -1 && targetCols[field] > -1) map[sourceCols[field]] = targetCols[field];
+  }
+  var used = {};
+  for (var k in map) used[map[k]] = true;
+  for (var i = 0; i < srcHead.length; i++) {
+    if (map[i] !== undefined || !srcHead[i]) continue;
+    var j = tgtHead.indexOf(srcHead[i]);
+    if (j > -1 && !used[j]) { map[i] = j; used[j] = true; }
+  }
+
+  var srcRange = sourceSheet.getRange(sourceRow, 1, 1, srcLast);
+  var srcValues = srcRange.getValues()[0];
+  var srcFormats = srcRange.getNumberFormats()[0];
+  var tgtRange = targetSheet.getRange(targetRow, 1, 1, tgtLast);
+  var outValues = tgtRange.getValues()[0];
+  var outFormats = tgtRange.getNumberFormats()[0];
+  for (var from in map) {
+    outValues[map[from]] = srcValues[from];
+    outFormats[map[from]] = srcFormats[from];
+  }
+  tgtRange.setValues([outValues]);
+  tgtRange.setNumberFormats([outFormats]);
 }
 
 /**
@@ -343,7 +379,7 @@ function preserveOriginalDate_(sheet, cols, rowNum, dateVal) {
   var colIdx = ensureOriginalDateColumn_(sheet, cols);
   var cell = sheet.getRange(rowNum, colIdx + 1);
   if (!cell.getValue()) {
-    cell.setValue(dateVal).setNumberFormat("yyyy-mm-dd");
+    cell.setValue(dateVal).setNumberFormat("dd/mm/yyyy");
   }
 }
 
@@ -432,7 +468,7 @@ function onEdit(e) {
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     var futureDate = new Date(today.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
-    sheet.getRange(row, cols.followUpDate + 1).setValue(futureDate).setNumberFormat("yyyy-mm-dd");
+    sheet.getRange(row, cols.followUpDate + 1).setValue(futureDate).setNumberFormat("dd/mm/yyyy");
 
     SpreadsheetApp.flush();
 
@@ -658,6 +694,13 @@ function doGet(e) {
         return jsonResponse(getFundPipelineData());
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
+      // A-N-T (see ANT.gs)
+      case 'antProfile':
+        return jsonResponse(antProfile());
+      case 'antSearchClients':
+        return jsonResponse(antSearchClients(e.parameter.q));
+      case 'antGetClient':
+        return jsonResponse(antGetClient(e.parameter.id));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -685,6 +728,11 @@ function doPost(e) {
         return jsonResponse(addPipelineClient(data));
       case 'importFundData':
         return jsonResponse(importFundData(data));
+      // A-N-T (see ANT.gs)
+      case 'antSaveClient':
+        return jsonResponse(antSaveClient(data));
+      case 'antSaveAnalysis':
+        return jsonResponse(antSaveAnalysis(data));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -965,8 +1013,8 @@ function addClientDetails(record) {
   }
 
   if (cols.policyNumber > -1) sheet.getRange(targetRow, cols.policyNumber + 1).setValue(record.policyNumber || '');
-  if (cols.birthday > -1 && record.birthday) sheet.getRange(targetRow, cols.birthday + 1).setValue(new Date(record.birthday + 'T00:00:00')).setNumberFormat('yyyy-mm-dd');
-  if (cols.paymentDue > -1 && record.paymentDue) sheet.getRange(targetRow, cols.paymentDue + 1).setValue(new Date(record.paymentDue + 'T00:00:00')).setNumberFormat('yyyy-mm-dd');
+  if (cols.birthday > -1 && record.birthday) sheet.getRange(targetRow, cols.birthday + 1).setValue(new Date(record.birthday + 'T00:00:00')).setNumberFormat('dd/mm/yyyy');
+  if (cols.paymentDue > -1 && record.paymentDue) sheet.getRange(targetRow, cols.paymentDue + 1).setValue(new Date(record.paymentDue + 'T00:00:00')).setNumberFormat('dd/mm/yyyy');
 
   return { success: true, created: false };
 }
@@ -1011,7 +1059,7 @@ function updateClientRecord(record) {
     if (cols[field] === -1 || value === undefined) return;
     var cell = sheet.getRange(row, cols[field] + 1);
     if (isDate) {
-      if (value) cell.setValue(new Date(value + "T00:00:00")).setNumberFormat("yyyy-mm-dd");
+      if (value) cell.setValue(new Date(value + "T00:00:00")).setNumberFormat("dd/mm/yyyy");
       else cell.clearContent();
     } else {
       cell.setValue(value);
@@ -1252,6 +1300,7 @@ function onOpen() {
     .addItem("Turn Off Monthly Manulife Import Reminder", "removeMonthlyManulifeReminder")
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
     .addToUi();
+  antAddMenu_(); // A-N-T menu (ANT.gs)
 }
 
 
@@ -1370,7 +1419,7 @@ function advanceDueDateIfPast_(sheet, cols, absoluteRow, dueDate, today, rawPaym
     rolled = true;
   }
   if (rolled) {
-    sheet.getRange(absoluteRow, cols.paymentDue + 1).setValue(newDate).setNumberFormat("yyyy-mm-dd");
+    sheet.getRange(absoluteRow, cols.paymentDue + 1).setValue(newDate).setNumberFormat("dd/mm/yyyy");
   }
   return newDate;
 }
@@ -1449,13 +1498,13 @@ function markReminderSent_(reminderSheet, row) {
     var targetRow = located.targetRow;
     var today = new Date();
     if (type === "Birthday" && c.greetingSent > -1) {
-      sheet.getRange(targetRow, c.greetingSent + 1).setValue(today).setNumberFormat("yyyy-mm-dd");
+      sheet.getRange(targetRow, c.greetingSent + 1).setValue(today).setNumberFormat("dd/mm/yyyy");
     } else if (type === "Premium Due" && c.reminderSent > -1 && c.paymentDue > -1) {
       var currentDue = sheet.getRange(targetRow, c.paymentDue + 1).getValue();
-      sheet.getRange(targetRow, c.reminderSent + 1).setValue(currentDue).setNumberFormat("yyyy-mm-dd");
+      sheet.getRange(targetRow, c.reminderSent + 1).setValue(currentDue).setNumberFormat("dd/mm/yyyy");
     } else if (type === "Premium Due (Advance Notice)" && c.advanceReminderSent > -1 && c.paymentDue > -1) {
       var currentDueAdvance = sheet.getRange(targetRow, c.paymentDue + 1).getValue();
-      sheet.getRange(targetRow, c.advanceReminderSent + 1).setValue(currentDueAdvance).setNumberFormat("yyyy-mm-dd");
+      sheet.getRange(targetRow, c.advanceReminderSent + 1).setValue(currentDueAdvance).setNumberFormat("dd/mm/yyyy");
     }
   }
 
@@ -2015,7 +2064,7 @@ function sendBirthdayVoucherEmails() {
         MailApp.sendEmail(String(email).trim(), subject, body);
         sentCount++;
         if (cols.voucherSent > -1) {
-          sheet.getRange(cols._dataStartRow + i, cols.voucherSent + 1).setValue(today).setNumberFormat("yyyy-mm-dd");
+          sheet.getRange(cols._dataStartRow + i, cols.voucherSent + 1).setValue(today).setNumberFormat("dd/mm/yyyy");
         }
       } catch (err) {
         // Skip a bad address and keep going with the rest.
@@ -3637,7 +3686,7 @@ function importPaymentModeAndAddress() {
         todayMidnight.setHours(0, 0, 0, 0);
         var upcoming = dueDates.filter(function (d) { return d.getTime() >= todayMidnight.getTime(); });
         var chosenDue = upcoming.length ? upcoming[0] : dueDates[dueDates.length - 1];
-        sheet.getRange(absoluteRow, cols.paymentDue + 1).setValue(chosenDue).setNumberFormat('yyyy-mm-dd');
+        sheet.getRange(absoluteRow, cols.paymentDue + 1).setValue(chosenDue).setNumberFormat('dd/mm/yyyy');
         dueDatesFilled++;
       }
 
@@ -3645,7 +3694,7 @@ function importPaymentModeAndAddress() {
       // never overwrite one you've already got.
       if (cols.birthday > -1 && birthdayVal) {
         var bCell = sheet.getRange(absoluteRow, cols.birthday + 1);
-        if (!bCell.getValue()) bCell.setValue(birthdayVal).setNumberFormat('yyyy-mm-dd');
+        if (!bCell.getValue()) bCell.setValue(birthdayVal).setNumberFormat('dd/mm/yyyy');
       }
 
       matched++;
@@ -3724,14 +3773,14 @@ function importPaymentModeAndAddress() {
     if (eCols.paymentDue > -1 && g.dueDate) {
       var existingDue = (g.dueDate instanceof Date) ? g.dueDate : new Date(g.dueDate);
       if (!isNaN(existingDue.getTime())) {
-        eSheet.getRange(eRow, eCols.paymentDue + 1).setValue(existingDue).setNumberFormat('yyyy-mm-dd');
+        eSheet.getRange(eRow, eCols.paymentDue + 1).setValue(existingDue).setNumberFormat('dd/mm/yyyy');
       }
     }
     if (eCols.birthday > -1 && g.birthday) {
       var bdCell = eSheet.getRange(eRow, eCols.birthday + 1);
       if (!bdCell.getValue()) {
         var existingBd = (g.birthday instanceof Date) ? g.birthday : new Date(g.birthday);
-        if (!isNaN(existingBd.getTime())) bdCell.setValue(existingBd).setNumberFormat('yyyy-mm-dd');
+        if (!isNaN(existingBd.getTime())) bdCell.setValue(existingBd).setNumberFormat('dd/mm/yyyy');
       }
     }
 
@@ -3813,11 +3862,11 @@ function addUnmatchedClientsToApproach_(ss, groupOrder, groups, modeCol, address
     if (cols.email > -1 && g.email) sheet.getRange(nextRow, cols.email + 1).setValue(g.email);
     if (cols.birthday > -1 && g.birthday) {
       var bd = (g.birthday instanceof Date) ? g.birthday : new Date(g.birthday);
-      if (!isNaN(bd.getTime())) sheet.getRange(nextRow, cols.birthday + 1).setValue(bd).setNumberFormat('yyyy-mm-dd');
+      if (!isNaN(bd.getTime())) sheet.getRange(nextRow, cols.birthday + 1).setValue(bd).setNumberFormat('dd/mm/yyyy');
     }
     if (cols.paymentDue > -1 && g.dueDate) {
       var dd = (g.dueDate instanceof Date) ? g.dueDate : new Date(g.dueDate);
-      if (!isNaN(dd.getTime())) sheet.getRange(nextRow, cols.paymentDue + 1).setValue(dd).setNumberFormat('yyyy-mm-dd');
+      if (!isNaN(dd.getTime())) sheet.getRange(nextRow, cols.paymentDue + 1).setValue(dd).setNumberFormat('dd/mm/yyyy');
     }
     if (cols.paymentMode > -1 && g.paymentModes.length) sheet.getRange(nextRow, cols.paymentMode + 1).setValue(g.paymentModes.join('/'));
     if (cols.mailingAddress > -1 && g.mailingAddress) sheet.getRange(nextRow, cols.mailingAddress + 1).setValue(g.mailingAddress);
@@ -4112,12 +4161,12 @@ function addFundEntry(record) {
 
   if (targetRow) {
     sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
-    sheet.getRange(targetRow, 8).setNumberFormat("yyyy-mm-dd");
+    sheet.getRange(targetRow, 8).setNumberFormat("dd/mm/yyyy");
     return { success: true, created: false };
   }
 
   sheet.appendRow(rowValues);
-  sheet.getRange(sheet.getLastRow(), 8).setNumberFormat("yyyy-mm-dd");
+  sheet.getRange(sheet.getLastRow(), 8).setNumberFormat("dd/mm/yyyy");
   return { success: true, created: true };
 }
 
@@ -4154,12 +4203,12 @@ function addPipelineClient(record) {
 
   if (targetRow) {
     sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
-    sheet.getRange(targetRow, 7).setNumberFormat("yyyy-mm-dd");
+    sheet.getRange(targetRow, 7).setNumberFormat("dd/mm/yyyy");
     return { success: true, created: false };
   }
 
   sheet.appendRow(rowValues);
-  sheet.getRange(sheet.getLastRow(), 7).setNumberFormat("yyyy-mm-dd");
+  sheet.getRange(sheet.getLastRow(), 7).setNumberFormat("dd/mm/yyyy");
   return { success: true, created: true };
 }
 
@@ -4261,7 +4310,7 @@ function importFundData(funds) {
       rowByName[name] = targetRow;
       added++;
     }
-    sheet.getRange(targetRow, 8).setNumberFormat("yyyy-mm-dd");
+    sheet.getRange(targetRow, 8).setNumberFormat("dd/mm/yyyy");
   });
 
   var summary = { success: true, added: added, updated: updated, skipped: skipped };

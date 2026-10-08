@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Fact-Find</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2545; --navy-mid:#1A4478; --gold:#F3AF3D; --gold-dark:#A86F14;
+  --bg:#F4F2EC; --card:#fff; --text:#1B2433; --text-light:#5F6673; --border:#DAD6CC;
+  --red:#C9402B; --ok:#2E8B3E;
+  --head:'Oswald','Arial Narrow',sans-serif; --body:'Work Sans',system-ui,sans-serif;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
+header img{height:40px}
+header .home{color:#fff;text-decoration:none;font-size:30px;line-height:1;padding:0 4px 4px 0}
+header h1{font-family:var(--head);font-weight:600;font-size:20px;letter-spacing:.08em;white-space:nowrap}
+header .conn{border:1px solid rgba(255,255,255,.35);background:none;color:#fff;border-radius:999px;padding:5px 10px;font:600 11px var(--body);letter-spacing:.08em;cursor:pointer;white-space:nowrap}
+header .conn.on{border-color:#5DBB63;color:#9BE3A1}
+header .cid{margin-left:auto;white-space:nowrap;font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.06em}
+main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
+.search{position:relative;margin-bottom:16px}
+.search input{width:100%;padding:13px 14px 13px 42px;border-radius:12px;border:1px solid var(--border);font:500 15px var(--body);background:#fff}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%)}
+.results{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 12px 30px rgba(11,37,69,.15);display:none}
+.results button{display:flex;justify-content:space-between;width:100%;padding:12px 14px;border:0;background:none;font:500 15px var(--body);text-align:left;cursor:pointer}
+.results button:hover{background:#FBF4E6}
+.results small{color:var(--text-light)}
+.card{background:var(--card);border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(11,37,69,.04),0 6px 18px rgba(11,37,69,.06)}
+.card h2{font-family:var(--head);font-weight:600;font-size:17px;letter-spacing:.1em;color:var(--navy);display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card h2 .n{width:28px;height:28px;border-radius:8px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--gold-dark)}
+.card h2 .opt{margin-left:auto;font-family:var(--body);font-weight:500;font-size:12px;letter-spacing:0;color:var(--text-light)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.fg label{display:block;font-size:13px;font-weight:600;color:var(--text-light);margin-bottom:6px}
+.fg input{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font:500 16px var(--body);color:var(--text);background:#fff;transition:border-color .2s}
+.fg input.money{text-align:right}
+.fg input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,175,61,.25)}
+.fg.bad input{border-color:var(--red)}
+.fg .err{display:none;color:var(--red);font-size:12px;margin-top:4px}
+.fg.bad .err{display:block}
+.age{display:flex;align-items:center;justify-content:center;height:46px;border-radius:10px;background:#F7F1E3;font-family:var(--head);font-weight:600;font-size:20px;color:var(--navy)}
+.fg textarea{width:100%;min-height:76px;padding:12px;border:1px solid var(--border);border-radius:10px;font:500 16px var(--body);color:var(--text);resize:vertical}
+.fg textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,175,61,.25)}
+.q{font-weight:600;font-size:15px;color:var(--navy);margin:4px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:10px 16px;font:600 14px var(--body);color:var(--text);cursor:pointer;transition:all .15s}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.follow{display:none;margin-top:12px;padding:12px;border-left:4px solid var(--gold);background:#FBF6EA;border-radius:0 10px 10px 0}
+.follow.show{display:block}
+.follow .grid{gap:10px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:#fff;font:700 20px var(--body);color:var(--navy);cursor:pointer}
+.stepper output{min-width:28px;text-align:center;font:700 20px var(--head);color:var(--navy)}
+.ages{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ages input{width:76px;padding:10px;border:1px solid var(--border);border-radius:9px;font:600 15px var(--body);text-align:center}
+.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:max-content}
+.seg button{border:0;background:#fff;padding:10px 18px;font:600 14px var(--body);cursor:pointer;color:var(--text)}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.block{margin-top:16px}
+.consent{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45}
+.consent input{width:22px;height:22px;accent-color:var(--navy);flex:none;margin-top:1px}
+.consent.bad{color:var(--red)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;justify-content:center;z-index:5}
+.btn{border:0;border-radius:12px;padding:14px 22px;font:700 15px var(--head);letter-spacing:.1em;cursor:pointer;transition:transform .15s var(--ease)}
+.btn:active{transform:translateY(2px)}
+.btn.primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark);flex:1;max-width:340px}
+.btn.ghost{background:#EEF1F6;color:var(--navy)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:all .35s var(--ease);max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.saved{display:none}
+.saved.show{display:block}
+.saved pre{background:#0B2545;color:#E9E4D8;border-radius:12px;padding:14px;font-size:12px;overflow:auto;max-height:300px}
+.saved .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.saved a{text-decoration:none}
+.note{font-size:12px;color:var(--text-light);margin-top:10px}
+@media (max-width:520px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <a href="../index.html" class="home" aria-label="Back to PULSE">‹</a>
+  <img src="ant-assets/logo-light.png" alt="ANT Wealth System">
+  <h1>FACT-FIND</h1>
+  <span class="cid" id="cid">NEW</span>
+  <button type="button" class="conn" id="conn" title="Connect to my Google Sheet">DEMO</button>
+</header>
+
+<main>
+  <div class="search">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5F6673" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Find existing client (name or phone)" autocomplete="off">
+    <div class="results" id="results"></div>
+  </div>
+
+  <form id="ff" novalidate>
+    <section class="card">
+      <h2><span class="n">A</span>CLIENT BACKGROUND</h2>
+      <div class="grid">
+        <div class="fg full"><label for="name">Client Name *</label><input id="name" required placeholder="Full name"><div class="err">Please enter the client's name</div></div>
+        <div class="fg"><label for="dob">Date of Birth *</label><input id="dob" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" autocomplete="off" required><div class="err">Please enter date of birth as dd/mm/yyyy</div></div>
+        <div class="fg"><label>Age</label><div class="age" id="age">—</div></div>
+        <div class="fg"><label for="phone">Phone *</label><input id="phone" type="tel" inputmode="tel" required placeholder="e.g. 012-345 6789"><div class="err">Please enter a valid phone number</div></div>
+        <div class="fg"><label for="email">Email</label><input id="email" type="email" inputmode="email" placeholder="name@email.com"><div class="err">Please check the email</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">B</span>GOALS</h2>
+      <div class="fg"><div class="q">What motivated you to meet up with me?</div><textarea id="motivation" placeholder="Client's answer"></textarea></div>
+
+      <div class="block">
+        <div class="q">What financial goals do you want to achieve?</div>
+        <div class="chips" data-group="goals">
+          <button type="button" class="chip" data-v="retire" aria-pressed="false">Retirement</button>
+          <button type="button" class="chip" data-v="education" aria-pressed="false">Kids' education</button>
+        </div>
+        <div class="follow" data-for="retire">
+          <div class="grid">
+            <div class="fg"><label for="retireAge">Retire at age</label><input id="retireAge" inputmode="numeric" placeholder="e.g. 55"></div>
+            <div class="fg"><label for="retireCash">Cash flow wanted every month</label><input id="retireCash" class="money" inputmode="numeric" placeholder="e.g. 5,000"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg block"><div class="q">What other financial goals do you have?</div><textarea id="otherGoals" placeholder="Client's answer"></textarea></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">C</span>FAMILY</h2>
+      <div class="q">Who are the most important people in your life right now?</div>
+      <div class="chips" data-group="people">
+        <button type="button" class="chip" data-v="spouse" aria-pressed="false">Spouse / Partner</button>
+        <button type="button" class="chip" data-v="children" aria-pressed="false">Children</button>
+        <button type="button" class="chip" data-v="parents" aria-pressed="false">Parents</button>
+      </div>
+      <div class="follow" data-for="spouse">
+        <div class="fg"><label for="spouseJob">What does your spouse / partner do?</label><input id="spouseJob" placeholder="e.g. Teacher"></div>
+      </div>
+      <div class="follow" data-for="kids">
+        <div class="fg"><label>How many children do you have? What are their ages?</label>
+          <div class="stepper"><button type="button" id="kidMinus" aria-label="Fewer children">−</button><output id="kidCount">0</output><button type="button" id="kidPlus" aria-label="More children">+</button></div>
+          <div class="ages" id="ages"></div>
+        </div>
+      </div>
+      <div class="follow" data-for="parents">
+        <div class="fg"><label>Are your parents depending on you?</label>
+          <div class="seg" id="parentsDep"><button type="button" data-v="Yes" aria-pressed="false">Yes</button><button type="button" data-v="Partly" aria-pressed="false">Partly</button><button type="button" data-v="No" aria-pressed="false">No</button></div>
+        </div>
+      </div>
+      <div class="fg block"><label for="otherPeople">Anyone else?</label><input id="otherPeople" placeholder="Optional"></div>
+    </section>
+
+
+
+    <section class="card">
+      <label class="consent" id="consentWrap"><input type="checkbox" id="consent">
+        <span>Client agrees that these details are kept by the agency for financial planning and follow-up.</span></label>
+    </section>
+
+    <section class="card saved" id="saved">
+      <h2><span class="n">✓</span>SAVED</h2>
+      <div id="savedMsg">This is what will be saved (demo – nothing is sent):</div>
+      <pre id="out"></pre>
+      <a id="folderLink" class="note" target="_blank" rel="noopener" style="display:none">Open client folder in Google Drive ↗</a>
+      <div class="row">
+        <a class="btn primary" href="slides.html">PRESENT SLIDES →</a>
+        <button type="button" class="btn ghost" id="newBtn">NEW CLIENT</button>
+      </div>
+      <div class="note">After the slides, the A-N-T Analysis PDF uses this client's details.</div>
+    </section>
+  </form>
+</main>
+
+<div class="bar">
+  <button type="button" class="btn ghost" id="clearBtn">CLEAR</button>
+  <button type="submit" form="ff" class="btn primary">SAVE CLIENT</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="ant-api.js"></script>
+<script>
+// Demo records so "Find existing client" can be tried. Real ones come from the agent's sheet.
+const DEMO = [
+  {clientId:'C-0001', name:'Tan Ah Kow', dob:'1985-04-12', phone:'012-345 6789', email:'ahkow@example.com',
+   background:{motivation:'Friend recommended – wants a proper plan for the family', goals:['retire','education'], retireAge:55, retireCash:6000,
+     otherGoals:'Buy a bigger house in 5 years', people:['spouse','children','parents'], spouseJob:'Teacher', childrenAges:[6, 9],
+     parentsDepend:'Partly', otherPeople:''}},
+  {clientId:'C-0002', name:'Siti Aminah', dob:'1990-09-30', phone:'019-888 1234', email:''}
+];
+let currentId = '';            // empty = new client; the sheet gives the ID on save
+// Agent profile – set once per agent in PULSE settings (demo values here)
+let AGENT = {agentId:'AG-001', agentName:'Demo Agent', agentPhone:'012-000 0000'};
+const LIVE = AntApi.connected();
+
+const $ = id => document.getElementById(id);
+
+function calcAge(iso) {
+  if (!iso) return null;
+  const d = new Date(iso + 'T00:00:00'), t = new Date();
+  if (isNaN(d) || d > t) return null;
+  let a = t.getFullYear() - d.getFullYear();
+  if (t.getMonth() < d.getMonth() || (t.getMonth() === d.getMonth() && t.getDate() < d.getDate())) a--;
+  return a;
+}
+// Date of birth is typed as dd/mm/yyyy (like the PULSE sheet); slashes are added automatically.
+const dmyToIso = t => { const m = String(t).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (!m) return '';
+  const iso = m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); const d = new Date(iso + 'T00:00:00');
+  return !isNaN(d) && d.getDate() === +m[1] && d.getMonth() + 1 === +m[2] ? iso : ''; };
+const isoToDmy = iso => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; };
+const dobIso = () => dmyToIso($('dob').value);
+$('dob').addEventListener('input', e => {
+  if (e.inputType && !e.inputType.startsWith('delete')) {
+    const d = $('dob').value.replace(/\D/g, '').slice(0, 8);
+    $('dob').value = d.length > 4 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+  }
+  const a = calcAge(dobIso()); $('age').textContent = a === null ? '—' : a;
+});
+
+// ---- Goals & family: tap answers, follow-up questions appear ----
+const picked = g => [...document.querySelectorAll(`[data-group="${g}"] .chip[aria-pressed="true"]`)].map(c => c.dataset.v);
+function updateFollowUps() {
+  const goals = picked('goals'), people = picked('people');
+  document.querySelector('[data-for="retire"]').classList.toggle('show', goals.includes('retire'));
+  document.querySelector('[data-for="spouse"]').classList.toggle('show', people.includes('spouse'));
+  document.querySelector('[data-for="parents"]').classList.toggle('show', people.includes('parents'));
+  // Children are asked once, whether they came up under goals or family
+  document.querySelector('[data-for="kids"]').classList.toggle('show', goals.includes('education') || people.includes('children'));
+}
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  updateFollowUps();
+}));
+function setChips(g, vals) {
+  document.querySelectorAll(`[data-group="${g}"] .chip`).forEach(c => c.setAttribute('aria-pressed', vals.includes(c.dataset.v) ? 'true' : 'false'));
+}
+
+function setKids(n, ages = []) {
+  n = Math.max(0, Math.min(12, n));
+  const keep = [...$('ages').querySelectorAll('input')].map(i => i.value);
+  $('kidCount').textContent = n;
+  $('ages').innerHTML = Array.from({length: n}, (_, i) =>
+    `<input inputmode="numeric" placeholder="Age" aria-label="Child ${i + 1} age" value="${ages[i] ?? keep[i] ?? ''}">`).join('');
+}
+$('kidPlus').onclick = () => setKids(+$('kidCount').textContent + 1);
+$('kidMinus').onclick = () => setKids(+$('kidCount').textContent - 1);
+
+$('parentsDep').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('parentsDep').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+});
+const parentsDep = () => $('parentsDep').querySelector('[aria-pressed="true"]')?.dataset.v || '';
+const toNum = v => { const d = String(v ?? '').replace(/[^0-9.]/g, ''); return d === '' ? null : Number(d); };
+document.addEventListener('focusout', e => {
+  if (e.target.matches('input.money') && e.target.value.trim()) e.target.value = Math.round(toNum(e.target.value)).toLocaleString('en-US');
+});
+
+function setBackground(b = {}) {
+  $('motivation').value = b.motivation || '';
+  setChips('goals', b.goals || []);
+  $('retireAge').value = b.retireAge ?? '';
+  $('retireCash').value = b.retireCash != null ? Math.round(b.retireCash).toLocaleString('en-US') : '';
+  $('otherGoals').value = b.otherGoals || '';
+  setChips('people', b.people || []);
+  $('spouseJob').value = b.spouseJob || '';
+  $('ages').innerHTML = ''; setKids((b.childrenAges || []).length, b.childrenAges || []);
+  $('parentsDep').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === b.parentsDepend ? 'true' : 'false'));
+  $('otherPeople').value = b.otherPeople || '';
+  updateFollowUps();
+}
+function getBackground() {
+  const goals = picked('goals'), people = picked('people');
+  const kidsAsked = goals.includes('education') || people.includes('children');
+  return {
+    motivation: $('motivation').value.trim(),
+    goals,
+    retireAge: goals.includes('retire') ? toNum($('retireAge').value) : null,
+    retireCash: goals.includes('retire') ? toNum($('retireCash').value) : null,
+    otherGoals: $('otherGoals').value.trim(),
+    people,
+    spouseJob: people.includes('spouse') ? $('spouseJob').value.trim() : '',
+    childrenAges: kidsAsked ? [...$('ages').querySelectorAll('input')].map(i => toNum(i.value)) : [],
+    parentsDepend: people.includes('parents') ? parentsDep() : '',
+    otherPeople: $('otherPeople').value.trim()
+  };
+}
+
+// ---- Find existing client ----
+const results = $('results');
+let searchTimer;
+const esc = t => String(t ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+function showResults(list, q) {
+  results.innerHTML = list.map(c => `<button type="button" data-id="${esc(c.clientId)}"><span>${esc(c.name)}</span><small>${esc(c.clientId)} · ${esc(c.phone)}</small></button>`).join('')
+    || (q ? '<button type="button" disabled><small>No client found – fill in below as new</small></button>' : '');
+  results.style.display = q ? 'block' : 'none';
+}
+$('q').addEventListener('input', () => {
+  const q = $('q').value.trim();
+  clearTimeout(searchTimer);
+  if (!q) return showResults([], '');
+  if (!LIVE) {
+    const ql = q.toLowerCase(), d = q.replace(/\D/g, '');
+    return showResults(DEMO.filter(c => c.name.toLowerCase().includes(ql) || (d && c.phone.replace(/\D/g, '').includes(d))), q);
+  }
+  searchTimer = setTimeout(async () => {
+    try { const r = await AntApi.get('antSearchClients', {q}); if ($('q').value.trim() === q) showResults(r.clients, q); }
+    catch (err) { toast(err.message); }
+  }, 300);
+});
+results.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  results.style.display = 'none'; $('q').value = '';
+  try {
+    const c = LIVE ? (await AntApi.get('antGetClient', {id: b.dataset.id})).client : DEMO.find(x => x.clientId === b.dataset.id);
+    fill(c); toast('Loaded ' + c.name + ' – update and save');
+  } catch (err) { toast(err.message); }
+});
+
+function fill(c) {
+  currentId = c.clientId;
+  $('cid').textContent = 'EDIT · ' + c.clientId;
+  $('name').value = c.name; $('dob').value = isoToDmy(c.dob); $('phone').value = c.phone; $('email').value = c.email || '';
+  $('dob').dispatchEvent(new Event('input'));
+  setBackground(c.background);
+  $('consent').checked = true;
+  clearErrors(); $('saved').classList.remove('show');
+}
+
+// ---- Validation + save ----
+function setBad(id, bad) { $(id).closest('.fg').classList.toggle('bad', bad); return bad; }
+function clearErrors() { document.querySelectorAll('.fg.bad').forEach(f => f.classList.remove('bad')); $('consentWrap').classList.remove('bad'); }
+
+$('ff').addEventListener('submit', async e => {
+  e.preventDefault(); clearErrors();
+  let bad = false;
+  bad = setBad('name', !$('name').value.trim()) || bad;
+  bad = setBad('dob', calcAge(dobIso()) === null) || bad;
+  bad = setBad('phone', $('phone').value.replace(/\D/g, '').length < 9) || bad;
+  const em = $('email').value.trim();
+  bad = setBad('email', !!em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) || bad;
+  if (!$('consent').checked) { $('consentWrap').classList.add('bad'); bad = true; }
+  if (bad) { toast('Please check the fields in red'); document.querySelector('.bad')?.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+
+  const record = {
+    clientId: currentId,
+    ...AGENT,
+    updatedAt: new Date().toISOString(),
+    name: $('name').value.trim(),
+    dob: dobIso(),
+    age: calcAge(dobIso()),
+    phone: $('phone').value.trim(),
+    email: em,
+    background: getBackground(),
+    consent: true
+  };
+  if (LIVE) {
+    const btn = document.querySelector('.bar .primary');
+    btn.disabled = true; btn.textContent = 'SAVING…';
+    try {
+      const r = await AntApi.post('antSaveClient', record);
+      currentId = record.clientId = r.clientId;
+      $('cid').textContent = 'EDIT · ' + r.clientId;
+      $('folderLink').href = r.folderUrl; $('folderLink').style.display = 'block';
+      $('savedMsg').textContent = 'Saved to your Google Sheet (tab ANT_CLIENTS)' +
+        (r.pipeline ? ' · ' + r.pipeline : '') +
+        (r.master === 'sent' ? ' · copied to Master ✓' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + ':';
+    } catch (err) {
+      toast('Not saved: ' + err.message); return;
+    } finally { btn.disabled = false; btn.textContent = 'SAVE CLIENT'; }
+  } else if (!record.clientId) {
+    record.clientId = 'C-DEMO';
+  }
+  // Hand-off: the A-N-T Analysis page reads this for the client details.
+  try { localStorage.setItem('ant-factfind-current', JSON.stringify(record)); } catch (_) {}
+  $('out').textContent = JSON.stringify({...record, dob: isoToDmy(record.dob), updatedAt: new Date().toLocaleString('en-GB')}, null, 2);
+  $('saved').classList.add('show');
+  $('saved').scrollIntoView({behavior:'smooth'});
+  toast('Saved ' + record.name + ' (' + record.clientId + ')');
+});
+
+function reset() {
+  $('ff').reset(); currentId = ''; $('cid').textContent = 'NEW'; $('folderLink').style.display = 'none';
+  $('age').textContent = '—'; setBackground(); clearErrors(); $('saved').classList.remove('show');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+$('clearBtn').onclick = reset;
+$('newBtn').onclick = reset;
+
+// ---- Connection: demo or the agent's own Google Sheet ----
+$('conn').onclick = () => { if (AntApi.promptUrl()) location.reload(); };
+if (LIVE) {
+  $('conn').textContent = 'CONNECTING…';
+  AntApi.get('antProfile').then(p => {
+    AGENT = {agentId: p.agentId, agentName: p.agentName, agentPhone: p.agentPhone};
+    $('conn').textContent = p.agentId ? 'CONNECTED · ' + p.agentId : 'CONNECTED – RUN A-N-T SETUP';
+    $('conn').classList.add('on');
+  }).catch(err => { $('conn').textContent = 'NOT CONNECTED'; toast(err.message); });
+}
+
+// Opened from the PULSE app's A-N-T tab with ?q=name → search straight away
+const startQ = new URLSearchParams(location.search).get('q');
+if (startQ) { $('q').value = startQ; $('q').dispatchEvent(new Event('input')); }
+
+let tt;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }
+</script>
+</body>
+</html>
