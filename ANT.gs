@@ -205,7 +205,12 @@ function antSaveAnalysis(data) {
     var sheet = antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
     var agentId = antProfile().agentId;
     var now = new Date();
-    var analysisId = antNextId_(sheet, 'A-');
+    // Same client, same day = a correction: replace that analysis instead of adding a new one.
+    var today = antDay_(now);
+    var same = antRows_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS).map(function (r, i) { return { row: r, index: i + 2 }; })
+      .filter(function (x) { return String(x.row['Client ID']) === String(data.clientId) && x.row['Date'] && antDay_(x.row['Date']) === today; })
+      .pop();
+    var analysisId = same ? same.row['Analysis ID'] : antNextId_(sheet, 'A-');
 
     var pdfLink = '';
     if (data.pdfBase64) {
@@ -213,6 +218,9 @@ function antSaveAnalysis(data) {
       if (!/\.pdf$/i.test(name)) name += '.pdf';
       var blob = Utilities.newBlob(Utilities.base64Decode(data.pdfBase64), 'application/pdf', name);
       pdfLink = antClientFolder_(data.clientId, client.row['Name']).createFile(blob).getUrl();
+      if (same) antTrashFile_(same.row['PDF Link']);   // old PDF goes to Drive Bin (restorable for 30 days)
+    } else if (same) {
+      pdfLink = same.row['PDF Link'];
     }
 
     var values = {
@@ -231,9 +239,11 @@ function antSaveAnalysis(data) {
     });
     values['Total Gap'] = totalGap;
 
-    sheet.appendRow(antHeaderOrder_(sheet, ANT_ANALYSIS_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; }));
-    antLog_(agentId, data.clientId, 'A-N-T Analysis saved', pdfLink || '(no PDF)');
-    return { ok: true, analysisId: analysisId, pdfUrl: pdfLink };
+    var rowArr = antHeaderOrder_(sheet, ANT_ANALYSIS_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; });
+    if (same) sheet.getRange(same.index, 1, 1, rowArr.length).setValues([rowArr]);
+    else sheet.appendRow(rowArr);
+    antLog_(agentId, data.clientId, same ? 'A-N-T Analysis replaced (same day)' : 'A-N-T Analysis saved', pdfLink || '(no PDF)');
+    return { ok: true, analysisId: analysisId, pdfUrl: pdfLink, replaced: !!same };
   } finally {
     lock.releaseLock();
   }
@@ -339,6 +349,17 @@ function antRowToClient_(r) {
       parentsDepend: r['Parents Depending'], otherPeople: r['Other People']
     }
   };
+}
+
+function antDay_(d) {
+  var date = d instanceof Date ? d : new Date(d);
+  return isNaN(date) ? '' : Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+function antTrashFile_(url) {
+  var m = String(url || '').match(/\/d\/([\w-]+)/) || String(url || '').match(/[?&]id=([\w-]+)/);
+  if (!m) return;
+  try { DriveApp.getFileById(m[1]).setTrashed(true); } catch (e) { /* already gone – nothing to do */ }
 }
 
 function antNum_(v) {

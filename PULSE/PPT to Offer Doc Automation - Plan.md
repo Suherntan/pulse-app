@@ -270,6 +270,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Analysis page: **Save to Drive** makes the PDF in the browser (exact look, A4) and stores it in the client's folder; **Download PDF** still works offline.
 - Tested end-to-end against the real script logic (fake Google in the test).
 - Setup steps: see [[A-N-T Step 1 - Setup Guide]].
+- Correction rule (8 Oct): same client + same day → **replace** the PDF and row; different day → new analysis.
 - **Next: Step 2** – send each saved row to the manager's master sheet.
 
 ## Full flow (review – 6 Oct 2026)

@@ -93,6 +93,10 @@ Click 💾 **Save**.
 4. Check: the PDF is in the client's Drive folder, and tab **ANT_ANALYSIS** has a row.
 5. Back in the form: search the client's name → it loads everything.
 
+## Correcting an analysis
+- Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).
+- **Another day**: saves as a new analysis, so you keep the history of each meeting.
+
 ## If something goes wrong
 | Problem | Fix |
 |---|---|

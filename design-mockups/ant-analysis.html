@@ -260,7 +260,7 @@ driveBtn.onclick = async () => {
       pdfBase64,
       fileName: document.title
     });
-    status.innerHTML = '✓ Saved (' + r.analysisId + '). <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
+    status.innerHTML = (r.replaced ? '✓ Updated today\'s analysis (' : '✓ Saved (') + r.analysisId + '). <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
     status.querySelector('a').href = r.pdfUrl;
     driveBtn.textContent = 'SAVED ✓';
   } catch (err) {
