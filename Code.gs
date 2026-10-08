@@ -284,15 +284,9 @@ function moveRowToStatus_(sourceSheet, cols, row, statusValue, previousStatus) {
     return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
   }
 
-  // Whole-row copy: works as long as this tab and the target tab share
-  // the same column layout as each other (they're meant to mirror one
-  // another). If you reorder columns, do it identically across
-  // APPROACH / PRESENTATION / CLOSING so this stays correct.
-  var numCols = sourceSheet.getLastColumn();
-  if (numCols < 1) numCols = 1;
-  var sourceRange = sourceSheet.getRange(row, 1, 1, numCols);
-  var destination = targetSheet.getRange(nextRow, 1);
-  sourceRange.copyTo(destination);
+  // Copy by column TITLE, not position, so each tab can keep its own
+  // column order (e.g. CLOSING arranged differently from APPROACH).
+  copyRowByHeader_(sourceSheet, cols, row, targetSheet, targetCols, nextRow);
 
   // Before we overwrite Date of Action with today, capture whatever it
   // currently holds (copied over from the source row) into "DATE FIRST
@@ -315,6 +309,48 @@ function moveRowToStatus_(sourceSheet, cols, row, statusValue, previousStatus) {
 
   sourceSheet.deleteRow(row);
   return { targetSheetName: targetSheet.getName(), targetRow: nextRow };
+}
+
+/**
+ * Copies one row from sourceSheet to targetSheet matching columns by
+ * their header title instead of by position. A column is matched by the
+ * field it means (COLUMN_HEADER_LABELS – so "PAYMENT DUE" on one tab
+ * still lands in "PREMIUM DUE DATE" on another), otherwise by the exact
+ * same header text. Columns the target tab doesn't have are skipped.
+ * Values and their number formats (dates etc.) are copied.
+ */
+function copyRowByHeader_(sourceSheet, sourceCols, sourceRow, targetSheet, targetCols, targetRow) {
+  var srcLast = Math.max(sourceSheet.getLastColumn(), 1);
+  var tgtLast = Math.max(targetSheet.getLastColumn(), 1);
+  var norm = function (h) { return String(h).trim().toUpperCase(); };
+  var srcHead = sourceSheet.getRange(sourceCols._headerRow, 1, 1, srcLast).getValues()[0].map(norm);
+  var tgtHead = targetSheet.getRange(targetCols._headerRow, 1, 1, tgtLast).getValues()[0].map(norm);
+
+  // source column index -> target column index
+  var map = {};
+  for (var field in COLUMN_HEADER_LABELS) {
+    if (sourceCols[field] > -1 && targetCols[field] > -1) map[sourceCols[field]] = targetCols[field];
+  }
+  var used = {};
+  for (var k in map) used[map[k]] = true;
+  for (var i = 0; i < srcHead.length; i++) {
+    if (map[i] !== undefined || !srcHead[i]) continue;
+    var j = tgtHead.indexOf(srcHead[i]);
+    if (j > -1 && !used[j]) { map[i] = j; used[j] = true; }
+  }
+
+  var srcRange = sourceSheet.getRange(sourceRow, 1, 1, srcLast);
+  var srcValues = srcRange.getValues()[0];
+  var srcFormats = srcRange.getNumberFormats()[0];
+  var tgtRange = targetSheet.getRange(targetRow, 1, 1, tgtLast);
+  var outValues = tgtRange.getValues()[0];
+  var outFormats = tgtRange.getNumberFormats()[0];
+  for (var from in map) {
+    outValues[map[from]] = srcValues[from];
+    outFormats[map[from]] = srcFormats[from];
+  }
+  tgtRange.setValues([outValues]);
+  tgtRange.setNumberFormats([outFormats]);
 }
 
 /**

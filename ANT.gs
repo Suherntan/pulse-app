@@ -278,24 +278,18 @@ function antSaveAnalysis(data) {
 // ---------------------------------------------------------------------
 
 /**
- * Adds an "ANT CLIENT ID" column to every pipeline tab, at the SAME
- * column letter on each – rows are copied by position when they move
- * between tabs, so the columns must line up.
+ * Adds an "ANT CLIENT ID" column to each pipeline tab that doesn't have
+ * one (at the end of that tab). Rows are copied by column title when they
+ * move between tabs, so the columns don't need to line up.
  */
 function antEnsurePipelineIdColumn_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var tabs = ANT_PIPELINE_TABS.map(function (n) { return ss.getSheetByName(n); }).filter(Boolean);
-  var maxCol = 0, existing = -1;
-  tabs.forEach(function (sh) {
-    var idx = antPipelineIdCol_(sh, getColumnMap_(sh));
-    if (idx > -1) existing = idx;
-    maxCol = Math.max(maxCol, sh.getLastColumn());
-  });
-  var colIdx = existing > -1 ? existing : maxCol;              // 0-based
-  tabs.forEach(function (sh) {
+  ANT_PIPELINE_TABS.forEach(function (n) {
+    var sh = ss.getSheetByName(n);
+    if (!sh) return;
     var cols = getColumnMap_(sh);
     if (antPipelineIdCol_(sh, cols) > -1) return;
-    sh.getRange(cols._headerRow, colIdx + 1).setValue(ANT_PIPELINE_ID_HEADER).setFontWeight('bold');
+    sh.getRange(cols._headerRow, sh.getLastColumn() + 1).setValue(ANT_PIPELINE_ID_HEADER).setFontWeight('bold');
   });
 }
 
@@ -316,9 +310,24 @@ function antPhoneKey_(p) {
   return d.replace(/^0+/, '');
 }
 
+// Same person? Exact name, one name inside the other ("Tan Ah Kow" /
+// "Tan Ah Kow (Steven)"), or at least 2 name words in common.
+function antSameName_(a, b) {
+  var clean = function (x) { return String(x || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim(); };
+  a = clean(a); b = clean(b);
+  if (!a || !b) return false;
+  if (a === b || a.indexOf(b) > -1 || b.indexOf(a) > -1) return true;
+  var wb = b.split(' ');
+  return a.split(' ').filter(function (w) { return w.length > 1 && wb.indexOf(w) > -1; }).length >= 2;
+}
+
 /**
- * Finds the client in the pipeline tabs: first by ANT CLIENT ID, then by
- * phone number, then by exact name. Returns { sheet, cols, row, tab, idCol } or null.
+ * Finds the client in the pipeline tabs:
+ *   1. same ANT CLIENT ID
+ *   2. same phone AND the name agrees (family members sharing one number
+ *      stay separate people)
+ *   3. exact same full name
+ * Nothing found = a new person. Returns { sheet, cols, row, tab, idCol } or null.
  */
 function antPipelineFind_(clientId, phone, name) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -334,7 +343,10 @@ function antPipelineFind_(clientId, phone, name) {
   var phoneKey = antPhoneKey_(phone), nameKey = String(name || '').trim().toLowerCase();
   var tests = [
     function (t, r) { return clientId && t.idCol > -1 && String(r[t.idCol]).trim() === clientId; },
-    function (t, r) { return phoneKey.length >= 7 && t.cols.contact > -1 && antPhoneKey_(r[t.cols.contact]) === phoneKey; },
+    function (t, r) {
+      return phoneKey.length >= 7 && t.cols.contact > -1 && antPhoneKey_(r[t.cols.contact]) === phoneKey &&
+        t.cols.name > -1 && antSameName_(r[t.cols.name], name);
+    },
     function (t, r) { return nameKey && t.cols.name > -1 && String(r[t.cols.name]).trim().toLowerCase() === nameKey; }
   ];
   for (var k = 0; k < tests.length; k++) {
@@ -377,7 +389,8 @@ function antLinkPipeline_(clientId, data) {
     var hit = antPipelineFind_(clientId, data.phone, data.name);
     if (hit) {
       antStampPipelineRow_(hit, clientId, data);
-      return { tab: hit.tab, message: 'Linked to ' + hit.tab };
+      var who = hit.cols.name > -1 ? hit.sheet.getRange(hit.row, hit.cols.name + 1).getValue() : '';
+      return { tab: hit.tab, message: 'Linked to ' + hit.tab + ' row ' + hit.row + (who ? ' (' + who + ')' : '') };
     }
     var res = addActivity({ activityType: 'APPROACH', name: String(data.name).trim(), contact: String(data.phone || '').trim(),
       remarks: 'A-N-T Fact-Find ' + clientId });

@@ -274,6 +274,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 ## ✅ Pipeline link built (8 Oct 2026)
 - Decisions: match by **phone**; search **all 4 tabs** (existing/servicing clients can do A-N-T again); not found → add to APPROACH; analysis saved → APPROACH moves to PRESENTATION, others stay.
 - ANT CLIENT ID column on APPROACH / PRESENTATION / CLOSING / SR; reuses Code.gs getColumnMap_, addActivity, moveRowToStatus_.
+- Update 8 Oct: tabs have different column orders → `moveRowToStatus_` now copies rows **by column title** (`copyRowByHeader_` in Code.gs – fixes manual moves too). Phone match also needs the **name to agree** (families sharing one number stay separate).
 - Tested with the real Code.gs + ANT.gs on a fake sheet: link to CLOSING, add new to APPROACH, +60 phone match, move to PRESENTATION, same-day redo no duplicate remark, CLOSING stays.
 
 ## ✅ Step 2 built (8 Oct 2026) – manager's Master Sheet
