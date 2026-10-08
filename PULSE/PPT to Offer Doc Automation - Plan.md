@@ -271,7 +271,12 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Tested end-to-end against the real script logic (fake Google in the test).
 - Setup steps: see [[A-N-T Step 1 - Setup Guide]].
 - Correction rule (8 Oct): same client + same day → **replace** the PDF and row; different day → new analysis.
-- **Next: Step 2** – send each saved row to the manager's master sheet.
+## ✅ Step 2 built (8 Oct 2026) – manager's Master Sheet
+- `ANT-Master.gs` in the manager's own Google Sheet: tabs AGENTS / CLIENTS / ANALYSIS / LOG, receiver web app, Add Agent (ID + secret key), Turn Agent On/Off, weekly backup (keep 8).
+- `ANT.gs` (agent): A-N-T → Connect to Master; every save also sends the data (no files, no links); failures wait in ANT_OUTBOX and re-send nightly; Send Everything (one-time).
+- Testing with a separate free "ANT Master" Gmail; real manager later = same steps, agents just reconnect.
+- Tested: send, update without duplicates, master down → retry, wrong key, agent turned off, Agent ID can't be faked.
+- Setup steps: see [[A-N-T Step 2 - Master Setup Guide]].
 
 ## Full flow (review – 6 Oct 2026)
 

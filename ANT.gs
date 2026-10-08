@@ -25,6 +25,12 @@ var ANT_LOG_SHEET = 'ANT_LOG';
 var ANT_ROOT_FOLDER_NAME = 'PULSE A-N-T Clients';
 var ANT_PROP_ROOT_FOLDER = 'ANT_ROOT_FOLDER_ID';
 var ANT_PROP_AGENT_ID = 'ANT_AGENT_ID';
+var ANT_PROP_MASTER_URL = 'ANT_MASTER_URL';
+var ANT_PROP_MASTER_KEY = 'ANT_MASTER_KEY';
+var ANT_OUTBOX_SHEET = 'ANT_OUTBOX';
+var ANT_OUTBOX_HEADERS = ['Time', 'Type', 'Record', 'Last Error'];
+// Only on the agent's side – the manager's master gets data, not file links.
+var ANT_LOCAL_ONLY = ['Folder Link', 'PDF Link'];
 
 var ANT_AREAS = ['hospitalization', 'disability', 'criticalIllness', 'death', 'education', 'investment'];
 var ANT_AREA_LABELS = {
@@ -60,6 +66,10 @@ function antAddMenu_() {
     .createMenu('A-N-T')
     .addItem('Set Up A-N-T (one-time)', 'antSetup')
     .addItem('Open A-N-T Clients Folder', 'antShowFolderLink')
+    .addSeparator()
+    .addItem('Connect to Master (from your manager)', 'antConnectMaster')
+    .addItem('Re-send Waiting Items to Master Now', 'antFlushOutbox')
+    .addItem('Send Everything to Master (one-time)', 'antSendAllToMaster')
     .addToUi();
 }
 
@@ -183,7 +193,8 @@ function antSaveClient(data) {
     else sheet.appendRow(rowArr);
 
     antLog_(agentId, clientId, existing ? 'Fact-Find updated' : 'Fact-Find new', values['Name']);
-    return { ok: true, clientId: clientId, folderUrl: folderLink, isNew: !existing };
+    var master = antSendToMaster_('client', values);
+    return { ok: true, clientId: clientId, folderUrl: folderLink, isNew: !existing, master: master };
   } finally {
     lock.releaseLock();
   }
@@ -243,9 +254,102 @@ function antSaveAnalysis(data) {
     if (same) sheet.getRange(same.index, 1, 1, rowArr.length).setValues([rowArr]);
     else sheet.appendRow(rowArr);
     antLog_(agentId, data.clientId, same ? 'A-N-T Analysis replaced (same day)' : 'A-N-T Analysis saved', pdfLink || '(no PDF)');
-    return { ok: true, analysisId: analysisId, pdfUrl: pdfLink, replaced: !!same };
+    var master = antSendToMaster_('analysis', values);
+    return { ok: true, analysisId: analysisId, pdfUrl: pdfLink, replaced: !!same, master: master };
   } finally {
     lock.releaseLock();
+  }
+}
+
+
+// ---------------------------------------------------------------------
+// Copy to the manager's master sheet (data only)
+// ---------------------------------------------------------------------
+
+function antConnectMaster() {
+  var ui = SpreadsheetApp.getUi();
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty(ANT_PROP_AGENT_ID)) { ui.alert('Run A-N-T > Set Up A-N-T first.'); return; }
+
+  var u = ui.prompt('Connect to Master', 'Master link from your manager (starts with https://script.google.com/)', ui.ButtonSet.OK_CANCEL);
+  if (u.getSelectedButton() !== ui.Button.OK) return;
+  var k = ui.prompt('Connect to Master', 'Secret key from your manager', ui.ButtonSet.OK_CANCEL);
+  if (k.getSelectedButton() !== ui.Button.OK) return;
+  props.setProperty(ANT_PROP_MASTER_URL, u.getResponseText().trim());
+  props.setProperty(ANT_PROP_MASTER_KEY, k.getResponseText().trim());
+
+  var res = antPostMaster_({ ping: true });
+  if (!res.ok) { ui.alert('Not connected', res.error + '\n\nCheck the link and key with your manager, then try again.', ui.ButtonSet.OK); return; }
+
+  // Re-send anything that failed, every night.
+  var has = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'antFlushOutbox'; });
+  if (!has) ScriptApp.newTrigger('antFlushOutbox').timeBased().everyDays(1).atHour(1).create();
+
+  ui.alert('Connected to Master ✓',
+    'From now on every saved client and analysis is also copied to your manager (data only, no files).' +
+    '\n\nTo copy what you already have: A-N-T > Send Everything to Master (one-time).', ui.ButtonSet.OK);
+}
+
+// Returns 'sent', 'queued' (will retry) or 'off' (not connected).
+function antSendToMaster_(type, values) {
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty(ANT_PROP_MASTER_URL)) return 'off';
+  var record = antMasterRecord_(values);
+  var res = antPostMaster_({ type: type, record: record });
+  if (res.ok) return 'sent';
+  antSheet_(ANT_OUTBOX_SHEET, ANT_OUTBOX_HEADERS).appendRow([new Date(), type, JSON.stringify(record), res.error]);
+  return 'queued';
+}
+
+function antFlushOutbox() {
+  var sh = antSheet_(ANT_OUTBOX_SHEET, ANT_OUTBOX_HEADERS);
+  var last = sh.getLastRow(), sent = 0, left = 0;
+  for (var r = last; r >= 2; r--) {                  // bottom-up so deleting rows is safe
+    var row = sh.getRange(r, 1, 1, 4).getValues()[0];
+    var res = antPostMaster_({ type: row[1], record: JSON.parse(row[2]) });
+    if (res.ok) { sh.deleteRow(r); sent++; }
+    else { sh.getRange(r, 4).setValue(res.error); left++; }
+  }
+  try {
+    SpreadsheetApp.getUi().alert('Master: ' + sent + ' sent, ' + left + ' still waiting.');
+  } catch (e) { /* running from the nightly timer – no screen */ }
+}
+
+function antSendAllToMaster() {
+  var ui = SpreadsheetApp.getUi();
+  if (!PropertiesService.getScriptProperties().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
+  var counts = { sent: 0, queued: 0 };
+  [['client', ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], ['analysis', ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS]].forEach(function (t) {
+    antRows_(t[1], t[2]).forEach(function (row) { counts[antSendToMaster_(t[0], row)]++; });
+  });
+  ui.alert('Sent ' + counts.sent + ' to Master.' + (counts.queued ? ' ' + counts.queued + ' waiting (see ANT_OUTBOX, retried tonight).' : ''));
+}
+
+function antMasterRecord_(values) {
+  var rec = {};
+  Object.keys(values).forEach(function (k) {
+    if (ANT_LOCAL_ONLY.indexOf(k) > -1) return;
+    var v = values[k];
+    if (v instanceof Date) v = Utilities.formatDate(v, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss");
+    else if (typeof v === 'string') v = v.replace(/^'/, '');
+    rec[k] = v;
+  });
+  return rec;
+}
+
+function antPostMaster_(payload) {
+  var props = PropertiesService.getScriptProperties();
+  payload.agentId = props.getProperty(ANT_PROP_AGENT_ID);
+  payload.key = props.getProperty(ANT_PROP_MASTER_KEY);
+  try {
+    var resp = UrlFetchApp.fetch(props.getProperty(ANT_PROP_MASTER_URL), {
+      method: 'post', contentType: 'text/plain', payload: JSON.stringify(payload),
+      muteHttpExceptions: true, followRedirects: true
+    });
+    var out = JSON.parse(resp.getContentText());
+    return out.ok ? out : { ok: false, error: out.error || 'Master said no' };
+  } catch (e) {
+    return { ok: false, error: 'Master not reachable: ' + e.message };
   }
 }
 

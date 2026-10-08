@@ -355,7 +355,8 @@ $('ff').addEventListener('submit', async e => {
       currentId = record.clientId = r.clientId;
       $('cid').textContent = 'EDIT · ' + r.clientId;
       $('folderLink').href = r.folderUrl; $('folderLink').style.display = 'block';
-      $('savedMsg').textContent = 'Saved to your Google Sheet (tab ANT_CLIENTS):';
+      $('savedMsg').textContent = 'Saved to your Google Sheet (tab ANT_CLIENTS)' +
+        (r.master === 'sent' ? ' · copied to Master ✓' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + ':';
     } catch (err) {
       toast('Not saved: ' + err.message); return;
     } finally { btn.disabled = false; btn.textContent = 'SAVE CLIENT'; }
