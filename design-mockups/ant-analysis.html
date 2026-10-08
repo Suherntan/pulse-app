@@ -260,7 +260,7 @@ driveBtn.onclick = async () => {
       pdfBase64,
       fileName: document.title
     });
-    status.innerHTML = (r.replaced ? '✓ Updated today\'s analysis (' : '✓ Saved (') + r.analysisId + ')' + (r.master === 'sent' ? ' · copied to Master' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '. <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
+    status.innerHTML = (r.replaced ? '✓ Updated today\'s analysis (' : '✓ Saved (') + r.analysisId + ')' + (r.pipeline ? ' · ' + r.pipeline : '') + (r.master === 'sent' ? ' · copied to Master' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '. <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
     status.querySelector('a').href = r.pdfUrl;
     driveBtn.textContent = 'SAVED ✓';
   } catch (err) {

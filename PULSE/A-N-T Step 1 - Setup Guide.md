@@ -93,6 +93,18 @@ Click 💾 **Save**.
 4. Check: the PDF is in the client's Drive folder, and tab **ANT_ANALYSIS** has a row.
 5. Back in the form: search the client's name → it loads everything.
 
+## Link with APPROACH / PRESENTATION / CLOSING / SR (added 8 Oct 2026)
+- A new column **ANT CLIENT ID** is added to all 4 tabs (same column letter on each, so row moves stay correct).
+- **Save Fact-Find:** looks for the client in **all 4 tabs** – by ANT CLIENT ID, then **phone number** (012-345 6789, +60 12…, 6012… all match), then exact name.
+  - Found → linked (ID written; empty EMAIL / BIRTHDAY filled in). Existing CLOSING clients are preferred over old APPROACH rows.
+  - Not found → **added to APPROACH** with today's date (remark "A-N-T Fact-Find C-000x").
+- **Save A-N-T Analysis:**
+  - Client in **APPROACH** → **moved to PRESENTATION** (same as changing the status by hand: date, week/day, activity log).
+  - Client in PRESENTATION / **CLOSING** / **SR** → stays (existing or servicing client).
+  - Remark added: "A-N-T Analysis A-000x · total gap …" (only once per day).
+- ANT_CLIENTS shows the current **Pipeline Stage**.
+- After updating ANT.gs: run **A-N-T → Set Up A-N-T** once more (adds the ANT CLIENT ID column), then Deploy → New version.
+
 ## Correcting an analysis
 - Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).
 - **Another day**: saves as a new analysis, so you keep the history of each meeting.

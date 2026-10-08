@@ -31,6 +31,10 @@ var ANT_OUTBOX_SHEET = 'ANT_OUTBOX';
 var ANT_OUTBOX_HEADERS = ['Time', 'Type', 'Record', 'Last Error'];
 // Only on the agent's side – the manager's master gets data, not file links.
 var ANT_LOCAL_ONLY = ['Folder Link', 'PDF Link'];
+// The PULSE pipeline tabs, in the order a match is preferred
+// (an existing client's CLOSING row wins over an old APPROACH row).
+var ANT_PIPELINE_TABS = ['CLOSING', 'PRESENTATION', 'APPROACH', 'SR'];
+var ANT_PIPELINE_ID_HEADER = 'ANT CLIENT ID';
 
 var ANT_AREAS = ['hospitalization', 'disability', 'criticalIllness', 'death', 'education', 'investment'];
 var ANT_AREA_LABELS = {
@@ -42,7 +46,7 @@ var ANT_CLIENT_HEADERS = [
   'Client ID', 'Agent ID', 'Name', 'DOB', 'Age', 'Phone', 'Email',
   'Motivation', 'Goals', 'Retire Age', 'Retire Cash / Month', 'Other Goals',
   'Important People', 'Spouse Job', 'Children Ages', 'Parents Depending', 'Other People',
-  'Consent', 'Folder Link', 'Created', 'Updated'
+  'Consent', 'Pipeline Stage', 'Folder Link', 'Created', 'Updated'
 ];
 
 var ANT_ANALYSIS_HEADERS = (function () {
@@ -89,6 +93,7 @@ function antSetup() {
   antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
   antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
   antSheet_(ANT_LOG_SHEET, ANT_LOG_HEADERS);
+  antEnsurePipelineIdColumn_();
   var folder = antRootFolder_();
   var s = getAgentSettings_();
 
@@ -161,6 +166,8 @@ function antSaveClient(data) {
     var clientId = existing ? data.clientId : antNextId_(sheet, 'C-');
     var b = data.background || {};
 
+    var pipeline = antLinkPipeline_(clientId, data);
+
     var folderLink = existing ? existing.row['Folder Link'] : '';
     if (!folderLink) folderLink = antClientFolder_(clientId, data.name).getUrl();
 
@@ -183,6 +190,7 @@ function antSaveClient(data) {
       'Parents Depending': b.parentsDepend || '',
       'Other People': b.otherPeople || '',
       'Consent': data.consent ? 'Yes' : 'No',
+      'Pipeline Stage': pipeline.tab || (existing ? existing.row['Pipeline Stage'] : ''),
       'Folder Link': folderLink,
       'Created': existing ? existing.row['Created'] : now,
       'Updated': now
@@ -194,7 +202,7 @@ function antSaveClient(data) {
 
     antLog_(agentId, clientId, existing ? 'Fact-Find updated' : 'Fact-Find new', values['Name']);
     var master = antSendToMaster_('client', values);
-    return { ok: true, clientId: clientId, folderUrl: folderLink, isNew: !existing, master: master };
+    return { ok: true, clientId: clientId, folderUrl: folderLink, isNew: !existing, master: master, pipeline: pipeline.message };
   } finally {
     lock.releaseLock();
   }
@@ -250,15 +258,176 @@ function antSaveAnalysis(data) {
     });
     values['Total Gap'] = totalGap;
 
+    var pipeline = antPipelineAfterAnalysis_(data.clientId, client.row, analysisId, totalGap, !!same);
+
     var rowArr = antHeaderOrder_(sheet, ANT_ANALYSIS_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; });
     if (same) sheet.getRange(same.index, 1, 1, rowArr.length).setValues([rowArr]);
     else sheet.appendRow(rowArr);
     antLog_(agentId, data.clientId, same ? 'A-N-T Analysis replaced (same day)' : 'A-N-T Analysis saved', pdfLink || '(no PDF)');
     var master = antSendToMaster_('analysis', values);
-    return { ok: true, analysisId: analysisId, pdfUrl: pdfLink, replaced: !!same, master: master };
+    return { ok: true, analysisId: analysisId, pdfUrl: pdfLink, replaced: !!same, master: master, pipeline: pipeline.message };
   } finally {
     lock.releaseLock();
   }
+}
+
+
+// ---------------------------------------------------------------------
+// Link with the PULSE pipeline (APPROACH / PRESENTATION / CLOSING / SR)
+// Uses Code.gs helpers: getColumnMap_, addActivity, moveRowToStatus_.
+// ---------------------------------------------------------------------
+
+/**
+ * Adds an "ANT CLIENT ID" column to every pipeline tab, at the SAME
+ * column letter on each – rows are copied by position when they move
+ * between tabs, so the columns must line up.
+ */
+function antEnsurePipelineIdColumn_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tabs = ANT_PIPELINE_TABS.map(function (n) { return ss.getSheetByName(n); }).filter(Boolean);
+  var maxCol = 0, existing = -1;
+  tabs.forEach(function (sh) {
+    var idx = antPipelineIdCol_(sh, getColumnMap_(sh));
+    if (idx > -1) existing = idx;
+    maxCol = Math.max(maxCol, sh.getLastColumn());
+  });
+  var colIdx = existing > -1 ? existing : maxCol;              // 0-based
+  tabs.forEach(function (sh) {
+    var cols = getColumnMap_(sh);
+    if (antPipelineIdCol_(sh, cols) > -1) return;
+    sh.getRange(cols._headerRow, colIdx + 1).setValue(ANT_PIPELINE_ID_HEADER).setFontWeight('bold');
+  });
+}
+
+function antPipelineIdCol_(sheet, cols) {
+  var lastCol = sheet.getLastColumn();
+  if (lastCol < 1) return -1;
+  var head = sheet.getRange(cols._headerRow, 1, 1, lastCol).getValues()[0];
+  for (var i = 0; i < head.length; i++) {
+    if (String(head[i]).trim().toUpperCase() === ANT_PIPELINE_ID_HEADER) return i;
+  }
+  return -1;
+}
+
+// 012-345 6789, +60 12 345 6789 and 60123456789 all become 123456789.
+function antPhoneKey_(p) {
+  var d = String(p || '').replace(/\D/g, '');
+  if (d.indexOf('60') === 0 && d.length >= 11) d = d.slice(2);
+  return d.replace(/^0+/, '');
+}
+
+/**
+ * Finds the client in the pipeline tabs: first by ANT CLIENT ID, then by
+ * phone number, then by exact name. Returns { sheet, cols, row, tab, idCol } or null.
+ */
+function antPipelineFind_(clientId, phone, name) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tabs = ANT_PIPELINE_TABS.map(function (n) {
+    var sh = ss.getSheetByName(n);
+    if (!sh) return null;
+    var cols = getColumnMap_(sh), last = sh.getLastRow();
+    var data = last >= cols._dataStartRow
+      ? sh.getRange(cols._dataStartRow, 1, last - cols._dataStartRow + 1, sh.getLastColumn()).getValues() : [];
+    return { sheet: sh, cols: cols, tab: n, data: data, idCol: antPipelineIdCol_(sh, cols) };
+  }).filter(Boolean);
+
+  var phoneKey = antPhoneKey_(phone), nameKey = String(name || '').trim().toLowerCase();
+  var tests = [
+    function (t, r) { return clientId && t.idCol > -1 && String(r[t.idCol]).trim() === clientId; },
+    function (t, r) { return phoneKey.length >= 7 && t.cols.contact > -1 && antPhoneKey_(r[t.cols.contact]) === phoneKey; },
+    function (t, r) { return nameKey && t.cols.name > -1 && String(r[t.cols.name]).trim().toLowerCase() === nameKey; }
+  ];
+  for (var k = 0; k < tests.length; k++) {
+    for (var i = 0; i < tabs.length; i++) {
+      var t = tabs[i];
+      for (var j = 0; j < t.data.length; j++) {
+        if (tests[k](t, t.data[j])) {
+          return { sheet: t.sheet, cols: t.cols, row: t.cols._dataStartRow + j, tab: t.tab, idCol: t.idCol };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Puts the ANT CLIENT ID on the row and fills EMAIL / BIRTHDAY only where empty.
+function antStampPipelineRow_(hit, clientId, data) {
+  var sh = hit.sheet, cols = hit.cols, row = hit.row;
+  var idCol = hit.idCol > -1 ? hit.idCol : antPipelineIdCol_(sh, cols);
+  if (idCol > -1) sh.getRange(row, idCol + 1).setValue(clientId);
+  if (data && cols.email > -1 && data.email && !sh.getRange(row, cols.email + 1).getValue()) {
+    sh.getRange(row, cols.email + 1).setValue(data.email);
+  }
+  if (data && cols.birthday > -1 && data.dob && !sh.getRange(row, cols.birthday + 1).getValue()) {
+    sh.getRange(row, cols.birthday + 1).setValue(new Date(data.dob + 'T00:00:00')).setNumberFormat('yyyy-mm-dd');
+  }
+}
+
+function antAddRemark_(hit, note) {
+  if (hit.cols.remarks === -1) return;
+  var cell = hit.sheet.getRange(hit.row, hit.cols.remarks + 1);
+  var old = String(cell.getValue() || '').trim();
+  cell.setValue(old ? old + ' | ' + note : note);
+}
+
+/** Fact-Find saved: link to the existing pipeline row, or add the client to APPROACH. */
+function antLinkPipeline_(clientId, data) {
+  try {
+    antEnsurePipelineIdColumn_();
+    var hit = antPipelineFind_(clientId, data.phone, data.name);
+    if (hit) {
+      antStampPipelineRow_(hit, clientId, data);
+      return { tab: hit.tab, message: 'Linked to ' + hit.tab };
+    }
+    var res = addActivity({ activityType: 'APPROACH', name: String(data.name).trim(), contact: String(data.phone || '').trim(),
+      remarks: 'A-N-T Fact-Find ' + clientId });
+    if (!res || !res.success) return { tab: '', message: 'Not added to APPROACH: ' + (res && res.error || 'unknown') };
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('APPROACH');
+    var cols = getColumnMap_(sh);
+    antStampPipelineRow_({ sheet: sh, cols: cols, row: sh.getLastRow(), idCol: antPipelineIdCol_(sh, cols) }, clientId, data);
+    return { tab: 'APPROACH', message: 'Added to APPROACH' };
+  } catch (e) {
+    return { tab: '', message: 'Pipeline not updated: ' + e.message };
+  }
+}
+
+/**
+ * Analysis saved = the client has been presented to.
+ * APPROACH → moves to PRESENTATION (same as changing the status by hand).
+ * PRESENTATION / CLOSING / SR → stays where it is (existing or servicing client).
+ * A note goes into REMARKS – once per day, so a same-day correction doesn't repeat it.
+ */
+function antPipelineAfterAnalysis_(clientId, clientRow, analysisId, totalGap, isReplace) {
+  try {
+    var hit = antPipelineFind_(clientId, clientRow['Phone'], clientRow['Name']);
+    if (!hit) {
+      var linked = antLinkPipeline_(clientId, { name: clientRow['Name'], phone: String(clientRow['Phone']).replace(/^'/, '') });
+      hit = antPipelineFind_(clientId, clientRow['Phone'], clientRow['Name']);
+      if (!hit) return { message: linked.message };
+    }
+    var note = 'A-N-T Analysis ' + analysisId + ' · total gap ' + Number(totalGap || 0).toLocaleString('en-US');
+    var stage = hit.tab, message = 'Stays in ' + hit.tab;
+
+    if (hit.tab === 'APPROACH') {
+      if (!isReplace) antAddRemark_(hit, note);
+      if (hit.cols.status > -1) hit.sheet.getRange(hit.row, hit.cols.status + 1).setValue('PRESENTATION');
+      var moved = moveRowToStatus_(hit.sheet, hit.cols, hit.row, 'PRESENTATION', 'APPROACH');
+      if (moved) { stage = 'PRESENTATION'; message = 'Moved to PRESENTATION'; }
+    } else if (!isReplace) {
+      antAddRemark_(hit, note);
+    }
+    antSetClientStage_(clientId, stage);
+    return { message: message };
+  } catch (e) {
+    return { message: 'Pipeline not updated: ' + e.message };
+  }
+}
+
+function antSetClientStage_(clientId, stage) {
+  var sh = antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
+  var found = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', clientId);
+  var col = antHeaderOrder_(sh, ANT_CLIENT_HEADERS).indexOf('Pipeline Stage');
+  if (found && col > -1) sh.getRange(found.index, col + 1).setValue(stage);
 }
 
 

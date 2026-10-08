@@ -271,6 +271,11 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Tested end-to-end against the real script logic (fake Google in the test).
 - Setup steps: see [[A-N-T Step 1 - Setup Guide]].
 - Correction rule (8 Oct): same client + same day → **replace** the PDF and row; different day → new analysis.
+## ✅ Pipeline link built (8 Oct 2026)
+- Decisions: match by **phone**; search **all 4 tabs** (existing/servicing clients can do A-N-T again); not found → add to APPROACH; analysis saved → APPROACH moves to PRESENTATION, others stay.
+- ANT CLIENT ID column on APPROACH / PRESENTATION / CLOSING / SR; reuses Code.gs getColumnMap_, addActivity, moveRowToStatus_.
+- Tested with the real Code.gs + ANT.gs on a fake sheet: link to CLOSING, add new to APPROACH, +60 phone match, move to PRESENTATION, same-day redo no duplicate remark, CLOSING stays.
+
 ## ✅ Step 2 built (8 Oct 2026) – manager's Master Sheet
 - `ANT-Master.gs` in the manager's own Google Sheet: tabs AGENTS / CLIENTS / ANALYSIS / LOG, receiver web app, Add Agent (ID + secret key), Turn Agent On/Off, weekly backup (keep 8).
 - `ANT.gs` (agent): A-N-T → Connect to Master; every save also sends the data (no files, no links); failures wait in ANT_OUTBOX and re-send nightly; Send Everything (one-time).
