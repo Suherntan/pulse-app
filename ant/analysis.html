@@ -159,15 +159,16 @@ const analysis = read('ant-analysis-current') || SAMPLE;
 const client = read('ant-factfind-current') || {name:'Sample Client', clientId:'C-0000', age:'—', agentName:'Agent Name', agentPhone:'012-000 0000'};
 
 const now = new Date(analysis.savedAt || Date.now());
-$('date').textContent = now.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+const dmy = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+$('date').textContent = dmy(now);
 $('cName').textContent = client.name || '—';
 $('cId').textContent = client.clientId || '—';
 $('cAge').textContent = client.age ?? '—';
 $('cAgent').textContent = client.agentName || client.agentId || '—';
 $('cAgentPh').textContent = client.agentPhone || '';
 if (client.agentName) $('prep').textContent = 'Prepared by ' + client.agentName + (client.agentPhone ? ' · ' + client.agentPhone : '') + ' · ANT Wealth System';
-$('ref').textContent = (client.clientId || '') + ' · ' + now.toISOString().slice(0, 10);
-document.title = `A-N-T Analysis – ${client.name || 'Client'} – ${now.toISOString().slice(0, 10)}`;
+$('ref').textContent = (client.clientId || '') + ' · ' + dmy(now);
+document.title = `A-N-T Analysis – ${client.name || 'Client'} – ${dmy(now).replace(/\//g, '-')}`;
 
 // Background from the Fact-Find form
 const b = client.background;

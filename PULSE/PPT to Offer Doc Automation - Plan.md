@@ -271,6 +271,11 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Tested end-to-end against the real script logic (fake Google in the test).
 - Setup steps: see [[A-N-T Step 1 - Setup Guide]].
 - Correction rule (8 Oct): same client + same day → **replace** the PDF and row; different day → new analysis.
+## ✅ Dates = dd/mm/yyyy everywhere (8 Oct 2026)
+- Form: Date of Birth typed as dd/mm/yyyy (slashes added automatically, impossible dates rejected).
+- PULSE tabs (Code.gs): every date the script writes (date of action, first approached, birthday, due dates, "sent" dates) now shows dd/mm/yyyy.
+- ANT tabs: DOB dd/mm/yyyy; Created / Updated / Date / Time dd/mm/yyyy hh:mm. Master copy and backups too. PDF date + file name dd/mm/yyyy.
+
 ## ✅ A-N-T inside the PULSE app (8 Oct 2026)
 - New **A-N-T** tab (7th tab) in PULSE: search client → Fact-Find, 1 Fact-Find · 2 Present Slides · 3 A-N-T Analysis.
 - Pages moved from `design-mockups/` to **`ant/`** (`ant/form.html`, `ant/slides.html`, `ant/analysis.html`). Each has a "PULSE" back button.

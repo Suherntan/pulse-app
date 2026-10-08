@@ -106,7 +106,7 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
       <h2><span class="n">A</span>CLIENT BACKGROUND</h2>
       <div class="grid">
         <div class="fg full"><label for="name">Client Name *</label><input id="name" required placeholder="Full name"><div class="err">Please enter the client's name</div></div>
-        <div class="fg"><label for="dob">Date of Birth *</label><input id="dob" type="date" required><div class="err">Please enter a valid date of birth</div></div>
+        <div class="fg"><label for="dob">Date of Birth *</label><input id="dob" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" autocomplete="off" required><div class="err">Please enter date of birth as dd/mm/yyyy</div></div>
         <div class="fg"><label>Age</label><div class="age" id="age">—</div></div>
         <div class="fg"><label for="phone">Phone *</label><input id="phone" type="tel" inputmode="tel" required placeholder="e.g. 012-345 6789"><div class="err">Please enter a valid phone number</div></div>
         <div class="fg"><label for="email">Email</label><input id="email" type="email" inputmode="email" placeholder="name@email.com"><div class="err">Please check the email</div></div>
@@ -211,7 +211,19 @@ function calcAge(iso) {
   if (t.getMonth() < d.getMonth() || (t.getMonth() === d.getMonth() && t.getDate() < d.getDate())) a--;
   return a;
 }
-$('dob').addEventListener('input', () => { const a = calcAge($('dob').value); $('age').textContent = a === null ? '—' : a; });
+// Date of birth is typed as dd/mm/yyyy (like the PULSE sheet); slashes are added automatically.
+const dmyToIso = t => { const m = String(t).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (!m) return '';
+  const iso = m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); const d = new Date(iso + 'T00:00:00');
+  return !isNaN(d) && d.getDate() === +m[1] && d.getMonth() + 1 === +m[2] ? iso : ''; };
+const isoToDmy = iso => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; };
+const dobIso = () => dmyToIso($('dob').value);
+$('dob').addEventListener('input', e => {
+  if (e.inputType && !e.inputType.startsWith('delete')) {
+    const d = $('dob').value.replace(/\D/g, '').slice(0, 8);
+    $('dob').value = d.length > 4 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+  }
+  const a = calcAge(dobIso()); $('age').textContent = a === null ? '—' : a;
+});
 
 // ---- Goals & family: tap answers, follow-up questions appear ----
 const picked = g => [...document.querySelectorAll(`[data-group="${g}"] .chip[aria-pressed="true"]`)].map(c => c.dataset.v);
@@ -315,7 +327,7 @@ results.addEventListener('click', async e => {
 function fill(c) {
   currentId = c.clientId;
   $('cid').textContent = 'EDIT · ' + c.clientId;
-  $('name').value = c.name; $('dob').value = c.dob; $('phone').value = c.phone; $('email').value = c.email || '';
+  $('name').value = c.name; $('dob').value = isoToDmy(c.dob); $('phone').value = c.phone; $('email').value = c.email || '';
   $('dob').dispatchEvent(new Event('input'));
   setBackground(c.background);
   $('consent').checked = true;
@@ -330,7 +342,7 @@ $('ff').addEventListener('submit', async e => {
   e.preventDefault(); clearErrors();
   let bad = false;
   bad = setBad('name', !$('name').value.trim()) || bad;
-  bad = setBad('dob', calcAge($('dob').value) === null) || bad;
+  bad = setBad('dob', calcAge(dobIso()) === null) || bad;
   bad = setBad('phone', $('phone').value.replace(/\D/g, '').length < 9) || bad;
   const em = $('email').value.trim();
   bad = setBad('email', !!em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) || bad;
@@ -342,8 +354,8 @@ $('ff').addEventListener('submit', async e => {
     ...AGENT,
     updatedAt: new Date().toISOString(),
     name: $('name').value.trim(),
-    dob: $('dob').value,
-    age: calcAge($('dob').value),
+    dob: dobIso(),
+    age: calcAge(dobIso()),
     phone: $('phone').value.trim(),
     email: em,
     background: getBackground(),
@@ -368,7 +380,7 @@ $('ff').addEventListener('submit', async e => {
   }
   // Hand-off: the A-N-T Analysis page reads this for the client details.
   try { localStorage.setItem('ant-factfind-current', JSON.stringify(record)); } catch (_) {}
-  $('out').textContent = JSON.stringify(record, null, 2);
+  $('out').textContent = JSON.stringify({...record, dob: isoToDmy(record.dob), updatedAt: new Date().toLocaleString('en-GB')}, null, 2);
   $('saved').classList.add('show');
   $('saved').scrollIntoView({behavior:'smooth'});
   toast('Saved ' + record.name + ' (' + record.clientId + ')');

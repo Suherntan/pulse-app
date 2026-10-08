@@ -93,6 +93,9 @@ function antSetup() {
   antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
   antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
   antSheet_(ANT_LOG_SHEET, ANT_LOG_HEADERS);
+  [ANT_CLIENTS_SHEET, ANT_ANALYSIS_SHEET, ANT_LOG_SHEET].forEach(function (n) {
+    antApplyDateFormats_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(n));
+  });
   antEnsurePipelineIdColumn_();
   var folder = antRootFolder_();
   var s = getAgentSettings_();
@@ -175,7 +178,7 @@ function antSaveClient(data) {
       'Client ID': clientId,
       'Agent ID': agentId,
       'Name': String(data.name).trim(),
-      'DOB': data.dob || '',
+      'DOB': antDateFromIso_(data.dob),
       'Age': data.age != null ? data.age : '',
       'Phone': "'" + String(data.phone || '').trim(),   // keep leading zero
       'Email': data.email || '',
@@ -371,7 +374,7 @@ function antStampPipelineRow_(hit, clientId, data) {
     sh.getRange(row, cols.email + 1).setValue(data.email);
   }
   if (data && cols.birthday > -1 && data.dob && !sh.getRange(row, cols.birthday + 1).getValue()) {
-    sh.getRange(row, cols.birthday + 1).setValue(new Date(data.dob + 'T00:00:00')).setNumberFormat('yyyy-mm-dd');
+    sh.getRange(row, cols.birthday + 1).setValue(new Date(data.dob + 'T00:00:00')).setNumberFormat('dd/mm/yyyy');
   }
 }
 
@@ -512,7 +515,10 @@ function antMasterRecord_(values) {
   Object.keys(values).forEach(function (k) {
     if (ANT_LOCAL_ONLY.indexOf(k) > -1) return;
     var v = values[k];
-    if (v instanceof Date) v = Utilities.formatDate(v, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss");
+    if (v instanceof Date) {
+      var tz = Session.getScriptTimeZone();
+      v = Utilities.formatDate(v, tz, Utilities.formatDate(v, tz, 'HH:mm') === '00:00' ? 'dd/MM/yyyy' : 'dd/MM/yyyy HH:mm');
+    }
     else if (typeof v === 'string') v = v.replace(/^'/, '');
     rec[k] = v;
   });
@@ -540,6 +546,25 @@ function antPostMaster_(payload) {
 // Helpers
 // ---------------------------------------------------------------------
 
+// Dates show as dd/mm/yyyy (same as the PULSE tabs); timestamps add the time.
+var ANT_DATE_FORMATS = {
+  'DOB': 'dd/mm/yyyy', 'Created': 'dd/mm/yyyy hh:mm', 'Updated': 'dd/mm/yyyy hh:mm',
+  'Date': 'dd/mm/yyyy hh:mm', 'Time': 'dd/mm/yyyy hh:mm'
+};
+
+function antDateFromIso_(iso) {
+  var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : (iso || '');
+}
+
+function antApplyDateFormats_(sh) {
+  var head = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0];
+  head.forEach(function (h, i) {
+    var f = ANT_DATE_FORMATS[String(h)];
+    if (f) sh.getRange(2, i + 1, Math.max(sh.getMaxRows() - 1, 1), 1).setNumberFormat(f);
+  });
+}
+
 function antSheet_(name, headers) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(name);
@@ -548,6 +573,7 @@ function antSheet_(name, headers) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold')
       .setBackground('#0B2545').setFontColor('#FFFFFF');
     sh.setFrozenRows(1);
+    antApplyDateFormats_(sh);
     return sh;
   }
   // Add any header that is missing (e.g. after an update), never remove.
@@ -624,6 +650,8 @@ function antRowToClient_(r) {
   var list = function (v) { return String(v || '').split(',').map(function (s) { return s.trim(); }).filter(String); };
   var dob = r['DOB'] instanceof Date
     ? Utilities.formatDate(r['DOB'], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(r['DOB'] || '');
+  var dm = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dm) dob = dm[3] + '-' + ('0' + dm[2]).slice(-2) + '-' + ('0' + dm[1]).slice(-2);
   return {
     clientId: r['Client ID'], name: r['Name'], dob: dob, phone: String(r['Phone']).replace(/^'/, ''), email: r['Email'],
     folderUrl: r['Folder Link'],

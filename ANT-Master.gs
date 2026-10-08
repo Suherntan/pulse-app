@@ -179,7 +179,7 @@ function masterBackupNow() {
   var it = DriveApp.getFoldersByName(M_BACKUP_FOLDER);
   var folder = it.hasNext() ? it.next() : DriveApp.createFolder(M_BACKUP_FOLDER);
   DriveApp.getFileById(ss.getId()).makeCopy(ss.getName() + ' – backup ' +
-    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'), folder);
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MM-yyyy'), folder);
 
   var copies = [], files = folder.getFiles();
   while (files.hasNext()) copies.push(files.next());
@@ -205,10 +205,19 @@ function mSheet_(name, headers) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]);
     mStyleHeader_(sh);
     sh.setFrozenRows(1);
+    mDateFormats_(sh);
   } else {
     mAddHeaders_(sh, headers);
   }
   return sh;
+}
+
+// Master date columns show dd/mm/yyyy like the PULSE tabs.
+function mDateFormats_(sh) {
+  var f = { 'Added': 'dd/mm/yyyy', 'Last Received': 'dd/mm/yyyy hh:mm', 'Received': 'dd/mm/yyyy hh:mm', 'Time': 'dd/mm/yyyy hh:mm' };
+  mHeaders_(sh).forEach(function (h, i) {
+    if (f[h]) sh.getRange(2, i + 1, Math.max(sh.getMaxRows() - 1, 1), 1).setNumberFormat(f[h]);
+  });
 }
 
 function mStyleHeader_(sh) {
