@@ -1417,3 +1417,9 @@ h3 {
         display: none !important;
     }
 }
+
+/* 7 tabs (incl. A-N-T) must fit a phone without scrolling */
+@media (max-width: 480px) {
+    .tab { min-width: 0; padding: 10px 1px; font-size: 11px; }
+    .tab .tab-icon svg { width: 18px; height: 18px; }
+}

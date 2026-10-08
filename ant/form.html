@@ -18,6 +18,7 @@
 body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh}
 header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
 header img{height:40px}
+header .home{color:#fff;text-decoration:none;font-size:30px;line-height:1;padding:0 4px 4px 0}
 header h1{font-family:var(--head);font-weight:600;font-size:20px;letter-spacing:.08em;white-space:nowrap}
 header .conn{border:1px solid rgba(255,255,255,.35);background:none;color:#fff;border-radius:999px;padding:5px 10px;font:600 11px var(--body);letter-spacing:.08em;cursor:pointer;white-space:nowrap}
 header .conn.on{border-color:#5DBB63;color:#9BE3A1}
@@ -86,6 +87,7 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 </head>
 <body>
 <header>
+  <a href="../index.html" class="home" aria-label="Back to PULSE">‹</a>
   <img src="ant-assets/logo-light.png" alt="ANT Wealth System">
   <h1>FACT-FIND</h1>
   <span class="cid" id="cid">NEW</span>
@@ -170,7 +172,7 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
       <pre id="out"></pre>
       <a id="folderLink" class="note" target="_blank" rel="noopener" style="display:none">Open client folder in Google Drive ↗</a>
       <div class="row">
-        <a class="btn primary" href="ant-deck-preview.html">PRESENT SLIDES →</a>
+        <a class="btn primary" href="slides.html">PRESENT SLIDES →</a>
         <button type="button" class="btn ghost" id="newBtn">NEW CLIENT</button>
       </div>
       <div class="note">After the slides, the A-N-T Analysis PDF uses this client's details.</div>
@@ -390,6 +392,10 @@ if (LIVE) {
     $('conn').classList.add('on');
   }).catch(err => { $('conn').textContent = 'NOT CONNECTED'; toast(err.message); });
 }
+
+// Opened from the PULSE app's A-N-T tab with ?q=name → search straight away
+const startQ = new URLSearchParams(location.search).get('q');
+if (startQ) { $('q').value = startQ; $('q').dispatchEvent(new Event('input')); }
 
 let tt;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }

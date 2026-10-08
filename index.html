@@ -87,6 +87,9 @@
 <button class=tab data-tab=send onclick="switchTab('send')">
 <span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><line x1=22 y1=2 x2=11 y2=13></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span><span>Send</span>
 </button>
+<button class=tab data-tab=ant onclick="switchTab('ant')">
+<span class=tab-icon><svg width=19 height=19 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.9 stroke-linecap=round stroke-linejoin=round><path d="M12 3 2 21h20z"></path><line x1=6.5 y1=13 x2=17.5 y2=13></line></svg></span><span>A-N-T</span>
+</button>
 </nav>
 <main id=tab-today class="tab-content active">
 <section class=reminders-section>
@@ -489,6 +492,35 @@
 <div class=send-card>
 <h3>&#128241; WhatsApp</h3>
 <p class=send-desc>WhatsApp can't be sent automatically for free &mdash; go to the <strong>Clients</strong> tab, then tap "Send via WhatsApp" on each client card to open it ready to send.</p>
+</div>
+</section>
+</main>
+<main id=tab-ant class="tab-content hidden">
+<style>
+.ant-hero{background:var(--navy);color:#fff;border-radius:14px;padding:18px 16px;display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.ant-hero img{height:42px}
+.ant-hero b{display:block;font-size:17px;letter-spacing:.06em}
+.ant-hero span{font-size:13px;color:#C9D2E0}
+.ant-steps{display:grid;gap:10px}
+.ant-step{display:flex;align-items:center;gap:14px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--text);box-shadow:var(--shadow)}
+.ant-step .n{width:34px;height:34px;flex:none;border-radius:10px;background:#F3AF3D;color:var(--navy);display:grid;place-items:center;font-weight:800;box-shadow:0 3px 0 #A86F14}
+.ant-step b{display:block;font-size:16px}
+.ant-step small{color:var(--text-light);font-size:13px}
+.ant-step .go{margin-left:auto;color:var(--primary);font-size:22px}
+.ant-find{display:flex;gap:8px;margin:14px 0 4px}
+.ant-find input{flex:1;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px}
+.ant-find button{border:0;border-radius:10px;padding:0 16px;background:var(--navy);color:#fff;font-weight:700}
+</style>
+<section>
+<div class=ant-hero><img src="/ant/ant-assets/logo-light.png" alt="ANT Wealth System"><div><b>A-N-T</b><span>Fact-Find &rarr; Slides &rarr; Analysis</span></div></div>
+<form class=ant-find onsubmit="event.preventDefault();var q=document.getElementById('ant-q').value.trim();location.href='/ant/form.html'+(q?'?q='+encodeURIComponent(q):'');">
+<input id=ant-q type=search placeholder="Find client (name or phone)" autocomplete=off>
+<button type=submit>Find</button>
+</form>
+<div class=ant-steps>
+<a class=ant-step href="/ant/form.html"><span class=n>1</span><div><b>Fact-Find</b><small>New client or update background</small></div><span class=go>&rsaquo;</span></a>
+<a class=ant-step href="/ant/slides.html"><span class=n>2</span><div><b>Present Slides</b><small>Lifestyle &middot; L.I.F.E</small></div><span class=go>&rsaquo;</span></a>
+<a class=ant-step href="/ant/analysis.html"><span class=n>3</span><div><b>A-N-T Analysis</b><small>Last analysis &middot; save PDF to Drive</small></div><span class=go>&rsaquo;</span></a>
 </div>
 </section>
 </main>

@@ -122,4 +122,4 @@ Click 💾 **Save**.
 ## Files (GitHub)
 - `ANT.gs` – new backend file
 - `Code.gs` – 3 small additions (routing + menu)
-- `design-mockups/fact-find-form.html`, `ant-deck-preview.html`, `ant-analysis.html`, `ant-api.js`, `vendor/` (free PDF tools, MIT licence)
+- `ant/form.html`, `ant/slides.html`, `ant/analysis.html`, `ant/ant-api.js`, `ant/vendor/` (free PDF tools, MIT licence)

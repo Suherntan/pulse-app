@@ -182,12 +182,14 @@ input.money:focus{border-color:var(--gold-soft)}
 </div></div>
 
 <div class="nav">
+  <button onclick="location.href='../index.html'">PULSE</button>
   <button id="prev">← Back</button>
   <button id="all">Show all</button>
   <button id="next">Next →</button>
   <button id="analysis">Save A-N-T Analysis</button>
 </div>
 
+<script src="ant-api.js"></script>
 <script>
 // Bottom → top = reveal order (most urgent first). Banner width follows the triangle;
 // a word that is too long simply runs out past the right-hand side.
@@ -287,7 +289,7 @@ function prev() { if (step > 0) showStep(step - 1, true); else if (cur > 0) go(c
 
 document.getElementById('next').onclick = next;
 document.getElementById('prev').onclick = prev;
-document.getElementById('analysis').onclick = () => { saveAnalysis(); location.href = 'ant-analysis.html'; };
+document.getElementById('analysis').onclick = () => { saveAnalysis(); location.href = 'analysis.html'; };
 document.getElementById('all').onclick = () => showStep(maxSteps(), true);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input')) return;

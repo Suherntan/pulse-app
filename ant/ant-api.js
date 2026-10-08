@@ -1,3 +1,7 @@
+// Same lock as the PULSE app: if this device hasn't unlocked PULSE,
+// go to the PULSE password screen first.
+try { if (localStorage.getItem('pulse_unlocked') !== 'true') location.replace('../index.html'); } catch (_) {}
+
 // Talks to the agent's own PULSE Google Apps Script (Code.gs + ANT.gs).
 // Uses the same web-app link the PULSE app saves in Settings ('pulse_api_url').
 // No link saved = demo mode (nothing leaves the phone).

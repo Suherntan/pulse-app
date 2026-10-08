@@ -229,7 +229,7 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
   - Animation: pyramid builds **one tier per click, from the bottom up**; matching table row slides in.
   - Table: **Current** (what client has) · **Gap = Ideal − Current (automatic)** · **Ideal** (decided together). Gap shows only when Current + Ideal are filled; red = short, green = covered; total gap at bottom.
   - Hints under each area. Education = short term, least risk, return ~__%; Investment = long term, higher risk, return ~__%. **% to be filled later.**
-- Preview file: `design-mockups/ant-deck-preview.html` (pictures in `design-mockups/ant-assets/`)
+- Preview file: `ant/slides.html` (pictures in `ant/ant-assets/`)
 
 ### Update (6 Oct 2026, part 4) – back to original layout
 - Keep the **original slide layout, wording and click order**; only colours/design change (navy + gold, ANT logo, Oswald font). No small explanation text – the agent explains.
@@ -248,7 +248,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 
 **Order:** Fact-Find form (client background) → Slides 1-3 → **A-N-T Analysis PDF** (outcome of slide 3).
 
-### Fact-Find form – `design-mockups/fact-find-form.html`
+### Fact-Find form – `ant/form.html`
 - Only **client background** now (L.I.F.E and Recommendation sections removed).
 - Now: Name*, DOB* (age auto), Phone*, Email, consent tick. Find existing client at top.
 - **B · Goals:** What motivated you to meet up with me? (text) · What financial goals? tap **Retirement** → retire at age + monthly cash flow wanted; tap **Kids' education** → children question · What other financial goals? (text)
@@ -256,7 +256,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Children are asked only once even if both "Kids' education" and "Children" are tapped.
 - The A-N-T Analysis PDF now has a short **Background** part (motivation, goals, other goals, family).
 
-### A-N-T Analysis PDF – `design-mockups/ant-analysis.html`
+### A-N-T Analysis PDF – `ant/analysis.html`
 - Opened from the slides with the **Save A-N-T Analysis** button.
 - One A4 page: navy header with logo + date · client box (name, Client ID, age, agent) · L.I.F.E pyramid + table (Current Status, L.I.F.E, Financial Goals, totals) · **Priority** list (gaps, most urgent first) · Notes box (type before saving). **No signature lines.** Agent **name + phone** shown in the client box and footer (from the agent's profile, set once in PULSE settings).
 - PDF is **for records only** – not sent to the client.
@@ -271,6 +271,12 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Tested end-to-end against the real script logic (fake Google in the test).
 - Setup steps: see [[A-N-T Step 1 - Setup Guide]].
 - Correction rule (8 Oct): same client + same day → **replace** the PDF and row; different day → new analysis.
+## ✅ A-N-T inside the PULSE app (8 Oct 2026)
+- New **A-N-T** tab (7th tab) in PULSE: search client → Fact-Find, 1 Fact-Find · 2 Present Slides · 3 A-N-T Analysis.
+- Pages moved from `design-mockups/` to **`ant/`** (`ant/form.html`, `ant/slides.html`, `ant/analysis.html`). Each has a "PULSE" back button.
+- Same PIN lock as PULSE: A-N-T pages send a locked device to the PULSE password screen first. Same Google link as PULSE (auto-connected).
+- Live on the normal PULSE address only **after merging the branch into master**.
+
 ## ✅ Pipeline link built (8 Oct 2026)
 - Decisions: match by **phone**; search **all 4 tabs** (existing/servicing clients can do A-N-T again); not found → add to APPROACH; analysis saved → APPROACH moves to PRESENTATION, others stay.
 - ANT CLIENT ID column on APPROACH / PRESENTATION / CLOSING / SR; reuses Code.gs getColumnMap_, addActivity, moveRowToStatus_.
