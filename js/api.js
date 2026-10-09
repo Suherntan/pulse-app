@@ -47,41 +47,55 @@ const API = {
         localStorage.setItem(this.SHEET_ID_KEY, id);
     },
 
-    /**
-     * Check if cached data is still valid
-     */
-    isCacheValid() {
-        const cacheTime = localStorage.getItem(this.CACHE_TIME_KEY);
-        if (!cacheTime) return false;
-        return (Date.now() - parseInt(cacheTime)) < this.CACHE_DURATION;
-    },
+    // One cache entry per action (fetchAll, templates, appointments …), so
+    // fetching one no longer wipes another.
+    _cacheKey(action) { return this.CACHE_KEY + ':' + action; },
 
     /**
-     * Get cached data
+     * Cached response for an action, with its age. `null` if none.
      */
-    getCachedData() {
+    _readCache(action) {
         try {
-            const data = localStorage.getItem(this.CACHE_KEY);
-            return data ? JSON.parse(data) : null;
+            const raw = localStorage.getItem(this._cacheKey(action));
+            if (!raw) return null;
+            const c = JSON.parse(raw);
+            return c && c.time ? c : null;
         } catch (e) {
             return null;
         }
     },
 
+    isCacheValid(action) {
+        const c = this._readCache(action);
+        return !!c && (Date.now() - c.time) < this.CACHE_DURATION;
+    },
+
+    getCachedData(action) {
+        const c = this._readCache(action);
+        return c ? c.data : null;
+    },
+
     /**
-     * Save data to cache
+     * Last saved data for an action, however old (used to show the
+     * dashboard instantly while fresh data loads in the background).
      */
-    saveCache(data) {
-        localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(this.CACHE_TIME_KEY, Date.now().toString());
+    getStaleData(action) {
+        return this.getCachedData(action);
+    },
+
+    saveCache(action, data) {
+        try {
+            localStorage.setItem(this._cacheKey(action), JSON.stringify({ time: Date.now(), data }));
+        } catch (e) { /* storage full – just skip caching */ }
     },
 
     /**
      * Clear all cache
      */
     clearCache() {
-        localStorage.removeItem(this.CACHE_KEY);
-        localStorage.removeItem(this.CACHE_TIME_KEY);
+        Object.keys(localStorage)
+            .filter(k => k.indexOf(this.CACHE_KEY + ':') === 0 || k === this.CACHE_KEY || k === this.CACHE_TIME_KEY)
+            .forEach(k => localStorage.removeItem(k));
     },
 
     /**
@@ -90,7 +104,7 @@ const API = {
      * @param {object} params - Additional query parameters
      * @returns {Promise<object>} Response data
      */
-    async get(action, params = {}) {
+    async get(action, params = {}, force = false) {
         const apiUrl = this.getApiUrl();
         if (!apiUrl) {
             throw new Error('API URL not configured. Please set it in Settings.');
@@ -104,12 +118,11 @@ const API = {
         });
 
         try {
-            // Try cache first
-            if (this.isCacheValid()) {
-                const cached = this.getCachedData();
-                if (cached && cached.action === action) {
-                    return cached.data;
-                }
+            // Try cache first (only for plain actions – a cached answer for
+            // one search/params must not be reused for another)
+            const cacheable = Object.keys(params).length === 0;
+            if (cacheable && !force && this.isCacheValid(action)) {
+                return this.getCachedData(action);
             }
 
             // Cache-bust: the Apps Script response is served from
@@ -139,18 +152,15 @@ const API = {
             }
 
             // Cache the data
-            this.saveCache({ action, data });
+            if (Object.keys(params).length === 0) this.saveCache(action, data);
 
             return data;
         } catch (error) {
             console.error('API GET error:', error);
             // Return cached data if available as fallback
-            if (this.isCacheValid()) {
-                const cached = this.getCachedData();
-                if (cached && cached.action === action) {
-                    console.warn('Using cached data (API unavailable)');
-                    return cached.data;
-                }
+            if (Object.keys(params).length === 0 && this.isCacheValid(action)) {
+                console.warn('Using cached data (API unavailable)');
+                return this.getCachedData(action);
             }
             throw error;
         }
@@ -216,8 +226,12 @@ const API = {
      * CLOSING, SR) for the Scriptable iOS widget; normalize to lowercase
      * here so the rest of the web app's lowercase reads keep working.
      */
-    async fetchAllData() {
-        const data = await this.get('fetchAll');
+    async fetchAllData(force = false) {
+        const data = this.normalizeAll(await this.get('fetchAll', {}, force));
+        return data;
+    },
+
+    normalizeAll(data) {
         if (data && !data.error) {
             ['APPROACH', 'PRESENTATION', 'CLOSING', 'SR'].forEach(key => {
                 const lower = key.toLowerCase();

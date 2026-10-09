@@ -37,38 +37,40 @@ async function testConnection() {
 }
 
 async function connectDashboard(url) {
+    // Fast start: show the data saved from last time straight away, then
+    // fetch fresh data from the Sheet in the background and redraw.
+    var stale = API.getStaleData('fetchAll');
+    if (stale && !stale.error) {
+        showScreen('dashboard');
+        updateDateDisplay();
+        updateWeekRange();
+        renderAll(API.normalizeAll(stale));
+        showLoading(false);
+        loadAllData(true, true);
+        return;
+    }
     try {
         showLoading(true);
-        var response = await fetch(url + (url.indexOf('?') === -1 ? '?' : '&') + 'action=fetchAll', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            var data = await response.json();
-            if (data.error) {
-                showLoading(false);
-                showScreen('setup');
-                var errorBox = document.getElementById('setup-error');
-                if (errorBox) errorBox.textContent = 'Backend error: ' + data.error;
-            } else {
-                showScreen('dashboard');
-                updateDateDisplay();
-                updateWeekRange();
-                await loadAllData();
-                showLoading(false);
-            }
-        } else {
-            showLoading(false);
-            showScreen('setup');
-            var errorBox2 = document.getElementById('setup-error');
-            if (errorBox2) errorBox2.textContent = 'Cannot connect. Check your URL and try again.';
-        }
+        // One fetch tests the link AND loads the data; templates load at the same time.
+        var both = await Promise.all([
+            API.fetchAllData(true),
+            typeof loadSheetMessageTemplates === 'function' ? loadSheetMessageTemplates() : null
+        ]);
+        var data = both[0];
+        showScreen('dashboard');
+        updateDateDisplay();
+        updateWeekRange();
+        await loadAllData(false, false, data);
+        showLoading(false);
     } catch (error) {
         console.error('Connection failed:', error);
         showLoading(false);
         showScreen('setup');
-        var errorBox3 = document.getElementById('setup-error');
-        if (errorBox3) errorBox3.textContent = 'Network error. Make sure you are online.';
+        var errorBox = document.getElementById('setup-error');
+        var msg = String(error && error.message || '');
+        if (errorBox) errorBox.textContent = /HTTP error|Failed to fetch|NetworkError|Load failed/i.test(msg)
+            ? 'Cannot connect. Check your URL and that you are online, then try again.'
+            : 'Backend error: ' + msg;
     }
 }
 
@@ -152,18 +154,28 @@ function formatNiceDate(dateStr) {
 }
 
 // --- Data Loading ---
-async function loadAllData() {
+// force = skip the 5-minute cache; quiet = background refresh (no error toast
+// if the dashboard is already showing data); prefetched = data already in hand.
+async function loadAllData(force, quiet, prefetched) {
+    // Message templates load alongside the data, not after it.
+    var templates = typeof loadSheetMessageTemplates === 'function' ? loadSheetMessageTemplates() : null;
     try {
-        lastFetchedData = await API.fetchAllData();
+        lastFetchedData = prefetched || await API.fetchAllData(!!force);
     } catch (error) {
         console.error('Load all data error:', error);
+        if (quiet && lastFetchedData) { showToast('Could not refresh – showing your last saved data.'); return; }
         showToast('Failed to load data from your Sheet.');
         lastFetchedData = { approach: [], presentation: [], closing: [], sr: [] };
     }
-    if (typeof loadSheetMessageTemplates === 'function') await loadSheetMessageTemplates();
-    renderTodayTab(lastFetchedData);
-    renderTrackerTab(lastFetchedData);
-    renderClientsTab(lastFetchedData);
+    if (templates) await templates;   // usually done by now – it ran in parallel
+    renderAll(lastFetchedData);
+}
+
+function renderAll(data) {
+    lastFetchedData = data;
+    renderTodayTab(data);
+    renderTrackerTab(data);
+    renderClientsTab(data);
 }
 
 function allRows(data) {

@@ -324,6 +324,12 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push
 
+## App speed (9 Oct 2026)
+- Was slow because each open asked Google for all data **twice**, then the message templates – one after another (about 3 × 2–5 s) – and the cache only kept one thing, so it was always overwritten.
+- Now (js/app.js, js/api.js): shows the data saved from last time **instantly**, refreshes from the Sheet in the background; first open does one data request with templates in parallel; cache kept per request.
+- Test (Google pretending 2 s per request): opening again ≈ 0.5 s (was ≈ 6 s); first open on a new phone ≈ 2.6 s.
+- Possible later (Google side, needs a deploy): make `fetchAll` in Code.gs faster with Apps Script CacheService.
+
 ## Full flow (review – 6 Oct 2026)
 
 ```
