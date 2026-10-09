@@ -294,6 +294,18 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Testing with a separate free "ANT Master" Gmail; real manager later = same steps, agents just reconnect.
 - Tested: send, update without duplicates, master down → retry, wrong key, agent turned off, Agent ID can't be faked.
 - Setup steps: see [[A-N-T Step 2 - Master Setup Guide]].
+- ⏸ **On hold (9 Oct 2026):** setup waits until Su meets the agency manager. Code is ready on master; setup ≈ 15 min (Part A manager, Part B each agent).
+
+## 📋 Status & to-do (9 Oct 2026)
+**Live:** A-N-T tab in PULSE (Fact-Find → Slides → Analysis PDF to Drive), pipeline link, dd/mm/yyyy dates. Repo on laptop moved to `C:\PULSE-app`; auto-backup working.
+
+**Waiting / open:**
+- [ ] Step 2 – Master sheet (after meeting the agency manager)
+- [ ] Offer Doc – original goal; needs Su's offer doc sample
+- [ ] Recommendation after presenting (plan, premium, sum assured) – removed from form; decide where it lives
+- [ ] Education / Investment return % hints on slide 3 (Su to give the %)
+- [ ] Logo position on slides 1 & 2 (on hold)
+- [ ] Optional: auto-backup.bat → pull before push
 
 ## Full flow (review – 6 Oct 2026)
 
