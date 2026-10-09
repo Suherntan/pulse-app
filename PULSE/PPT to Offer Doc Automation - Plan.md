@@ -301,19 +301,17 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 
 **Waiting / open:**
 - [ ] Step 2 – Master sheet (after meeting the agency manager)
-- [~] Offer Doc – **preview built (9 Oct)**: `ant/offer.html` (step 4 in the A-N-T tab, and OFFER → button on the Analysis page)
-  - Based on Su's "Policy Summary Table" artifact: cover types down the side, one column per policy, premium at the bottom
-  - Each column is marked **Existing** (policy no.) or **Proposed** (new plan); proposed columns are shaded
-  - Each cover is linked to a L.I.F.E area (LIFE→Death, ABCC/Cancer Booster→Critical Illness, MME/MHSB→Hospitalization, ADD→Disability; can change per row)
-  - "L.I.F.E after this plan" box: goal − current − proposed = still short (uses the last analysis)
-  - Premium per month or per year; optional total column; notes; Download PDF
-  - Draft kept on the phone (`ant-offer-current`)
-  - **Upload Proposal PDF (9 Oct):** reads Manulife proposal PDFs on the phone (free, pdf.js – file never leaves the phone)
-    - Reads the "Plan Details" lines (plan name, face amount, e.g. "MHSE 200"), the Total Modal Premium and the Payment Mode
-    - Each PDF = one Proposed column ("MANULINK ESSENTIAL · Option 1/2/3"); basic plan → LIFE row; riders get their own rows, L.I.F.E area guessed
-    - Everything stays editable; scanned/picture PDFs can't be read (type in by hand)
-    - Gap box now shows "still short" **per option** (options are choices, not added together)
-    - Other insurers' layouts: send a sample, add a rule
+- [~] Offer Doc – **rebuilt to follow Su's "Import Proposal" artifact (9 Oct)**: `ant/offer.html` (step 4 in the A-N-T tab, OFFER → on the Analysis page)
+  - Same layout: client name (gold) + 4 columns EXISTING / OFFER 1 (green) / OFFER 2 (navy) / VALUE UP (orange)
+  - 12 fixed rows: Basic Life Coverage, Critical Illness, CI Passive Income, Hospital Room Rate, Annual Hospitalization Fund, Family Plan, Deductible, Accident Coverage, Premium Waiver, LHDN Tax Relieve, LHDN Investment Fund, Coverage Term
+  - Premium Payment Options block (Annual / Semi-Annual / Monthly), can switch to Annual only
+  - Upload one proposal PDF at a time → "Review & match" (pick column, check each row & amount) → Add to Offer Doc
+  - PDF read **free on the phone** (pdf.js) – the artifact used Claude to read; we use the artifact's own Manulife rules instead, no credits
+  - Reads: plan lines (Manulink Essential → Basic Life, Additional CI → CI, Accident Indemnity → Accident, Health Saver "MHSE 200" → Hospital Room Rate RM 200), Deductible, Overall Annual Limit, Coverage Term, client name + age, total premium + payment mode
+  - LHDN rule: yearly premium over RM 3,000 → "YES" in LHDN Tax Relieve
+  - File name …_OFFER1.pdf / _OFFER2 / _VALUE UP / _EXISTING picks the column
+  - Every cell editable; Undo last import; Clear all; Download PDF (landscape A4, same look as the artifact)
+  - Not done from the artifact: reading photos/screenshots (needs Claude = credits) and the .pptx slide download
   - [ ] Next, after Su checks the look: Save to Drive + PRESENTATION tab update (Offer Status, date, PDF link) + copy to master
 - [ ] Education / Investment return % hints on slide 3 (Su to give the %)
 - [ ] Logo position on slides 1 & 2 (on hold)
