@@ -143,18 +143,52 @@ function antSearchClients(q) {
   q = String(q || '').trim().toLowerCase();
   if (!q) return { ok: true, clients: [] };
   var digits = q.replace(/\D/g, '');
-  var rows = antRows_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
-  var hits = rows.filter(function (r) {
-    return String(r['Name']).toLowerCase().indexOf(q) > -1 ||
-      (digits.length >= 3 && String(r['Phone']).replace(/\D/g, '').indexOf(digits) > -1) ||
-      String(r['Client ID']).toLowerCase() === q;
-  }).slice(0, 20);
-  return {
-    ok: true,
-    clients: hits.map(function (r) {
-      return { clientId: r['Client ID'], name: r['Name'], phone: String(r['Phone']).replace(/^'/, '') };
-    })
+  var matches = function (name, phone, id) {
+    return String(name).toLowerCase().indexOf(q) > -1 ||
+      (digits.length >= 3 && String(phone).replace(/\D/g, '').indexOf(digits) > -1) ||
+      (id && String(id).toLowerCase() === q);
   };
+  var rows = antRows_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
+  var hits = rows.filter(function (r) { return matches(r['Name'], r['Phone'], r['Client ID']); }).slice(0, 20);
+  var out = hits.map(function (r) {
+    return { clientId: r['Client ID'], name: r['Name'], phone: String(r['Phone']).replace(/^'/, ''), stage: r['Pipeline Stage'] || '' };
+  });
+  // Existing PULSE clients (APPROACH / PRESENTATION / CLOSING / SR) with no A-N-T yet.
+  try { out = out.concat(antSearchPipeline_(q, matches, rows).slice(0, Math.max(0, 25 - out.length))); } catch (e) { /* pipeline tabs missing – A-N-T clients only */ }
+  return { ok: true, clients: out };
+}
+
+function antSearchPipeline_(q, matches, antRows) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), out = [], seen = {};
+  var antIds = {}, antKeys = {};
+  antRows.forEach(function (r) {
+    antIds[String(r['Client ID'])] = true;
+    antKeys[antPhoneKey_(r['Phone']) + '|' + String(r['Name']).trim().toLowerCase()] = true;
+  });
+  var tz = Session.getScriptTimeZone();
+  ANT_PIPELINE_TABS.forEach(function (tab) {
+    var sh = ss.getSheetByName(tab);
+    if (!sh) return;
+    var cols = getColumnMap_(sh), last = sh.getLastRow();
+    if (cols.name === -1 || last < cols._dataStartRow) return;
+    var idCol = antPipelineIdCol_(sh, cols);
+    sh.getRange(cols._dataStartRow, 1, last - cols._dataStartRow + 1, sh.getLastColumn()).getValues().forEach(function (r) {
+      var name = String(r[cols.name] || '').trim();
+      if (!name) return;
+      var phone = cols.contact > -1 ? String(r[cols.contact] || '').replace(/^'/, '').trim() : '';
+      if (idCol > -1 && antIds[String(r[idCol]).trim()]) return;                      // already an A-N-T client
+      var key = antPhoneKey_(phone) + '|' + name.toLowerCase();
+      if (antKeys[key] || seen[key] || !matches(name, phone)) return;
+      seen[key] = true;
+      var bday = cols.birthday > -1 ? r[cols.birthday] : '';
+      out.push({
+        clientId: '', pipeline: true, tab: tab, name: name, phone: phone,
+        email: cols.email > -1 ? String(r[cols.email] || '').trim() : '',
+        dob: bday instanceof Date ? Utilities.formatDate(bday, tz, 'yyyy-MM-dd') : ''
+      });
+    });
+  });
+  return out;
 }
 
 /** GET ?action=antGetClient&id=C-0001 — full Fact-Find record. */

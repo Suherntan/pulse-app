@@ -27,11 +27,15 @@ var M_BACKUP_FOLDER = 'A-N-T Master Backups';
 var M_BACKUP_KEEP = 8;
 
 // Each type: which tab it goes to and which column identifies the record.
+// Every agent numbers from C-0001, so the master adds the Agent ID in front:
+// Master ID "AG-001-C-0001" (and "AG-001-A-0003", "AG-001-O-0002"). Analysis and
+// offer rows also get "Master Client ID", so a client's rows can be found across tabs.
 var M_TYPES = {
-  client:   { sheet: M_CLIENTS,  idKey: 'Client ID' },
-  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID' },
-  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID' }
+  client:   { sheet: M_CLIENTS,  idKey: 'Client ID',   headers: ['Master ID', 'Agent ID', 'Client ID', 'Received'] },
+  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID', headers: ['Master ID', 'Master Client ID', 'Agent ID', 'Analysis ID', 'Client ID', 'Received'] },
+  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID',    headers: ['Master ID', 'Master Client ID', 'Agent ID', 'Offer ID', 'Client ID', 'Received'] }
 };
+function mMasterId_(agentId, id) { return id ? agentId + '-' + id : ''; }
 
 
 // ---------------------------------------------------------------------
@@ -54,9 +58,7 @@ function onOpen() {
 
 function masterSetup() {
   mSheet_(M_AGENTS, M_AGENT_HEADERS);
-  mSheet_(M_CLIENTS, ['Agent ID', 'Client ID', 'Received']);
-  mSheet_(M_ANALYSIS, ['Agent ID', 'Analysis ID', 'Received']);
-  mSheet_(M_OFFERS, ['Agent ID', 'Offer ID', 'Received']);
+  Object.keys(M_TYPES).forEach(function (k) { mSheet_(M_TYPES[k].sheet, M_TYPES[k].headers); });
   mSheet_(M_LOG, M_LOG_HEADERS);
   var def = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
   if (def && def.getLastRow() === 0 && SpreadsheetApp.getActiveSpreadsheet().getSheets().length > 1) {
@@ -149,7 +151,9 @@ function doPost(e) {
     Object.keys(body.record).forEach(function (k) { rec[k] = body.record[k]; });
     rec['Agent ID'] = agentId;                       // always the verified agent, never what was sent
     rec['Received'] = new Date();
-    var sheet = mSheet_(t.sheet, ['Agent ID', t.idKey, 'Received']);
+    rec['Master ID'] = mMasterId_(agentId, rec[t.idKey]);
+    if (body.type !== 'client') rec['Master Client ID'] = mMasterId_(agentId, rec['Client ID']);
+    var sheet = mSheet_(t.sheet, t.headers);
     mAddHeaders_(sheet, Object.keys(rec));
     var res = mUpsert_(sheet, [ 'Agent ID', t.idKey ], rec);
     mUpsert_(agents, 'Agent ID', { 'Agent ID': agentId, 'Last Received': new Date() });

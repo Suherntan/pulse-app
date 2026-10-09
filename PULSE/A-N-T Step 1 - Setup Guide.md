@@ -114,6 +114,10 @@ Click 💾 **Save**.
 - Saving again the same day replaces that day's offer (old PDF goes to Drive Bin).
 - After updating: paste the new **Code.gs** and **ANT.gs**, then **Deploy → Manage deployments → Edit → Version: New version → Deploy**.
 
+## Search finds existing PULSE clients (added 9 Oct 2026)
+- The Fact-Find search also shows clients from APPROACH / PRESENTATION / CLOSING / SR that have no A-N-T yet, marked e.g. "CLOSING · no A-N-T yet".
+- Tap one → the form fills in name, phone, email, birthday. Add the background and save → they get a C-number, linked to that same pipeline row (no new row).
+
 ## Correcting an analysis
 - Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).
 - **Another day**: saves as a new analysis, so you keep the history of each meeting.
