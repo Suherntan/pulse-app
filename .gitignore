@@ -2,3 +2,6 @@ node_modules/
 clients_export*.csv
 clients_export*.xlsx
 *.lock
+
+# Obsidian settings when C:\PULSE-app itself was opened as a vault by mistake
+/.obsidian/

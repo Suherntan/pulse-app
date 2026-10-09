@@ -14,6 +14,9 @@ if %errorlevel% neq 0 (
 )
 
 echo.
+echo Getting latest changes from GitHub...
+git pull --no-rebase --no-edit
+
 echo Uploading to GitHub...
 git push
 
