@@ -10,7 +10,7 @@
  * needs an Agent ID + secret key from the AGENTS tab, so nobody else
  * can write in, and agents never get access to this sheet.
  *
- * Tabs: AGENTS · CLIENTS · ANALYSIS · LOG
+ * Tabs: AGENTS · CLIENTS · ANALYSIS · OFFERS · LOG
  * Menu: A-N-T Master > Set Up / Add Agent / Turn Agent On-Off /
  *       Weekly Backup On-Off
  * =====================================================================
@@ -19,6 +19,7 @@
 var M_AGENTS = 'AGENTS';
 var M_CLIENTS = 'CLIENTS';
 var M_ANALYSIS = 'ANALYSIS';
+var M_OFFERS = 'OFFERS';
 var M_LOG = 'LOG';
 var M_AGENT_HEADERS = ['Agent ID', 'Agent Name', 'Phone', 'Secret Key', 'Active', 'Added', 'Last Received'];
 var M_LOG_HEADERS = ['Time', 'Agent ID', 'Type', 'Record ID', 'Result'];
@@ -26,10 +27,15 @@ var M_BACKUP_FOLDER = 'A-N-T Master Backups';
 var M_BACKUP_KEEP = 8;
 
 // Each type: which tab it goes to and which column identifies the record.
+// Every agent numbers from C-0001, so the master adds the Agent ID in front:
+// Master ID "SH01-C-0001" (and "SH01-A-0003", "SH01-O-0002"). Analysis and
+// offer rows also get "Master Client ID", so a client's rows can be found across tabs.
 var M_TYPES = {
-  client:   { sheet: M_CLIENTS,  idKey: 'Client ID' },
-  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID' }
+  client:   { sheet: M_CLIENTS,  idKey: 'Client ID',   headers: ['Master ID', 'Agent ID', 'Client ID', 'Received'] },
+  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID', headers: ['Master ID', 'Master Client ID', 'Agent ID', 'Analysis ID', 'Client ID', 'Received'] },
+  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID',    headers: ['Master ID', 'Master Client ID', 'Agent ID', 'Offer ID', 'Client ID', 'Received'] }
 };
+function mMasterId_(agentId, id) { return id ? agentId + '-' + id : ''; }
 
 
 // ---------------------------------------------------------------------
@@ -52,8 +58,7 @@ function onOpen() {
 
 function masterSetup() {
   mSheet_(M_AGENTS, M_AGENT_HEADERS);
-  mSheet_(M_CLIENTS, ['Agent ID', 'Client ID', 'Received']);
-  mSheet_(M_ANALYSIS, ['Agent ID', 'Analysis ID', 'Received']);
+  Object.keys(M_TYPES).forEach(function (k) { mSheet_(M_TYPES[k].sheet, M_TYPES[k].headers); });
   mSheet_(M_LOG, M_LOG_HEADERS);
   var def = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
   if (def && def.getLastRow() === 0 && SpreadsheetApp.getActiveSpreadsheet().getSheets().length > 1) {
@@ -67,10 +72,11 @@ function masterSetup() {
 
 function masterAddAgent() {
   var ui = SpreadsheetApp.getUi();
-  var idRes = ui.prompt('Add Agent', 'Agent ID (e.g. AG-001)', ui.ButtonSet.OK_CANCEL);
+  var idRes = ui.prompt('Add Agent', 'Agent ID = the agent\'s initials + a number (e.g. SH01)', ui.ButtonSet.OK_CANCEL);
   if (idRes.getSelectedButton() !== ui.Button.OK) return;
-  var agentId = idRes.getResponseText().trim().toUpperCase();
+  var agentId = idRes.getResponseText().replace(/\s+/g, '').toUpperCase();
   if (!agentId) return;
+  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Agent ID: letters and numbers only, e.g. SH01.'); return; }
 
   var sheet = mSheet_(M_AGENTS, M_AGENT_HEADERS);
   var found = mFind_(sheet, 'Agent ID', agentId);
@@ -118,7 +124,7 @@ function doGet() {
 }
 
 /**
- * Body: { agentId, key, type: 'client' | 'analysis', record: { header: value, ... } }
+ * Body: { agentId, key, type: 'client' | 'analysis' | 'offer', record: { header: value, ... } }
  * or    { agentId, key, ping: true }   (connection test)
  */
 function doPost(e) {
@@ -146,7 +152,9 @@ function doPost(e) {
     Object.keys(body.record).forEach(function (k) { rec[k] = body.record[k]; });
     rec['Agent ID'] = agentId;                       // always the verified agent, never what was sent
     rec['Received'] = new Date();
-    var sheet = mSheet_(t.sheet, ['Agent ID', t.idKey, 'Received']);
+    rec['Master ID'] = mMasterId_(agentId, rec[t.idKey]);
+    if (body.type !== 'client') rec['Master Client ID'] = mMasterId_(agentId, rec['Client ID']);
+    var sheet = mSheet_(t.sheet, t.headers);
     mAddHeaders_(sheet, Object.keys(rec));
     var res = mUpsert_(sheet, [ 'Agent ID', t.idKey ], rec);
     mUpsert_(agents, 'Agent ID', { 'Agent ID': agentId, 'Last Received': new Date() });

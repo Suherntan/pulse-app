@@ -26,7 +26,7 @@
    - Execute as: **Me**
    - Who has access: **Anyone**
    - **Deploy** → copy the **Web app URL** (this is the **Master link**).
-7. Sheet → **A-N-T Master → Add Agent** → Agent ID (e.g. `AG-001`) → name → it shows the **Master link + secret key**. Send these two to the agent (WhatsApp is fine).
+7. Sheet → **A-N-T Master → Add Agent** → Agent ID = the agent's initials + a number (e.g. `SH01`) → name → it shows the **Master link + secret key**. Send these two to the agent (WhatsApp is fine).
 8. (Optional) **A-N-T Master → Turn On Weekly Backup**.
 
 > "Anyone" only means the link can receive data. Nothing can be read through it, and only agents with a correct key can add data.
@@ -47,7 +47,9 @@
 ## Quick test
 1. Agent: save a test client in the form → it says **"copied to Master ✓"**.
 2. Manager: Master Sheet → tab **CLIENTS** shows the row with the **Agent ID**.
-3. Agent: save an A-N-T Analysis → Master tab **ANALYSIS** gets the row.
+3. Agent: save an A-N-T Analysis → Master tab **ANALYSIS** gets the row. Save an Offer Document → tab **OFFERS** (made by itself).
+
+**Numbering in the master:** every agent starts at C-0001, so the master adds the Agent ID in front – column **Master ID**, e.g. `SH01-C-0001` (client), `SH01-A-0003` (analysis), `SH01-O-0002` (offer). Analysis and offer rows also have **Master Client ID** (e.g. `SH01-C-0001`), so filtering by it shows everything for one client.
 4. Agent: change the client's email and save again → Master row is **updated** (not duplicated).
 
 ## If something goes wrong

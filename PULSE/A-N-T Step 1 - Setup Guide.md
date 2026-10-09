@@ -71,7 +71,7 @@ Click 💾 **Save**.
 1. Go back to the Sheet and **reload the page**. A new menu **A-N-T** appears.
 2. **A-N-T → Set Up A-N-T (one-time)**.
 3. Google asks for permission (first time only) → choose your account → **Advanced → Go to project → Allow**. (Needed so it can make folders in your Drive.)
-4. Type your **Agent ID** (e.g. `AG-001`) → OK.
+4. Type your **Agent ID** = your initials + a number (e.g. `SH01`) → OK.
 5. It shows your name, phone and the new Drive folder link. Name or phone wrong? Fix in **PULSE Reminders → My Settings**.
 
 ### 4. Publish the new version (important!)
@@ -83,7 +83,7 @@ Click 💾 **Save**.
 ### 5. Connect the form
 1. Open the Fact-Find form on your phone.
 2. Top right shows **DEMO** → tap it → paste your **web-app link** (same one the PULSE app uses) → OK.
-3. It should now say **CONNECTED · AG-001**.
+3. It should now say **CONNECTED · SH01**.
    (If you already use the PULSE app on the same website, it may connect by itself.)
 
 ## Quick test
@@ -106,6 +106,17 @@ Click 💾 **Save**.
   - Remark added: "A-N-T Analysis A-000x · total gap …" (only once per day).
 - ANT_CLIENTS shows the current **Pipeline Stage**.
 - After updating: paste the new **Code.gs** (row moves by title) and **ANT.gs**, run **A-N-T → Set Up A-N-T** once more (adds the ANT CLIENT ID column), then Deploy → New version.
+
+## Offer Document – Save to Drive (added 9 Oct 2026)
+- Page: A-N-T tab → **4 Offer** (or OFFER → on the Analysis page). Upload proposal PDFs, then **SAVE TO DRIVE**.
+- The button only shows when the app is connected **and** the client was saved in the Fact-Find form.
+- Saves: PDF in the client's folder, a row in the new **ANT_OFFERS** tab (made by itself), a note in the pipeline REMARKS, PRODUCT PROPOSED (if empty). APPROACH clients move to PRESENTATION.
+- Saving again the same day replaces that day's offer (old PDF goes to Drive Bin).
+- After updating: paste the new **Code.gs** and **ANT.gs**, then **Deploy → Manage deployments → Edit → Version: New version → Deploy**.
+
+## Search finds existing PULSE clients (added 9 Oct 2026)
+- The Fact-Find search also shows clients from APPROACH / PRESENTATION / CLOSING / SR that have no A-N-T yet, marked e.g. "CLOSING · no A-N-T yet".
+- Tap one → the form fills in name, phone, email, birthday. Add the background and save → they get a C-number, linked to that same pipeline row (no new row).
 
 ## Correcting an analysis
 - Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).

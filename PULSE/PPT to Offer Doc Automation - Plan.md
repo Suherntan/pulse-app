@@ -301,8 +301,25 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 
 **Waiting / open:**
 - [ ] Step 2 – Master sheet (after meeting the agency manager)
-- [ ] Offer Doc – original goal; needs Su's offer doc sample
-- [ ] Recommendation after presenting (plan, premium, sum assured) – removed from form; decide where it lives
+- [~] Offer Doc – **rebuilt to follow Su's "Import Proposal" artifact (9 Oct)**: `ant/offer.html` (step 4 in the A-N-T tab, OFFER → on the Analysis page)
+  - Same layout: client name (gold) + 4 columns EXISTING / OFFER 1 (green) / OFFER 2 (navy) / VALUE UP (orange)
+  - 12 fixed rows: Basic Life Coverage, Critical Illness, CI Passive Income, Hospital Room Rate, Annual Hospitalization Fund, Family Plan, Deductible, Accident Coverage, Premium Waiver, LHDN Tax Relieve, LHDN Investment Fund, Coverage Term
+  - Premium Payment Options block (Annual / Semi-Annual / Monthly), can switch to Annual only
+  - Upload one proposal PDF at a time → "Review & match" (pick column, check each row & amount) → Add to Offer Doc
+  - PDF read **free on the phone** (pdf.js) – the artifact used Claude to read; we use the artifact's own Manulife rules instead, no credits
+  - Reads: plan lines (Manulink Essential → Basic Life, Additional CI → CI, Accident Indemnity → Accident, Health Saver "MHSE 200" → Hospital Room Rate RM 200), Deductible, Overall Annual Limit, Coverage Term, client name + age, total premium + payment mode
+  - LHDN rule: yearly premium over RM 3,000 → "YES" in LHDN Tax Relieve
+  - File name …_OFFER1.pdf / _OFFER2 / _VALUE UP / _EXISTING picks the column
+  - Every cell editable; Undo last import; Clear all; Download PDF (landscape A4, same look as the artifact)
+  - Not done from the artifact: reading photos/screenshots (needs Claude = credits) and the .pptx slide download
+  - [x] **Save to Drive (9 Oct)** – `antSaveOffer` in ANT.gs (+ case in Code.gs doPost)
+    - PDF → client's Drive folder; new **ANT_OFFERS** tab (Offer ID O-0001, per column: Plan, Basic Life, Annual Premium, full table as JSON, PDF link)
+    - Same client + same day = replaces that offer and its PDF (old PDF to Drive Bin)
+    - Pipeline: APPROACH → PRESENTATION; REMARKS "A-N-T Offer O-0001 · Offer 1 RM 5,063.00 / Offer 2 …" (once a day); PRODUCT PROPOSED filled if empty (e.g. MANULINK ESSENTIAL)
+    - Copy to master as type **offer** (ANT-Master.gs now has an OFFERS tab) – only once Step 2 is set up
+    - Su to do: paste new Code.gs + ANT.gs → Deploy → Manage deployments → Edit → New version
+  - [x] **Search finds existing PULSE clients (9 Oct)** – Fact-Find search also lists APPROACH / PRESENTATION / CLOSING / SR clients with no A-N-T yet ("CLOSING · no A-N-T yet"); tap = Fact-Find pre-filled (name, phone, email, birthday); saving gives a C-number and links that same pipeline row
+  - [x] **Master numbering (9 Oct)** – master adds **Master ID** = Agent ID + number (SH01-C-0001, SH01-A-0003, SH01-O-0002). **Agent ID = initials + number (e.g. SH01)** so the manager can tell agents apart; changing it in Set Up A-N-T also updates rows already saved; analysis/offer rows also get **Master Client ID**. Agents keep their own short numbers
 - [ ] Education / Investment return % hints on slide 3 (Su to give the %)
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push

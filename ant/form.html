@@ -198,7 +198,7 @@ const DEMO = [
 ];
 let currentId = '';            // empty = new client; the sheet gives the ID on save
 // Agent profile – set once per agent in PULSE settings (demo values here)
-let AGENT = {agentId:'AG-001', agentName:'Demo Agent', agentPhone:'012-000 0000'};
+let AGENT = {agentId:'SH01', agentName:'Demo Agent', agentPhone:'012-000 0000'};
 const LIVE = AntApi.connected();
 
 const $ = id => document.getElementById(id);
@@ -295,10 +295,13 @@ function getBackground() {
 
 // ---- Find existing client ----
 const results = $('results');
-let searchTimer;
+let searchTimer, shown = [];
 const esc = t => String(t ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 function showResults(list, q) {
-  results.innerHTML = list.map(c => `<button type="button" data-id="${esc(c.clientId)}"><span>${esc(c.name)}</span><small>${esc(c.clientId)} · ${esc(c.phone)}</small></button>`).join('')
+  shown = list;
+  results.innerHTML = list.map((c, i) => c.pipeline
+      ? `<button type="button" data-i="${i}"><span>${esc(c.name)}</span><small>${esc(c.tab)} · no A-N-T yet${c.phone ? ' · ' + esc(c.phone) : ''}</small></button>`
+      : `<button type="button" data-i="${i}" data-id="${esc(c.clientId)}"><span>${esc(c.name)}</span><small>${esc(c.clientId)} · ${esc(c.phone)}</small></button>`).join('')
     || (q ? '<button type="button" disabled><small>No client found – fill in below as new</small></button>' : '');
   results.style.display = q ? 'block' : 'none';
 }
@@ -311,13 +314,21 @@ $('q').addEventListener('input', () => {
     return showResults(DEMO.filter(c => c.name.toLowerCase().includes(ql) || (d && c.phone.replace(/\D/g, '').includes(d))), q);
   }
   searchTimer = setTimeout(async () => {
-    try { const r = await AntApi.get('antSearchClients', {q}); if ($('q').value.trim() === q) showResults(r.clients, q); }
+    try {
+      const r = await AntApi.get('antSearchClients', {q});
+      if ($('q').value.trim() !== q) return;
+      showResults(r.clients, q);
+      if (!r.pipelineSearch) toast('Pipeline clients not searched yet – update ANT.gs and Deploy > New version');
+      else if (r.pipelineError) toast('Pipeline search problem: ' + r.pipelineError);
+    }
     catch (err) { toast(err.message); }
   }, 300);
 });
 results.addEventListener('click', async e => {
-  const b = e.target.closest('button[data-id]'); if (!b) return;
+  const b = e.target.closest('button[data-i]'); if (!b) return;
   results.style.display = 'none'; $('q').value = '';
+  const pick = shown[+b.dataset.i];
+  if (pick && pick.pipeline) { fillFromPipeline(pick); return; }
   try {
     const c = LIVE ? (await AntApi.get('antGetClient', {id: b.dataset.id})).client : DEMO.find(x => x.clientId === b.dataset.id);
     fill(c); toast('Loaded ' + c.name + ' – update and save');
@@ -332,6 +343,18 @@ function fill(c) {
   setBackground(c.background);
   $('consent').checked = true;
   clearErrors(); $('saved').classList.remove('show');
+}
+
+// Existing PULSE client (from APPROACH / PRESENTATION / CLOSING / SR): start a new
+// Fact-Find with what the pipeline already knows. Saving links it to that same row.
+function fillFromPipeline(c) {
+  $('ff').reset(); currentId = ''; $('folderLink').style.display = 'none';
+  $('cid').textContent = 'NEW · from ' + c.tab;
+  $('name').value = c.name; $('phone').value = c.phone || ''; $('email').value = c.email || '';
+  $('dob').value = isoToDmy(c.dob); $('dob').dispatchEvent(new Event('input'));
+  setBackground({});
+  clearErrors(); $('saved').classList.remove('show');
+  toast(c.name + ' from ' + c.tab + ' – add the background and save');
 }
 
 // ---- Validation + save ----
