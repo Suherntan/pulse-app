@@ -107,6 +107,13 @@ Click 💾 **Save**.
 - ANT_CLIENTS shows the current **Pipeline Stage**.
 - After updating: paste the new **Code.gs** (row moves by title) and **ANT.gs**, run **A-N-T → Set Up A-N-T** once more (adds the ANT CLIENT ID column), then Deploy → New version.
 
+## Offer Document – Save to Drive (added 9 Oct 2026)
+- Page: A-N-T tab → **4 Offer** (or OFFER → on the Analysis page). Upload proposal PDFs, then **SAVE TO DRIVE**.
+- The button only shows when the app is connected **and** the client was saved in the Fact-Find form.
+- Saves: PDF in the client's folder, a row in the new **ANT_OFFERS** tab (made by itself), a note in the pipeline REMARKS, PRODUCT PROPOSED (if empty). APPROACH clients move to PRESENTATION.
+- Saving again the same day replaces that day's offer (old PDF goes to Drive Bin).
+- After updating: paste the new **Code.gs** and **ANT.gs**, then **Deploy → Manage deployments → Edit → Version: New version → Deploy**.
+
 ## Correcting an analysis
 - Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).
 - **Another day**: saves as a new analysis, so you keep the history of each meeting.

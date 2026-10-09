@@ -21,6 +21,11 @@ body{margin:0;background:var(--desk);color:var(--ink);font:14px/1.5 var(--body);
 .tools a,.tools button{border:0;border-radius:999px;padding:11px 20px;min-height:44px;font:700 13px var(--head);letter-spacing:.04em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
 .tools .ghost{background:#fff;color:var(--navy)}
 .tools .primary{background:var(--navy);color:#fff}
+.tools button:disabled{opacity:.6;cursor:wait}
+.status{max-width:1040px;margin:0 auto 8px;padding:0 16px;text-align:center;font-size:14px;color:var(--navy)}
+.status:empty{display:none}
+.status a{color:var(--navy);font-weight:700}
+.status.err{color:var(--danger)}
 .wrap{max-width:1040px;margin:8px auto 48px;background:var(--paper);padding:32px 36px 40px;border-radius:16px;box-shadow:0 1px 2px rgba(2,40,88,.06),0 18px 48px rgba(2,40,88,.10)}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:3px solid var(--gold);margin-bottom:18px}
 header img{height:64px;width:auto;display:block}
@@ -104,8 +109,10 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 <div class="tools">
   <a class="ghost" href="../index.html">PULSE</a>
   <a class="ghost" href="analysis.html">← ANALYSIS</a>
-  <button class="primary" id="pdfBtn">DOWNLOAD PDF</button>
+  <button class="ghost" id="pdfBtn">DOWNLOAD PDF</button>
+  <button class="primary" id="driveBtn" hidden>SAVE TO DRIVE</button>
 </div>
+<div class="status" id="status" role="status"></div>
 
 <div class="wrap">
   <header>
@@ -150,6 +157,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
   if (!valid(doc) || doc.clientId !== (client && client.clientId)) {
     doc = {clientId: client && client.clientId, clientLabel: defaultLabel, rows: freshRows(), premium: freshPremium(), includePremium: true};
   }
+  doc.plans = doc.plans || {};   // plan name per column (e.g. MANULINK ESSENTIAL), for the PULSE pipeline
   const save = () => write(KEY, doc);
 
   const ui = {status:'idle', msg:'', targetSlot:'offer1', slotNote:'', mapClient:'', editRows:[], premiumEdit:{annual:'-',semiAnnual:'-',monthly:'-'}, last:null, flashSlot:null};
@@ -288,7 +296,9 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
   /* ---------- review → add to the Offer Doc ---------- */
   function confirmMapping() {
     const slot = ui.targetSlot;
-    ui.last = {slot, before: clone({rows: doc.rows, premium: doc.premium, clientLabel: doc.clientLabel})};
+    ui.last = {slot, before: clone({rows: doc.rows, premium: doc.premium, clientLabel: doc.clientLabel, plans: doc.plans})};
+    const basicLine = ui.editRows.find(er => er.matchTo === 'Basic Life Coverage' && er.label.trim());
+    if (basicLine) doc.plans[slot] = basicLine.label.trim();
     const mapped = {};
     ui.editRows.forEach(er => {
       if (!er.matchTo) return;
@@ -399,7 +409,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
     const clr = $('odClear');
     clr.onclick = () => {
       if (!clr.classList.contains('armed')) { clr.classList.add('armed'); clr.textContent = 'Tap again to clear all'; setTimeout(() => { clr.classList.remove('armed'); clr.textContent = 'Clear all'; }, 3000); return; }
-      Object.assign(doc, {clientLabel: defaultLabel, rows: freshRows(), premium: freshPremium(), includePremium: true}); ui.last = null; save(); renderOfferDoc();
+      Object.assign(doc, {clientLabel: defaultLabel, rows: freshRows(), premium: freshPremium(), includePremium: true, plans: {}}); ui.last = null; save(); renderOfferDoc();
     };
     $('offerdoc').querySelectorAll('.vcell input').forEach(el => el.oninput = e => { doc.rows[+e.target.dataset.i][e.target.dataset.slot] = e.target.value; save(); });
     $('offerdoc').querySelectorAll('.pcell input').forEach(el => el.oninput = e => { doc.premium[e.target.dataset.p][e.target.dataset.slot] = e.target.value; save(); });
@@ -462,14 +472,44 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
     pdf.text(safeText('Generated ' + dmy + by + '  -  ANT Wealth System'), M, 203);
     return {pdf, dmy};
   }
+  const fileName = dmy => {
+    const who = (doc.clientLabel || 'Client').replace(/\s*\(.*$/, '').replace(/[^\w ]+/g, '').trim() || 'Client';
+    return `Offer Document - ${who} - ${dmy.replace(/\//g, '-')}.pdf`;
+  };
   $('pdfBtn').onclick = async () => {
     const b = $('pdfBtn'); b.disabled = true;
+    try { const {pdf, dmy} = await buildPdf(); pdf.save(fileName(dmy)); }
+    catch (e) { toast('PDF not made: ' + e.message); }
+    b.disabled = false;
+  };
+
+  // Save to Drive: PDF into the client's folder + ANT_OFFERS row + PULSE pipeline (+ Master copy).
+  const status = $('status'), driveBtn = $('driveBtn');
+  const canSave = AntApi.connected() && client && client.clientId && !/DEMO|0000/.test(client.clientId);
+  if (canSave) driveBtn.hidden = false;
+  else if (AntApi.connected()) status.textContent = 'Save the client in the Fact-Find form first to keep this in Google Drive.';
+  driveBtn.onclick = async () => {
+    const filled = doc.rows.some(r => SLOTS.some(s => String(r[s.key] || '').trim() && r[s.key] !== '-'));
+    if (!filled) { toast('Add at least one plan to the table first'); return; }
+    driveBtn.disabled = true; driveBtn.textContent = 'SAVING…'; status.className = 'status'; status.textContent = 'Making the PDF…';
     try {
       const {pdf, dmy} = await buildPdf();
-      const who = (doc.clientLabel || 'Client').replace(/\s*\(.*$/, '').replace(/[^\w ]+/g, '').trim() || 'Client';
-      pdf.save(`Offer Document - ${who} - ${dmy.replace(/\//g, '-')}.pdf`);
-    } catch (e) { toast('PDF not made: ' + e.message); }
-    b.disabled = false;
+      status.textContent = 'Uploading to Google Drive…';
+      const r = await AntApi.post('antSaveOffer', {
+        clientId: client.clientId,
+        offer: {clientLabel: doc.clientLabel, rows: doc.rows, premium: doc.premium, plans: doc.plans},
+        pdfBase64: pdf.output('datauristring').split(',')[1],
+        fileName: fileName(dmy)
+      });
+      status.innerHTML = (r.replaced ? '✓ Updated today\'s offer (' : '✓ Saved (') + esc(r.offerId) + ')' + (r.pipeline ? ' · ' + esc(r.pipeline) : '') +
+        (r.master === 'sent' ? ' · copied to Master' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '. <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
+      status.querySelector('a').href = r.pdfUrl;
+      driveBtn.textContent = 'SAVED ✓';
+    } catch (e) {
+      status.className = 'status err'; status.textContent = 'Not saved: ' + e.message;
+      driveBtn.textContent = 'SAVE TO DRIVE';
+    }
+    driveBtn.disabled = false;
   };
 
   renderStage(); renderOfferDoc();

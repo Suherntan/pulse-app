@@ -312,7 +312,12 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
   - File name …_OFFER1.pdf / _OFFER2 / _VALUE UP / _EXISTING picks the column
   - Every cell editable; Undo last import; Clear all; Download PDF (landscape A4, same look as the artifact)
   - Not done from the artifact: reading photos/screenshots (needs Claude = credits) and the .pptx slide download
-  - [ ] Next, after Su checks the look: Save to Drive + PRESENTATION tab update (Offer Status, date, PDF link) + copy to master
+  - [x] **Save to Drive (9 Oct)** – `antSaveOffer` in ANT.gs (+ case in Code.gs doPost)
+    - PDF → client's Drive folder; new **ANT_OFFERS** tab (Offer ID O-0001, per column: Plan, Basic Life, Annual Premium, full table as JSON, PDF link)
+    - Same client + same day = replaces that offer and its PDF (old PDF to Drive Bin)
+    - Pipeline: APPROACH → PRESENTATION; REMARKS "A-N-T Offer O-0001 · Offer 1 RM 5,063.00 / Offer 2 …" (once a day); PRODUCT PROPOSED filled if empty (e.g. MANULINK ESSENTIAL)
+    - Copy to master as type **offer** (ANT-Master.gs now has an OFFERS tab) – only once Step 2 is set up
+    - Su to do: paste new Code.gs + ANT.gs → Deploy → Manage deployments → Edit → New version
 - [ ] Education / Investment return % hints on slide 3 (Su to give the %)
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push

@@ -47,7 +47,7 @@
 ## Quick test
 1. Agent: save a test client in the form → it says **"copied to Master ✓"**.
 2. Manager: Master Sheet → tab **CLIENTS** shows the row with the **Agent ID**.
-3. Agent: save an A-N-T Analysis → Master tab **ANALYSIS** gets the row.
+3. Agent: save an A-N-T Analysis → Master tab **ANALYSIS** gets the row. Save an Offer Document → tab **OFFERS** (made by itself).
 4. Agent: change the client's email and save again → Master row is **updated** (not duplicated).
 
 ## If something goes wrong

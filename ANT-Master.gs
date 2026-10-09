@@ -10,7 +10,7 @@
  * needs an Agent ID + secret key from the AGENTS tab, so nobody else
  * can write in, and agents never get access to this sheet.
  *
- * Tabs: AGENTS · CLIENTS · ANALYSIS · LOG
+ * Tabs: AGENTS · CLIENTS · ANALYSIS · OFFERS · LOG
  * Menu: A-N-T Master > Set Up / Add Agent / Turn Agent On-Off /
  *       Weekly Backup On-Off
  * =====================================================================
@@ -19,6 +19,7 @@
 var M_AGENTS = 'AGENTS';
 var M_CLIENTS = 'CLIENTS';
 var M_ANALYSIS = 'ANALYSIS';
+var M_OFFERS = 'OFFERS';
 var M_LOG = 'LOG';
 var M_AGENT_HEADERS = ['Agent ID', 'Agent Name', 'Phone', 'Secret Key', 'Active', 'Added', 'Last Received'];
 var M_LOG_HEADERS = ['Time', 'Agent ID', 'Type', 'Record ID', 'Result'];
@@ -28,7 +29,8 @@ var M_BACKUP_KEEP = 8;
 // Each type: which tab it goes to and which column identifies the record.
 var M_TYPES = {
   client:   { sheet: M_CLIENTS,  idKey: 'Client ID' },
-  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID' }
+  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID' },
+  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID' }
 };
 
 
@@ -54,6 +56,7 @@ function masterSetup() {
   mSheet_(M_AGENTS, M_AGENT_HEADERS);
   mSheet_(M_CLIENTS, ['Agent ID', 'Client ID', 'Received']);
   mSheet_(M_ANALYSIS, ['Agent ID', 'Analysis ID', 'Received']);
+  mSheet_(M_OFFERS, ['Agent ID', 'Offer ID', 'Received']);
   mSheet_(M_LOG, M_LOG_HEADERS);
   var def = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
   if (def && def.getLastRow() === 0 && SpreadsheetApp.getActiveSpreadsheet().getSheets().length > 1) {
@@ -118,7 +121,7 @@ function doGet() {
 }
 
 /**
- * Body: { agentId, key, type: 'client' | 'analysis', record: { header: value, ... } }
+ * Body: { agentId, key, type: 'client' | 'analysis' | 'offer', record: { header: value, ... } }
  * or    { agentId, key, ping: true }   (connection test)
  */
 function doPost(e) {
