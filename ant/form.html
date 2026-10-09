@@ -76,7 +76,6 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .saved{display:none}
 .saved.show{display:block}
-.saved pre{background:#0B2545;color:#E9E4D8;border-radius:12px;padding:14px;font-size:12px;overflow:auto;max-height:300px}
 .saved .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .saved a{text-decoration:none}
 .note{font-size:12px;color:var(--text-light);margin-top:10px}
@@ -168,8 +167,7 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 
     <section class="card saved" id="saved">
       <h2><span class="n">✓</span>SAVED</h2>
-      <div id="savedMsg">This is what will be saved (demo – nothing is sent):</div>
-      <pre id="out"></pre>
+      <div id="savedMsg">Demo only – nothing was sent. Connect your Google Sheet to save for real.</div>
       <a id="folderLink" class="note" target="_blank" rel="noopener" style="display:none">Open client folder in Google Drive ↗</a>
       <div class="row">
         <a class="btn primary" href="slides.html">PRESENT SLIDES →</a>
@@ -392,9 +390,9 @@ $('ff').addEventListener('submit', async e => {
       currentId = record.clientId = r.clientId;
       $('cid').textContent = 'EDIT · ' + r.clientId;
       $('folderLink').href = r.folderUrl; $('folderLink').style.display = 'block';
-      $('savedMsg').textContent = 'Saved to your Google Sheet (tab ANT_CLIENTS)' +
+      $('savedMsg').textContent = record.name + ' (' + r.clientId + ') saved to your Google Sheet' +
         (r.pipeline ? ' · ' + r.pipeline : '') +
-        (r.master === 'sent' ? ' · copied to Master ✓' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + ':';
+        (r.master === 'sent' ? ' · copied to Master ✓' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '.';
     } catch (err) {
       toast('Not saved: ' + err.message); return;
     } finally { btn.disabled = false; btn.textContent = 'SAVE CLIENT'; }
@@ -403,7 +401,6 @@ $('ff').addEventListener('submit', async e => {
   }
   // Hand-off: the A-N-T Analysis page reads this for the client details.
   try { localStorage.setItem('ant-factfind-current', JSON.stringify(record)); } catch (_) {}
-  $('out').textContent = JSON.stringify({...record, dob: isoToDmy(record.dob), updatedAt: new Date().toLocaleString('en-GB')}, null, 2);
   $('saved').classList.add('show');
   $('saved').scrollIntoView({behavior:'smooth'});
   toast('Saved ' + record.name + ' (' + record.clientId + ')');
