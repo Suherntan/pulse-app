@@ -301,8 +301,14 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 
 **Waiting / open:**
 - [ ] Step 2 – Master sheet (after meeting the agency manager)
-- [ ] Offer Doc – original goal; needs Su's offer doc sample
-- [ ] Recommendation after presenting (plan, premium, sum assured) – removed from form; decide where it lives
+- [~] Offer Doc – **preview built (9 Oct)**: `ant/offer.html` (step 4 in the A-N-T tab, and OFFER → button on the Analysis page)
+  - Based on Su's "Policy Summary Table" artifact: cover types down the side, one column per policy, premium at the bottom
+  - Each column is marked **Existing** (policy no.) or **Proposed** (new plan); proposed columns are shaded
+  - Each cover is linked to a L.I.F.E area (LIFE→Death, ABCC/Cancer Booster→Critical Illness, MME/MHSB→Hospitalization, ADD→Disability; can change per row)
+  - "L.I.F.E after this plan" box: goal − current − proposed = still short (uses the last analysis)
+  - Premium per month or per year; optional total column; notes; Download PDF
+  - Draft kept on the phone (`ant-offer-current`)
+  - [ ] Next, after Su checks the look: Save to Drive + PRESENTATION tab update (Offer Status, date, PDF link) + copy to master
 - [ ] Education / Investment return % hints on slide 3 (Su to give the %)
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push
