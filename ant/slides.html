@@ -96,19 +96,17 @@ html,body{height:100%;background:#0B2545;color:var(--white);font-family:var(--bo
 .tier.done .band{animation:none;transform:scaleX(1)}
 .tier.done .mark path{animation:none;stroke-dashoffset:0}
 .tier.done .word{animation:none;clip-path:inset(0 -80% 0 0);transform:none}
-/* return % hint under Education / Investment, shows after the word is dragged out */
-.tier .hint{position:absolute;left:24px;top:72px;white-space:nowrap;font-family:var(--head);font-weight:600;font-size:23px;letter-spacing:.08em;
-  color:var(--gold-soft);text-shadow:0 2px 8px rgba(0,0,0,.6);opacity:0}
-.tier.on .hint{animation:hint .4s ease 1s forwards}
-.tier.done .hint{animation:none;opacity:1}
-@keyframes hint{to{opacity:1}}
+/* return % hint next to the Financial Goals box (Education / Investment) */
+.hint{left:1715px;width:200px;height:66px;white-space:nowrap;display:flex;flex-direction:column;justify-content:center;font-family:var(--head);line-height:1.1;color:var(--gold-soft)}
+.hint b{font-weight:700;font-size:30px;letter-spacing:.04em}
+.hint span{font-weight:500;font-size:16px;letter-spacing:.06em;color:var(--cream)}
 
 .th{top:206px;font-family:var(--head);font-weight:600;font-size:32px;line-height:1.1;letter-spacing:.1em;color:var(--gold-soft);text-align:center;width:240px}
-.cell{width:240px;height:66px;display:flex;align-items:center;justify-content:center}
+.cell{width:200px;height:66px;display:flex;align-items:center;justify-content:center}
 .row{opacity:0;transform:translateX(30px);transition:opacity .5s var(--ease) .5s,transform .5s var(--ease) .5s}
 .row.on{opacity:1;transform:none}
 input.money{width:100%;height:58px;background:#06182F;border:2px solid var(--navy-line);color:var(--white);border-radius:10px;
-  padding:0 16px;font:600 30px var(--body);text-align:right;outline:none;transition:border-color .2s}
+  padding:0 14px;font:600 30px var(--body);text-align:right;outline:none;transition:border-color .2s}
 input.money:focus{border-color:var(--gold-soft)}
 .gap{font:700 34px var(--body);transition:color .3s}
 .gap.short{color:var(--red)} .gap.ok{color:var(--ok)}
@@ -180,9 +178,9 @@ input.money:focus{border-color:var(--gold-soft)}
     <div class="abs title3">L.I.F.E</div>
     <div id="tiers"></div>
 
-    <div class="abs th" style="left:1080px">CURRENT<br>STATUS</div>
-    <div class="abs th" style="left:1340px">L.I.F.E</div>
-    <div class="abs th" style="left:1600px">FINANCIAL<br>GOALS</div>
+    <div class="abs th" style="left:1040px">CURRENT<br>STATUS</div>
+    <div class="abs th" style="left:1260px">L.I.F.E</div>
+    <div class="abs th" style="left:1480px">FINANCIAL<br>GOALS</div>
     <div id="rows"></div>
   </section>
 </div></div>
@@ -205,8 +203,8 @@ const TIERS = [
   {name:'DISABILITY',       y:752, c:'#D35400'},
   {name:'CRITICAL ILLNESS', y:642, c:'#E67E22'},
   {name:'DEATH',            y:532, c:'#C9962B'},
-  {name:'EDUCATION',        y:422, c:'#2E86AB', hint:'SHORT TERM · LEAST RISK · ~4% P.A.'},
-  {name:'INVESTMENT',       y:312, c:'#1B998B', hint:'LONG TERM · HIGHER RISK · ~8% P.A.'}
+  {name:'EDUCATION',        y:422, c:'#2E86AB', hint:['~4% P.A.', 'SHORT TERM', 'LEAST RISK']},
+  {name:'INVESTMENT',       y:312, c:'#1B998B', hint:['~8% P.A.', 'LONG TERM', 'HIGHER RISK']}
 ];
 const tiersEl = document.getElementById('tiers'), rowsEl = document.getElementById('rows');
 
@@ -220,14 +218,15 @@ TIERS.forEach(t => {
   d.innerHTML = `<div class="band"></div>
     <svg class="mark" width="${len}" height="94" viewBox="0 0 ${len} 94" aria-hidden="true">
       <path d="M10 84 C ${len*.25} 70, ${len*.55} 92, ${len-14} 72" stroke-dasharray="${len*1.1}" stroke-dashoffset="${len*1.1}"/></svg>
-    <div class="word">${t.name}</div>${t.hint ? `<div class="hint">${t.hint}</div>` : ''}`;
+    <div class="word">${t.name}</div>`;
   tiersEl.appendChild(d);
 
   const r = document.createElement('div');
   r.className = 'row';
-  r.innerHTML = `<div class="abs cell" style="left:1080px;top:${t.y}px"><input class="money" inputmode="numeric" aria-label="${t.name} current status"></div>
-    <div class="abs cell" style="left:1340px;top:${t.y}px"><span class="gap"></span></div>
-    <div class="abs cell" style="left:1600px;top:${t.y}px"><input class="money" inputmode="numeric" aria-label="${t.name} financial goal"></div>`;
+  r.innerHTML = `<div class="abs cell" style="left:1060px;top:${t.y}px"><input class="money" inputmode="numeric" aria-label="${t.name} current status"></div>
+    <div class="abs cell" style="left:1280px;top:${t.y}px"><span class="gap"></span></div>
+    <div class="abs cell" style="left:1500px;top:${t.y}px"><input class="money" inputmode="numeric" aria-label="${t.name} financial goal"></div>${t.hint ? `
+    <div class="abs hint" style="top:${t.y}px"><b>${t.hint[0]}</b><span>${t.hint[1]}</span><span>${t.hint[2]}</span></div>` : ''}`;
   rowsEl.appendChild(r);
 });
 
