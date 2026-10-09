@@ -141,11 +141,16 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
   const defaultLabel = client && client.name ? client.name.toUpperCase() + (client.age != null && client.age !== '' ? ' (' + client.age + 'Y)' : '') : '';
 
   // The offer table is kept on this phone per client, so it survives a reload.
-  let doc = read('ant-offer-current');
-  if (!doc || !doc.rows || doc.clientId !== (client && client.clientId)) {
+  // (Own key, and a shape check, so a draft saved by an older version of this page can't break it.)
+  const KEY = 'ant-offerdoc-current';
+  let doc = read(KEY);
+  const valid = d => d && Array.isArray(d.rows) && STANDARD_ROWS.every(l => d.rows.some(r => r.label === l)) &&
+    d.premium && PREM_ROWS.every(p => d.premium[p.key] && typeof d.premium[p.key] === 'object');
+  try { localStorage.removeItem('ant-offer-current'); } catch (_) {}
+  if (!valid(doc) || doc.clientId !== (client && client.clientId)) {
     doc = {clientId: client && client.clientId, clientLabel: defaultLabel, rows: freshRows(), premium: freshPremium(), includePremium: true};
   }
-  const save = () => write('ant-offer-current', doc);
+  const save = () => write(KEY, doc);
 
   const ui = {status:'idle', msg:'', targetSlot:'offer1', slotNote:'', mapClient:'', editRows:[], premiumEdit:{annual:'-',semiAnnual:'-',monthly:'-'}, last:null, flashSlot:null};
 
@@ -353,7 +358,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
     $('mapClient').oninput = e => { ui.mapClient = e.target.value; };
     $('slotSel').onchange = e => { ui.targetSlot = e.target.value; };
     $('addRow').onclick = () => { ui.editRows.push(blank()); renderStage(); };
-    $('doConfirm').onclick = confirmMapping;
+    $('doConfirm').onclick = () => { try { confirmMapping(); } catch (e) { toast('Could not add: ' + e.message); } };
     $('doCancel').onclick = () => { Object.assign(ui, {status:'idle', msg:'', editRows:[]}); renderStage(); };
     host.querySelectorAll('.maprow [data-k]').forEach(el => el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', e => {
       const r = ui.editRows[+e.target.dataset.i], k = e.target.dataset.k;
