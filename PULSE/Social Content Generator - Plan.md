@@ -1,0 +1,88 @@
+# Social Content Generator – Plan (draft, 9 Oct 2026)
+
+Goal: posts for **Facebook, Instagram and LinkedIn** (WhatsApp Status as a bonus) with little effort each week. Keep it **free**, keep **Claude credits low**, and keep it in Su's own voice.
+
+Su's style (from the artifact "FB Caption Template – Personal Story Style"):
+- Personal and warm, **never salesy**. Written for relatives and friends.
+- Flow: story hook → "It hit close to home for me…" → short lesson line → simple explanation → local (Malaysia) angle → very soft "message me" call to action.
+- No pricing, no product pitch, no "limited time".
+
+---
+
+## How it works (the mechanism)
+
+```
+1. IDEAS BANK   → a Google Sheet tab "CONTENT" (free)
+                  Su adds: topic / news link / personal story / which pillar
+2. GENERATE     → once a month, ONE Claude chat makes the whole month
+                  (one long answer = far fewer credits than 30 small chats)
+3. 3 VERSIONS   → each idea comes back as FB + IG + LinkedIn (+ WhatsApp Status)
+4. CHECK        → Su reads, edits, ticks "Approved" (compliance check)
+5. SCHEDULE     → free: Meta Business Suite (FB + IG), LinkedIn's own scheduler
+6. TRACK        → "Posted" date + likes/comments → next month repeats what worked
+```
+
+### Content pillars (rotate so the feed isn't one-note)
+| Pillar | Example | Link to A-N-T |
+|---|---|---|
+| Real-life stories / news | Anita Mui trust story | Death / legacy |
+| L.I.F.E education | "Why hospital card comes first" | Hospitalization → Investment |
+| Money habits | Budgeting, EPF, LHDN tax relief (RM 3,000) | Investment / Education |
+| Behind the scenes | A day as an agent, training, team | Trust |
+| Client wins (with permission, no names) | "A claim that helped a family" | Proof |
+| Festive / seasonal | CNY, Raya, Deepavali, year-end tax | Reach |
+
+Suggested rhythm: **3 posts a week** = about 12–13 a month.
+
+### What each platform gets
+| | Facebook | Instagram | LinkedIn |
+|---|---|---|---|
+| Length | Medium story (Su's style) | Short caption + 5–10 hashtags | Professional, lesson-first, 3–5 short paragraphs |
+| Tone | Personal, warm | Light, visual | Calm expert, still personal |
+| Picture | Optional | **Required** – square image or carousel text | Optional |
+| CTA | "message me ❤️" | "DM me" | "Happy to share – drop me a message" |
+
+---
+
+## Options for the "GENERATE" step
+
+| Option | How | Cost | Good | Not so good |
+|---|---|---|---|---|
+| **A. Monthly batch in Claude chat** ✅ | A saved Claude **skill / project** with Su's style rules. Paste the month's ideas → get all posts in one table | Uses normal Claude plan, **one chat a month** | Best writing, true to Su's voice, no setup | Copy-paste into the sheet |
+| B. Template bank (no AI) | 30–50 fill-in-the-blank templates in a **Content** tab in the PULSE app, with a copy button and per-platform versions | **Free, zero credits** | Instant, offline, any agent can use | Less fresh; Su writes the story part |
+| C. Auto-generate in Google Sheet | Apps Script + free Gemini API key fills the sheet weekly | Free tier | Fully automatic | Free tier may use the data for training; weaker in Su's voice; more setup |
+| D. Paid tools (Canva Magic Write, Buffer AI, etc.) | – | Monthly fee | All-in-one | **Not free** – skip |
+
+**Recommendation: A + B together.**
+- **A** for the main monthly batch: quality, and Su's voice.
+- **B** inside PULSE for quick daily posts (festive greetings, tips) without spending credits.
+
+Pictures: **Canva free** with an A-N-T brand template (navy `#0B2545` + gold `#F3AF3D`, Oswald font). One template per pillar, so each post only needs a text change.
+
+Scheduling (free):
+- **Meta Business Suite** schedules FB + IG together.
+- **LinkedIn** has its own scheduler (clock icon when posting).
+- Buffer's free plan (3 channels, 10 queued posts each) is a backup.
+
+---
+
+## Compliance (important for insurance agents)
+- No promised returns or guaranteed figures. Use "around / historically", and never quote a fund return as a promise.
+- No product names with prices; no comparing with other insurers.
+- Client stories only **with permission**, and no names or photos unless agreed in writing.
+- Follow the company's / LIAM social media rules. If the agency needs pre-approval, the "Approved" tick in step 4 is that check.
+- Add the company's standard disclaimer line if required.
+
+---
+
+## What would be built (if Su says go)
+1. **Claude skill "Su social posts"** (Claude Toolkit vault): style rules, the 3 platform formats, pillars, compliance rules, and the output as a table (Date · Pillar · FB · IG · LinkedIn · Hashtags · Image idea).
+2. **CONTENT tab** in the PULSE Google Sheet: Idea · Pillar · Story/link · FB · IG · LinkedIn · Image idea · Approved · Scheduled · Posted · Likes.
+3. **(Option B)** **Content** screen in the PULSE app: pick a pillar → template → fill blanks → copy for FB / IG / LinkedIn, with a button to open each app.
+4. Canva template set (Su makes these in Canva free; Claude gives sizes and layout).
+
+Open questions for Su:
+1. Which platforms first? (FB + IG + LinkedIn, or add WhatsApp Status / TikTok captions?)
+2. How many posts a week?
+3. Languages: English only, or also Bahasa Malaysia / Chinese versions?
+4. Build A only, or A + B?
