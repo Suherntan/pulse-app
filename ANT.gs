@@ -93,17 +93,21 @@ function antSetup() {
   var current = props.getProperty(ANT_PROP_AGENT_ID) || '';
 
   var res = ui.prompt('A-N-T Setup',
-    'Agent ID given by your agency manager (e.g. AG-001)' + (current ? '\nCurrent: ' + current : ''),
+    'Agent ID = your initials + a number, same as your agency manager has for you (e.g. SH01)' +
+    (current ? '\nCurrent: ' + current + ' (leave empty to keep it)' : ''),
     ui.ButtonSet.OK_CANCEL);
   if (res.getSelectedButton() !== ui.Button.OK) return;
-  var agentId = res.getResponseText().trim().toUpperCase() || current;
+  var agentId = res.getResponseText().replace(/\s+/g, '').toUpperCase() || current;
   if (!agentId) { ui.alert('Agent ID is needed. Please run Set Up again.'); return; }
+  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Agent ID: letters and numbers only, e.g. SH01. Please run Set Up again.'); return; }
   props.setProperty(ANT_PROP_AGENT_ID, agentId);
+  if (current && current !== agentId) antRenameAgent_(current, agentId);
 
   antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
   antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
+  antSheet_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS);
   antSheet_(ANT_LOG_SHEET, ANT_LOG_HEADERS);
-  [ANT_CLIENTS_SHEET, ANT_ANALYSIS_SHEET, ANT_LOG_SHEET].forEach(function (n) {
+  [ANT_CLIENTS_SHEET, ANT_ANALYSIS_SHEET, ANT_OFFERS_SHEET, ANT_LOG_SHEET].forEach(function (n) {
     antApplyDateFormats_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(n));
   });
   antEnsurePipelineIdColumn_();
@@ -116,6 +120,18 @@ function antSetup() {
     '\n\nName or phone wrong? Fix them in PULSE Reminders > My Settings.' +
     '\nRemember: Deploy > Manage deployments > Edit > New version, so the app sees this code.',
     ui.ButtonSet.OK);
+}
+
+// Agent ID changed in Set Up (e.g. AG-001 → SH01): update the rows already saved.
+function antRenameAgent_(oldId, newId) {
+  [[ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], [ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS], [ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(t[0]);
+    if (!sh || sh.getLastRow() < 2) return;
+    var col = antHeaderOrder_(sh, t[1]).indexOf('Agent ID');
+    if (col === -1) return;
+    var rng = sh.getRange(2, col + 1, sh.getLastRow() - 1, 1);
+    rng.setValues(rng.getValues().map(function (r) { return [String(r[0]) === oldId ? newId : r[0]]; }));
+  });
 }
 
 function antShowFolderLink() {

@@ -28,7 +28,7 @@ var M_BACKUP_KEEP = 8;
 
 // Each type: which tab it goes to and which column identifies the record.
 // Every agent numbers from C-0001, so the master adds the Agent ID in front:
-// Master ID "AG-001-C-0001" (and "AG-001-A-0003", "AG-001-O-0002"). Analysis and
+// Master ID "SH01-C-0001" (and "SH01-A-0003", "SH01-O-0002"). Analysis and
 // offer rows also get "Master Client ID", so a client's rows can be found across tabs.
 var M_TYPES = {
   client:   { sheet: M_CLIENTS,  idKey: 'Client ID',   headers: ['Master ID', 'Agent ID', 'Client ID', 'Received'] },
@@ -72,10 +72,11 @@ function masterSetup() {
 
 function masterAddAgent() {
   var ui = SpreadsheetApp.getUi();
-  var idRes = ui.prompt('Add Agent', 'Agent ID (e.g. AG-001)', ui.ButtonSet.OK_CANCEL);
+  var idRes = ui.prompt('Add Agent', 'Agent ID = the agent\'s initials + a number (e.g. SH01)', ui.ButtonSet.OK_CANCEL);
   if (idRes.getSelectedButton() !== ui.Button.OK) return;
-  var agentId = idRes.getResponseText().trim().toUpperCase();
+  var agentId = idRes.getResponseText().replace(/\s+/g, '').toUpperCase();
   if (!agentId) return;
+  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Agent ID: letters and numbers only, e.g. SH01.'); return; }
 
   var sheet = mSheet_(M_AGENTS, M_AGENT_HEADERS);
   var found = mFind_(sheet, 'Agent ID', agentId);

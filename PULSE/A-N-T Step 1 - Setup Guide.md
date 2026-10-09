@@ -71,7 +71,7 @@ Click 💾 **Save**.
 1. Go back to the Sheet and **reload the page**. A new menu **A-N-T** appears.
 2. **A-N-T → Set Up A-N-T (one-time)**.
 3. Google asks for permission (first time only) → choose your account → **Advanced → Go to project → Allow**. (Needed so it can make folders in your Drive.)
-4. Type your **Agent ID** (e.g. `AG-001`) → OK.
+4. Type your **Agent ID** = your initials + a number (e.g. `SH01`) → OK.
 5. It shows your name, phone and the new Drive folder link. Name or phone wrong? Fix in **PULSE Reminders → My Settings**.
 
 ### 4. Publish the new version (important!)
@@ -83,7 +83,7 @@ Click 💾 **Save**.
 ### 5. Connect the form
 1. Open the Fact-Find form on your phone.
 2. Top right shows **DEMO** → tap it → paste your **web-app link** (same one the PULSE app uses) → OK.
-3. It should now say **CONNECTED · AG-001**.
+3. It should now say **CONNECTED · SH01**.
    (If you already use the PULSE app on the same website, it may connect by itself.)
 
 ## Quick test
