@@ -37,6 +37,12 @@ body{font-family:var(--body);background:#E9E6DF;color:var(--text);-webkit-print-
 .edit .opts label{display:flex;gap:6px;align-items:center}
 .edit .opts select{width:auto;min-width:0}
 .edit tfoot td{border-bottom:0;padding-top:10px}
+.edit .upload{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:14px;padding:12px;border-radius:12px;background:var(--cream)}
+.edit .up{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px;background:var(--navy);color:#fff;font:600 13px var(--head);letter-spacing:.1em;cursor:pointer}
+.edit .up input{position:absolute;width:1px;height:1px;opacity:0}
+.edit .up:focus-within{outline:3px solid var(--gold)}
+#upMsg{font-size:13px;color:var(--text-light);flex:1;min-width:200px}
+#upMsg.err{color:var(--red)} #upMsg.ok{color:var(--ok)}
 .edit .lbl{font-family:var(--head);font-weight:600;letter-spacing:.06em;color:var(--navy)}
 
 /* ---- A4 page ---- */
@@ -76,6 +82,8 @@ h2{font-family:var(--head);font-weight:600;font-size:16px;letter-spacing:.14em;c
 .gaps{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
 .gaps th{font-family:var(--head);font-weight:600;font-size:11px;letter-spacing:.1em;color:var(--gold-dark);text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
 .gaps th:first-child{text-align:left}
+.gaps th{overflow-wrap:break-word}
+.gaps td:first-child{white-space:nowrap}
 .gaps td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
 .gaps td:first-child{text-align:left;font-family:var(--head);font-weight:600;letter-spacing:.04em;color:var(--navy)}
 .gaps td:first-child i{display:inline-block;width:8px;height:16px;border-radius:2px;background:var(--c);vertical-align:-3px;margin-right:8px}
@@ -117,6 +125,10 @@ h2{font-family:var(--head);font-weight:600;font-size:16px;letter-spacing:.14em;c
 
 <section class="edit" id="edit">
   <h3>FILL IN THE PLANS</h3>
+  <div class="upload">
+    <label class="up">UPLOAD PROPOSAL PDF<input type="file" id="pdfIn" accept="application/pdf,.pdf" multiple></label>
+    <span id="upMsg">Each PDF becomes one plan column. Check the numbers after – you can change anything.</span>
+  </div>
   <div class="scroll"><table id="ed"></table></div>
   <div class="row-btns">
     <button type="button" id="addPlan">+ PLAN</button>
@@ -149,9 +161,9 @@ h2{font-family:var(--head);font-weight:600;font-size:16px;letter-spacing:.14em;c
     </section>
 
     <section id="gapSec">
-      <h2>L.I.F.E AFTER THIS PLAN</h2>
+      <h2>L.I.F.E – STILL SHORT AFTER EACH PLAN</h2>
       <div class="docwrap"><table class="gaps">
-        <thead><tr><th>AREA</th><th>FINANCIAL GOAL</th><th>CURRENT</th><th>THIS PLAN</th><th>STILL SHORT</th></tr></thead>
+        <thead id="gapHead"></thead>
         <tbody id="gaps"></tbody>
       </table></div>
     </section>
@@ -183,7 +195,9 @@ const DEFAULT_ROWS = [
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 const fmt = n => n === null || n === undefined || n === '' ? '–' : Math.round(n).toLocaleString('en-US');
-const num = v => { const n = parseFloat(String(v ?? '').replace(/[^\d.]/g, '')); return isNaN(n) ? null : n; };
+const num = v => { const t = String(v ?? '').replace(/RM|,|\s/gi, ''); if (!/^\d+(\.\d+)?$/.test(t)) return null; return parseFloat(t); };
+// A cell shows a number nicely, or the text as typed (e.g. "MHSE 200").
+const cell = v => num(v) !== null ? fmt(num(v)) : String(v ?? '').trim() ? esc(String(v).trim()) : '–';
 const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 
@@ -220,7 +234,7 @@ function renderEditor() {
   const body = offer.rows.map((r, i) => `<tr>
       <td><input data-r="${i}" data-f="label" value="${esc(r.label)}" aria-label="Coverage name"></td>
       <td><select data-r="${i}" data-f="area" aria-label="L.I.F.E area">${areaOpts(r.area)}</select></td>
-      ${offer.plans.map((_, j) => `<td><input class="num" inputmode="decimal" data-r="${i}" data-c="${j}" value="${esc(r.v[j] ?? '')}" aria-label="${esc(r.label)} amount"></td>`).join('')}
+      ${offer.plans.map((_, j) => `<td><input class="num" data-r="${i}" data-c="${j}" value="${esc(r.v[j] ?? '')}" aria-label="${esc(r.label)} amount"></td>`).join('')}
       <td><button type="button" class="x" data-delr="${i}" aria-label="Remove ${esc(r.label)}">×</button></td></tr>`).join('');
   const prem = offer.plans.map((_, j) => `<td><input class="num" inputmode="decimal" data-prem="${j}" value="${esc(offer.premium[j] ?? '')}" aria-label="Premium plan ${j + 1}"></td>`).join('');
   $('ed').innerHTML = `<thead><tr><th>COVERAGE</th><th>L.I.F.E AREA</th>${head}<th></th></tr></thead>
@@ -249,16 +263,119 @@ $('mode').onchange = e => { offer.mode = e.target.value; renderEditor(); renderD
 $('showTotal').onchange = e => { offer.showTotal = e.target.checked; renderDoc(); };
 $('notes').addEventListener('input', () => { offer.notes = $('notes').innerText; write('ant-offer-current', offer); });
 
+// ---------- Read a proposal PDF (on this phone, free – pdf.js) ----------
+// Made for the Manulife proposal layout: "Plan Details" lines
+// (name · policy term · face amount · modal premium), then "Total … Modal Premium".
+const YEAR_FACTOR = {annual:1, yearly:1, 'semi-annual':2, 'half-yearly':2, quarterly:4, monthly:12};
+// Where each plan line goes: an existing row, or a new row with the printed name.
+const ALIAS = [
+  [/PREMIUM CARE|WAIVER|PAYOR/i, 'PREMIUM CARE'],
+  [/CANCER/i, 'CANCER BOOSTER'],
+  [/\bABCC\b/i, 'ABCC'],
+  [/\bMHSB\b/i, 'MHSB'],
+  [/\bMME\b/i, 'MME'],
+  [/\bADD\b/i, 'ADD'],
+  [/SPECIAL BENEFIT/i, 'SPECIAL BENEFIT']
+];
+const guessArea = name =>
+  /\bCI\b|CRITICAL|CANCER|ABCC/i.test(name) ? 'criticalIllness' :
+  /ACCIDENT|\bADD\b|\bTPD\b|DISAB|INDEMNITY/i.test(name) ? 'disability' :
+  /HEALTH|MEDICAL|HOSPITAL|\bMHS|\bMME\b|MEDI/i.test(name) ? 'hospitalization' :
+  /EDUCAT/i.test(name) ? 'education' : /LIFE|DEATH/i.test(name) ? 'death' : '';
+
+async function pdfLines(file) {
+  if (!window.pdfjsLib) await loadScript('vendor/pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+  const doc = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+  const lines = [];
+  for (let n = 1; n <= Math.min(doc.numPages, 6); n++) {
+    const items = (await (await doc.getPage(n)).getTextContent()).items.filter(it => it.str.trim());
+    const rows = [];
+    items.forEach(it => {
+      const y = it.transform[5], x = it.transform[4];
+      let row = rows.find(r => Math.abs(r.y - y) < 3);
+      if (!row) rows.push(row = {y, parts: []});
+      row.parts.push({x, s: it.str.trim()});
+    });
+    rows.sort((a, b) => b.y - a.y).forEach(r => lines.push(r.parts.sort((a, b) => a.x - b.x).map(p => p.s).join(' ').replace(/\s+/g, ' ')));
+  }
+  return lines;
+}
+
+function parseProposal(lines) {
+  const out = {plan: '', mode: '', items: [], total: null};
+  const pm = lines.join(' ').match(/Payment Mode\s*:?\s*(Semi-?Annual|Half-?Yearly|Annual|Yearly|Quarterly|Monthly)/i);
+  if (pm) out.mode = pm[1].toLowerCase().replace('semiannual', 'semi-annual').replace('halfyearly', 'half-yearly');
+  let start = lines.findIndex(l => /Policy Term/i.test(l) && /Face Amount|Sum Assured/i.test(l));
+  if (start < 0) return out;
+  // plan name · term · (ext rate) · face amount (number, or text like "MHSE 200") · (premium)
+  const re = /^(.+?)\s+(\d{1,3})\s+(?:(\d+(?:\.\d+)?)\s+)??((?:[A-Z]{2,8}\s*)?\d[\d,]*(?:\.\d+)?)(?:\s+(\d[\d,]*\.\d{2}))?\s*\*?$/;
+  for (let i = start + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^Total\b/i.test(l)) { const m = l.match(/(\d[\d,]*\.\d{2})\s*$/); if (m) out.total = num(m[1]); break; }
+    const m = l.match(re);
+    if (!m || !/[A-Za-z]/.test(m[1])) continue;
+    const name = m[1].trim(), face = m[4].trim();
+    out.items.push({name, face: /^[\d,.]+$/.test(face) ? face.replace(/\.00$/, '') : face, premium: m[5] ? num(m[5]) : null});
+    if (!out.plan) out.plan = name;
+  }
+  return out;
+}
+
+function addProposal(p, fileName) {
+  // Reuse an empty column (the blank "Plan 1") before adding a new one.
+  let j = offer.plans.findIndex((_, k) => !String(offer.premium[k] ?? '').trim() && offer.rows.every(r => !String(r.v[k] ?? '').trim()));
+  if (j < 0) { j = offer.plans.length; offer.plans.push({}); offer.premium.push(''); offer.rows.forEach(r => r.v.push('')); }
+  const n = offer.plans.filter(x => x.type === 'pr' && x.name && x !== offer.plans[j]).length + 1;
+  offer.plans[j] = {type: 'pr', name: (p.plan || fileName.replace(/\.pdf$/i, '')) + ' · Option ' + n};
+  p.items.forEach((it, k) => {
+    const label = k === 0 ? 'LIFE' : (ALIAS.find(([rx]) => rx.test(it.name)) || [])[1] || it.name.toUpperCase();
+    let row = offer.rows.find(r => r.label.trim().toUpperCase() === label);
+    if (!row) { row = {label, area: k === 0 ? 'death' : guessArea(it.name), v: offer.plans.map(() => '')}; offer.rows.push(row); }
+    row.v[j] = it.face;
+  });
+  // Premium: the total, shown per month or per year as chosen.
+  const yearly = p.total ?? p.items.reduce((a, b) => a + (b.premium || 0), 0);
+  if (yearly) {
+    const f = YEAR_FACTOR[p.mode] || 1, perYear = yearly * f;
+    if (!offer.premium.some((v, k) => k !== j && String(v ?? '').trim())) offer.mode = f === 12 ? 'month' : 'year';
+    offer.premium[j] = String(Math.round((offer.mode === 'month' ? perYear / 12 : perYear) * 100) / 100);
+  }
+}
+
+function loadScript(src) {
+  return new Promise((ok, fail) => { const t = document.createElement('script'); t.src = src; t.onload = ok; t.onerror = () => fail(new Error('Could not load ' + src)); document.head.appendChild(t); });
+}
+
+$('pdfIn').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  const msg = $('upMsg'); msg.className = ''; msg.textContent = 'Reading…';
+  const done = [], failed = [];
+  for (const f of files) {
+    try {
+      const lines = await pdfLines(f);
+      if (!lines.length) { failed.push(f.name + ' (scanned picture – no text to read)'); continue; }
+      const p = parseProposal(lines);
+      if (!p.items.length) { failed.push(f.name + ' (layout not recognised)'); continue; }
+      addProposal(p, f.name); done.push(f.name);
+    } catch (err) { failed.push(f.name + ' (' + err.message + ')'); }
+  }
+  renderEditor(); renderDoc();
+  msg.className = failed.length ? 'err' : 'ok';
+  msg.textContent = (done.length ? '✓ Read ' + done.length + ' PDF' + (done.length > 1 ? 's' : '') + '. Please check the numbers. ' : '') +
+    (failed.length ? 'Could not read: ' + failed.join(', ') + ' – please type these in.' : '');
+};
+
 // ---------- A4 document ----------
 function renderDoc() {
   const plans = offer.plans, tot = offer.showTotal;
-  const rows = offer.rows.filter(r => r.label.trim() || r.v.some(x => num(x) !== null));
+  const rows = offer.rows.filter(r => r.v.some(x => String(x ?? '').trim()));   // empty covers stay off the PDF
   const head = `<thead><tr><th>COVERAGE</th>${plans.map(p => `<th class="${p.type}"><span class="tag ${p.type}">${p.type === 'pr' ? 'PROPOSED' : 'EXISTING'}</span><b>${esc(p.name) || '—'}</b></th>`).join('')}${tot ? '<th class="tot"><b>TOTAL</b></th>' : ''}</tr></thead>`;
   const body = rows.map(r => {
-    const vals = plans.map((_, j) => num(r.v[j]));
-    const sum = vals.reduce((a, b) => a + (b || 0), 0);
+    const raw = plans.map((_, j) => r.v[j]);
+    const sum = raw.reduce((a, b) => a + (num(b) || 0), 0);
     const c = r.area && AREA[r.area] ? `--c:${AREA[r.area].c}` : '';
-    return `<tr style="${c}"><td><i></i>${esc(r.label) || '—'}</td>${vals.map((v, j) => `<td class="${plans[j].type}${v === null ? ' nil' : ''}">${fmt(v)}</td>`).join('')}${tot ? `<td class="tot">${sum ? fmt(sum) : '–'}</td>` : ''}</tr>`;
+    return `<tr style="${c}"><td><i></i>${esc(r.label) || '—'}</td>${raw.map((v, j) => `<td class="${plans[j].type}${String(v ?? '').trim() ? '' : ' nil'}">${cell(v)}</td>`).join('')}${tot ? `<td class="tot">${sum ? fmt(sum) : '–'}</td>` : ''}</tr>`;
   }).join('');
   const prem = plans.map((_, j) => num(offer.premium[j]));
   const premSum = prem.reduce((a, b) => a + (b || 0), 0);
@@ -270,16 +387,22 @@ function renderDoc() {
   if (!life) { $('gapSec').style.display = 'none'; }
   else {
     $('gapSec').style.display = '';
-    const add = {};
-    offer.rows.forEach(r => { if (!r.area) return; plans.forEach((p, j) => { if (p.type === 'pr') add[r.area] = (add[r.area] || 0) + (num(r.v[j]) || 0); }); });
+    // Each proposed plan is a separate choice: show what is still short with that plan alone.
+    const props = plans.map((p, j) => ({p, j})).filter(x => x.p.type === 'pr');
+    const adds = props.map(({j}) => {
+      const add = {};
+      offer.rows.forEach(r => { if (r.area) add[r.area] = (add[r.area] || 0) + (num(r.v[j]) || 0); });
+      return add;
+    });
+    $('gapHead').innerHTML = `<tr><th>AREA</th><th>FINANCIAL GOAL</th><th>CURRENT</th>${props.map(({p}) => `<th>${esc(p.name) || 'PLAN'}</th>`).join('')}</tr>`;
     $('gaps').innerHTML = AREAS.map(a => {
-      const v = life[a.k] || {}, goal = v.goal ?? null, cur = v.current ?? null, plus = add[a.k] || 0;
-      if (goal === null && !plus) return '';
-      const left = goal === null ? null : goal - (cur || 0) - plus;
-      return `<tr style="--c:${a.c}"><td><i></i>${a.name}</td><td>${fmt(goal)}</td><td>${fmt(cur)}</td>
-        <td class="${plus ? 'add' : ''}">${plus ? '+ ' + fmt(plus) : '–'}</td>
-        <td class="${left === null ? '' : left > 0 ? 'short' : 'ok'}">${left === null ? '–' : left > 0 ? fmt(left) : '✓'}</td></tr>`;
+      const v = life[a.k] || {}, goal = v.goal ?? null, cur = v.current ?? null;
+      if (goal === null) return '';
+      return `<tr style="--c:${a.c}"><td><i></i>${a.name}</td><td>${fmt(goal)}</td><td>${fmt(cur)}</td>` +
+        adds.map(add => { const left = goal - (cur || 0) - (add[a.k] || 0);
+          return `<td class="${left > 0 ? 'short' : 'ok'}">${left > 0 ? fmt(left) : '✓'}</td>`; }).join('') + '</tr>';
     }).join('');
+    if (!props.length || !$('gaps').innerHTML) $('gapSec').style.display = 'none';
   }
   write('ant-offer-current', offer);
 }

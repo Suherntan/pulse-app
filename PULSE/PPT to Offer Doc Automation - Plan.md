@@ -308,6 +308,12 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
   - "L.I.F.E after this plan" box: goal − current − proposed = still short (uses the last analysis)
   - Premium per month or per year; optional total column; notes; Download PDF
   - Draft kept on the phone (`ant-offer-current`)
+  - **Upload Proposal PDF (9 Oct):** reads Manulife proposal PDFs on the phone (free, pdf.js – file never leaves the phone)
+    - Reads the "Plan Details" lines (plan name, face amount, e.g. "MHSE 200"), the Total Modal Premium and the Payment Mode
+    - Each PDF = one Proposed column ("MANULINK ESSENTIAL · Option 1/2/3"); basic plan → LIFE row; riders get their own rows, L.I.F.E area guessed
+    - Everything stays editable; scanned/picture PDFs can't be read (type in by hand)
+    - Gap box now shows "still short" **per option** (options are choices, not added together)
+    - Other insurers' layouts: send a sample, add a rule
   - [ ] Next, after Su checks the look: Save to Drive + PRESENTATION tab update (Offer Status, date, PDF link) + copy to master
 - [ ] Education / Investment return % hints on slide 3 (Su to give the %)
 - [ ] Logo position on slides 1 & 2 (on hold)
