@@ -3685,3 +3685,22 @@ To https://github.com/Suherntan/pulse-app.git
    aec1200..3ca404d  master -> master
 (done) 
 ---- 21/09/2026 11:04:00.34 ---- 
+---- 09/10/2026 10:50:24.06 ---- 
+warning: in the working copy of '.obsidian/core-plugins.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.obsidian/workspace.json', LF will be replaced by CRLF the next time Git touches it
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'User@DESKTOP-VA8DVNV.(none)')
+Everything up-to-date
+(done) 
+---- 09/10/2026 11:01:47.34 ---- 
