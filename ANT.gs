@@ -176,6 +176,19 @@ function antSearchClients(q) {
   return { ok: true, clients: out, pipelineSearch: true, pipelineError: pipelineError };
 }
 
+// The client's email from a pipeline row: the EMAIL column if it holds a real
+// address, otherwise the first cell in that row that looks like one.
+function antEmailFromRow_(r, cols) {
+  var rx = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/;
+  var m = cols.email > -1 ? String(r[cols.email] || '').match(rx) : null;
+  if (m) return m[0];
+  for (var i = 0; i < r.length; i++) {
+    m = typeof r[i] === 'string' ? r[i].match(rx) : null;
+    if (m) return m[0];
+  }
+  return '';
+}
+
 function antSearchPipeline_(q, matches, antRows) {
   var ss = SpreadsheetApp.getActiveSpreadsheet(), out = [], seen = {};
   var antIds = {}, antKeys = {};
@@ -201,7 +214,7 @@ function antSearchPipeline_(q, matches, antRows) {
       var bday = cols.birthday > -1 ? r[cols.birthday] : '';
       out.push({
         clientId: '', pipeline: true, tab: tab, name: name, phone: phone,
-        email: cols.email > -1 ? String(r[cols.email] || '').trim() : '',
+        email: antEmailFromRow_(r, cols),
         dob: bday instanceof Date ? Utilities.formatDate(bday, tz, 'yyyy-MM-dd') : ''
       });
     });
