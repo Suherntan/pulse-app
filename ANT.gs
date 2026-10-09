@@ -776,15 +776,36 @@ function antFindRow_(name, headers, key, value) {
 }
 
 // Next ID like C-0001, based on the highest number already used.
+// Next ID like C-0001. Never reused: a deleted client's number stays used, so a
+// new client can't land in the old Drive folder or pipeline link. The highest
+// number ever given is kept in Script Properties (ANT_LAST_C- / A- / O-).
 function antNextId_(sheet, prefix) {
-  var max = 0;
+  var props = PropertiesService.getScriptProperties();
+  var key = 'ANT_LAST_' + prefix;
+  var max = Number(props.getProperty(key)) || 0;
   if (sheet.getLastRow() > 1) {
     sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().forEach(function (r) {
       var m = String(r[0]).match(/(\d+)$/);
       if (m) max = Math.max(max, Number(m[1]));
     });
   }
+  if (prefix === 'C-') max = Math.max(max, antHighestFolderNumber_());
+  props.setProperty(key, String(max + 1));
   return prefix + ('0000' + (max + 1)).slice(-4);
+}
+
+// Highest C-number among the client folders in Drive (covers clients deleted
+// from the sheet before this rule existed).
+function antHighestFolderNumber_() {
+  var max = 0;
+  try {
+    var it = antRootFolder_().getFolders();
+    while (it.hasNext()) {
+      var m = it.next().getName().match(/^C-(\d+)/);
+      if (m) max = Math.max(max, Number(m[1]));
+    }
+  } catch (e) { /* no folder yet */ }
+  return max;
 }
 
 function antRootFolder_() {

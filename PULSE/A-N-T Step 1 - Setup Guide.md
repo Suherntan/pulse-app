@@ -118,6 +118,15 @@ Click 💾 **Save**.
 - The Fact-Find search also shows clients from APPROACH / PRESENTATION / CLOSING / SR that have no A-N-T yet, marked e.g. "CLOSING · no A-N-T yet".
 - Tap one → the form fills in name, phone, email, birthday. Add the background and save → they get a C-number, linked to that same pipeline row (no new row).
 
+## Deleting a client (e.g. a test) – added 9 Oct 2026
+Numbers are **never reused** (C-, A-, O-): after deleting C-0003, the next new client is still C-0004. This stops a new client landing in the old Drive folder or old pipeline link.
+To remove a client completely:
+1. **ANT_CLIENTS** tab → right-click the client's row number → **Delete row**.
+2. **ANT_ANALYSIS** and **ANT_OFFERS** → delete the rows with that Client ID (if any).
+3. Pipeline tab (APPROACH / PRESENTATION / CLOSING / SR) → test client: delete the row; real client you keep: just clear the **ANT CLIENT ID** cell.
+4. Google Drive → *PULSE A-N-T Clients* → delete the folder **C-000X - Name**.
+5. (Optional) ANT_LOG keeps a history line – fine to leave.
+
 ## Correcting an analysis
 - Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).
 - **Another day**: saves as a new analysis, so you keep the history of each meeting.
