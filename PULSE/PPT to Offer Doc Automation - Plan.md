@@ -320,7 +320,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
     - Su to do: paste new Code.gs + ANT.gs → Deploy → Manage deployments → Edit → New version
   - [x] **Search finds existing PULSE clients (9 Oct)** – Fact-Find search also lists APPROACH / PRESENTATION / CLOSING / SR clients with no A-N-T yet ("CLOSING · no A-N-T yet"); tap = Fact-Find pre-filled (name, phone, email, birthday); saving gives a C-number and links that same pipeline row
   - [x] **Master numbering (9 Oct)** – master adds **Master ID** = Agent ID + number (SH01-C-0001, SH01-A-0003, SH01-O-0002). **Agent ID = initials + number (e.g. SH01)** so the manager can tell agents apart; changing it in Set Up A-N-T also updates rows already saved; analysis/offer rows also get **Master Client ID**. Agents keep their own short numbers
-- [ ] Education / Investment return % hints on slide 3 (Su to give the %)
+- [x] Education / Investment return % hints on slide 3 (9 Oct): under the banners, fixed – EDUCATION "SHORT TERM · LEAST RISK · ~4% P.A.", INVESTMENT "LONG TERM · HIGHER RISK · ~8% P.A." (fade in after the word). To change: `TIERS` in ant/slides.html
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push
 
