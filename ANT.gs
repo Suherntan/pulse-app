@@ -170,8 +170,10 @@ function antSearchClients(q) {
     return { clientId: r['Client ID'], name: r['Name'], phone: String(r['Phone']).replace(/^'/, ''), stage: r['Pipeline Stage'] || '' };
   });
   // Existing PULSE clients (APPROACH / PRESENTATION / CLOSING / SR) with no A-N-T yet.
-  try { out = out.concat(antSearchPipeline_(q, matches, rows).slice(0, Math.max(0, 25 - out.length))); } catch (e) { /* pipeline tabs missing – A-N-T clients only */ }
-  return { ok: true, clients: out };
+  var pipelineError = '';
+  try { out = out.concat(antSearchPipeline_(q, matches, rows).slice(0, Math.max(0, 25 - out.length))); }
+  catch (e) { pipelineError = e.message; }   // still show the A-N-T clients
+  return { ok: true, clients: out, pipelineSearch: true, pipelineError: pipelineError };
 }
 
 function antSearchPipeline_(q, matches, antRows) {

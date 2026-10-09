@@ -314,7 +314,13 @@ $('q').addEventListener('input', () => {
     return showResults(DEMO.filter(c => c.name.toLowerCase().includes(ql) || (d && c.phone.replace(/\D/g, '').includes(d))), q);
   }
   searchTimer = setTimeout(async () => {
-    try { const r = await AntApi.get('antSearchClients', {q}); if ($('q').value.trim() === q) showResults(r.clients, q); }
+    try {
+      const r = await AntApi.get('antSearchClients', {q});
+      if ($('q').value.trim() !== q) return;
+      showResults(r.clients, q);
+      if (!r.pipelineSearch) toast('Pipeline clients not searched yet – update ANT.gs and Deploy > New version');
+      else if (r.pipelineError) toast('Pipeline search problem: ' + r.pipelineError);
+    }
     catch (err) { toast(err.message); }
   }, 300);
 });
