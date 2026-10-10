@@ -101,6 +101,10 @@ Scheduling (free):
 - First month built from this: `Social Posts - Nov 2026` (PRS relief, children's life-insurance relief under Budget 2026, medical card premium hikes, year-end tax checklist).
 - Not used: Agent Reach (reads XHS / X etc. with Su's logged-in accounts). It would need to run on Su's laptop with her logins, and it bypasses the platforms' official APIs (Terms of Service risk), so it is not run from the cloud.
 
+## Publishing & media (10 Oct 2026)
+- Su: **Facebook Page**, Instagram **Professional** → both can be scheduled automatically (Buffer free: 3 channels, 10 queued posts each, enough for 1 post/week; or Meta Business Suite). LinkedIn: Buffer or LinkedIn's own scheduler. 小红书: no official auto-posting – use 创作服务平台 定时发布 (don't use unofficial tools).
+- **MAKE SLIDES** (Social Posts → open a post → MAKE SLIDES): builds branded carousel pictures from the post text – Instagram/FB 4:5 PNG, 小红书 3:4 PNG (中文), LinkedIn PDF. Editable text per slide, name on slides, SAVE or SHARE TO APP (phone share sheet). Free, on the phone (html2canvas + jsPDF already in the app).
+
 ## Built
 - **A – Claude skill `su-social-posts`**: `PULSE/Social Posts Skill/SKILL.md` (upload as a zip in Claude → Settings → Capabilities → Skills). Su's voice, 4 platform formats, pillars, compliance, and a fixed output format the app can read.
 - **B – PULSE app → A-N-T tab → Social Posts** (`ant/posts.html`):
