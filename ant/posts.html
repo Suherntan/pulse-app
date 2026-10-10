@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Social Posts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --navy:#0B2545; --gold:#F3AF3D; --gold-dark:#A86F14; --bg:#F4F2EC; --card:#fff;
@@ -105,10 +105,12 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
   </section>
 
   <div class="out" id="out"></div>
+  <div id="slideBox"></div>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="ant-api.js"></script>
+<script src="slides-maker.js"></script>
 <script>
 (function () {
 'use strict';
@@ -678,7 +680,9 @@ function renderOut(post, qid) {
     (post.note && post.note.trim() && post.note.trim() !== '-' ? `<div class="note"><b>Check:</b> ${esc(post.note)}</div>` : '') +
     PLATFORMS.map(card).join('') +
     (post.img ? `<div class="note"><b>Picture idea:</b> ${esc(post.img)}</div>` : '') +
-    (q ? '' : `<button class="btn ghost" id="saveQ">SAVE TO MY POSTS</button>`);
+    `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" id="mkSlides">MAKE SLIDES</button>` +
+    (q ? '' : `<button class="btn ghost" id="saveQ">SAVE TO MY POSTS</button>`) + `</div>`;
+  $('slideBox').innerHTML = '';
   $('out').onclick = async e => {
     const c = e.target.closest('[data-copy]');
     if (c) {
@@ -687,6 +691,7 @@ function renderOut(post, qid) {
       return;
     }
     if (e.target.id === 'saveQ') { addToQueue(post); toast('Saved to My Posts'); }
+    if (e.target.id === 'mkSlides') window.SlideMaker.open(post, $('slideBox'), toast);
   };
   $('out').onchange = e => {
     const k = e.target.dataset.done; if (!k || !q) return;
@@ -770,7 +775,7 @@ function setMode(m) {
   [['tpl', 'mTpl', 'tplView'], ['claude', 'mClaude', 'claudeView'], ['queue', 'mQueue', 'queueView']].forEach(([k, b, v]) => {
     $(b).setAttribute('aria-pressed', k === m); $(v).hidden = k !== m;
   });
-  $('out').innerHTML = '';
+  $('out').innerHTML = ''; $('slideBox').innerHTML = '';
   if (m === 'queue') renderQueue();
   if (m === 'tpl') renderFromTemplate();
 }
