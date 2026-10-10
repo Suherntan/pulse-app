@@ -1,4 +1,4 @@
-# Social Content Generator – Plan (draft, 9 Oct 2026)
+# Social Content Generator – Plan (built 10 Oct 2026)
 
 Goal: posts for **Facebook, Instagram and LinkedIn** (WhatsApp Status as a bonus) with little effort each week. Keep it **free**, keep **Claude credits low**, and keep it in Su's own voice.
 
@@ -81,8 +81,15 @@ Scheduling (free):
 3. **(Option B)** **Content** screen in the PULSE app: pick a pillar → template → fill blanks → copy for FB / IG / LinkedIn, with a button to open each app.
 4. Canva template set (Su makes these in Canva free; Claude gives sizes and layout).
 
-Open questions for Su:
-1. Which platforms first? (FB + IG + LinkedIn, or add WhatsApp Status / TikTok captions?)
-2. How many posts a week?
-3. Languages: English only, or also Bahasa Malaysia / Chinese versions?
-4. Build A only, or A + B?
+## Decisions (10 Oct 2026)
+- Platforms: **FB, IG, LinkedIn (English) + 小红书 XHS (Simplified Chinese)**
+- **1 post a week** to start (may go to 3)
+- Build **A + B**
+
+## Built
+- **A – Claude skill `su-social-posts`**: `PULSE/Social Posts Skill/SKILL.md` (upload as a zip in Claude → Settings → Capabilities → Skills). Su's voice, 4 platform formats, pillars, compliance, and a fixed output format the app can read.
+- **B – PULSE app → A-N-T tab → Social Posts** (`ant/posts.html`):
+  - **Templates** (free): 9 templates over 6 pillars, fill in the blanks (Chinese boxes for XHS fall back to English), live FB / IG / LinkedIn / XHS versions with character counts, Copy and Open app.
+  - **From Claude**: paste the monthly answer → split into posts. "Copy monthly prompt" button.
+  - **My Posts**: saved posts with a **Posted** tick per platform (kept on the phone).
+- Not built (later if needed): CONTENT tab in Google Sheet, likes tracking, Canva templates (Su makes these in Canva free).
