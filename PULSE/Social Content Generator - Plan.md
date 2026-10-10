@@ -104,6 +104,7 @@ Scheduling (free):
 ## Publishing & media (10 Oct 2026)
 - Su: **Facebook Page**, Instagram **Professional** → both can be scheduled automatically (Buffer free: 3 channels, 10 queued posts each, enough for 1 post/week; or Meta Business Suite). LinkedIn: Buffer or LinkedIn's own scheduler. 小红书: no official auto-posting – use 创作服务平台 定时发布 (don't use unofficial tools).
 - **MAKE SLIDES** (Social Posts → open a post → MAKE SLIDES): builds branded carousel pictures from the post text – Instagram/FB 4:5 PNG, 小红书 3:4 PNG (中文), LinkedIn PDF. Editable text per slide, name on slides, SAVE or SHARE TO APP (phone share sheet). Free, on the phone (html2canvas + jsPDF already in the app).
+- **Slide look (10 Oct 2026)**: 3 looks – **Mix** (default: navy cover + last slide to stop the scroll, light cream reading slides), **Navy**, **Light**. Big "DID YOU KNOW?" tag on the cover, faint big slide number, page pill, gold progress bar at the bottom (shows there is more to swipe). Why: research says one idea per slide, strong hook cover, consistent look across posts, high-contrast easy-to-read text; light slides are easier for longer text, dark cover stands out in the feed. 小红书: 3:4 with a big clear title works best.
 
 ## Built
 - **A – Claude skill `su-social-posts`**: `PULSE/Social Posts Skill/SKILL.md` (upload as a zip in Claude → Settings → Capabilities → Skills). Su's voice, 4 platform formats, pillars, compliance, and a fixed output format the app can read.
