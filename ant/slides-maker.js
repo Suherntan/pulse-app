@@ -70,16 +70,25 @@
     const titleSize = s.kind === 'cover' ? fit(s.title, [[28, 104], [60, 84], [0, 66]]) : fit(s.title, [[24, 62], [40, 52], [0, 44]]);
     const bodySize = fit(s.body, zh ? [[60, 46], [120, 40], [0, 34]] : [[120, 46], [220, 40], [0, 34]]);
     const disc = i === total - 1 ? (zh ? '以上为一般资讯，不构成理财建议，请以官方最新规定为准。' : 'General info only, not financial advice. Check the latest rules with the relevant agency.') : '';
-    return `<div class="sm-slide sm-${s.kind}" style="width:${W}px;height:${h}px;font-family:${bodyFont}">
-      <div class="sm-tri"></div>
-      <div class="sm-top"><img src="ant-assets/logo-light.png" alt=""><span>${i + 1} / ${total}</span></div>
+    // Theme: MIX = dark cover/end + light reading slides (default), DARK, LIGHT
+    const light = opts.theme === 'light' || (opts.theme !== 'dark' && s.kind === 'content');
+    let title = s.title || '', tag = '';
+    const m = s.kind === 'cover' && title.match(/^(did you know\?)\s*\n([\s\S]+)/i);
+    if (m) { tag = m[1].toUpperCase(); title = m[2]; }
+    const pct = Math.round((i + 1) / total * 100);
+    return `<div class="sm-slide sm-${s.kind} ${light ? 'sm-light' : 'sm-dark'}" style="width:${W}px;height:${h}px;font-family:${bodyFont}">
+      <div class="sm-bg"></div><div class="sm-ring"></div><div class="sm-dot"></div>
+      ${s.kind === 'content' ? `<div class="sm-num">${String(i + 1).padStart(2, '0')}</div>` : ''}
+      <div class="sm-top"><img src="ant-assets/${light ? 'logo-dark' : 'logo-light'}.png" alt=""><span>${i + 1} / ${total}</span></div>
       <div class="sm-main">
-        ${s.title ? `<h3 style="font-family:${headFont};font-size:${titleSize}px">${esc(s.title).replace(/\n/g, '<br>')}</h3>` : ''}
-        ${s.kind === 'cover' ? '<div class="sm-rule"></div>' : ''}
+        ${tag ? `<div class="sm-tag">${esc(tag)}</div>` : ''}
+        ${title ? `<h3 style="font-family:${headFont};font-size:${titleSize}px">${esc(title).replace(/\n/g, '<br>')}</h3>` : ''}
+        ${s.kind !== 'end' ? '<div class="sm-rule"></div>' : ''}
         ${s.body ? `<p style="font-size:${bodySize}px">${esc(s.body).replace(/\n/g, '<br>')}</p>` : ''}
         ${s.kind === 'cover' ? `<div class="sm-swipe">${zh ? '向左滑 →' : 'Swipe →'}</div>` : ''}
       </div>
       <div class="sm-foot"><b>${esc(opts.name || 'ANT Wealth System')}</b>${disc ? `<small>${esc(disc)}</small>` : ''}</div>
+      <div class="sm-bar"><i style="width:${pct}%"></i></div>
     </div>`;
   }
 
@@ -96,31 +105,55 @@
   .sm-row header button{border:0;background:#EEF1F5;border-radius:8px;min-width:40px;min-height:36px;cursor:pointer;color:var(--navy);font-size:16px}
   .sm-acts{display:flex;flex-wrap:wrap;gap:8px}
   .sm-stage{position:fixed;left:-20000px;top:0}
-  .sm-slide{position:relative;overflow:hidden;background:#0B2545;color:#F4F2EC;box-sizing:border-box;padding:80px 90px 70px;display:flex;flex-direction:column}
-  .sm-tri{position:absolute;right:-180px;bottom:-180px;width:520px;height:520px;background:#F3AF3D;opacity:.12;transform:rotate(45deg)}
+  .sm-slide{position:relative;overflow:hidden;box-sizing:border-box;padding:80px 90px 90px;display:flex;flex-direction:column}
+  .sm-slide>*{position:relative}
+  .sm-slide>.sm-bg,.sm-slide>.sm-ring,.sm-slide>.sm-dot,.sm-slide>.sm-num,.sm-slide>.sm-bar{position:absolute}
+  .sm-bg{inset:0}
+  .sm-dark{color:#F4F2EC}
+  .sm-dark .sm-bg{background:linear-gradient(160deg,#123563 0%,#0B2545 55%,#06182F 100%)}
+  .sm-light{color:#0B2545}
+  .sm-light .sm-bg{background:#FBF7EF}
+  .sm-ring{right:-230px;top:-230px;width:640px;height:640px;border-radius:50%;border:4px solid rgba(243,175,61,.35)}
+  .sm-dot{left:-160px;bottom:-200px;width:520px;height:520px;border-radius:50%;background:rgba(243,175,61,.10)}
+  .sm-light .sm-ring{border-color:rgba(11,37,69,.10)}
+  .sm-light .sm-dot{background:rgba(243,175,61,.16)}
+  .sm-num{right:70px;top:150px;font:700 260px/1 'Oswald','Arial Narrow',sans-serif;color:rgba(11,37,69,.06)}
+  .sm-dark .sm-num{color:rgba(255,255,255,.05)}
   .sm-top{display:flex;justify-content:space-between;align-items:center}
   .sm-top img{height:76px}
-  .sm-top span{font:600 30px 'Oswald',sans-serif;letter-spacing:.12em;color:#F3AF3D}
-  .sm-main{flex:1;display:flex;flex-direction:column;justify-content:center;gap:34px;position:relative}
-  .sm-main h3{margin:0;font-weight:700;line-height:1.12;color:#fff;letter-spacing:.01em}
-  .sm-content h3{color:#F3AF3D}
-  .sm-end h3{color:#F3AF3D;text-align:center}
-  .sm-end p{text-align:center}
+  .sm-top span{font:600 28px 'Oswald',sans-serif;letter-spacing:.12em;padding:8px 22px;border-radius:40px;background:rgba(243,175,61,.16);color:#F3AF3D}
+  .sm-light .sm-top span{background:#0B2545;color:#F3AF3D}
+  .sm-main{flex:1;display:flex;flex-direction:column;justify-content:center;gap:34px}
+  .sm-main h3{margin:0;font-weight:700;line-height:1.12;letter-spacing:.01em;color:#fff}
+  .sm-light .sm-main h3{color:#0B2545}
+  .sm-dark.sm-content h3,.sm-end h3{color:#F3AF3D}
+  .sm-end h3,.sm-end p{text-align:center}
+  .sm-end .sm-main{align-items:center}
+  .sm-tag{align-self:flex-start;font:700 34px 'Oswald','Arial Narrow',sans-serif;letter-spacing:.14em;background:#F3AF3D;color:#0B2545;padding:10px 26px;border-radius:10px}
   .sm-main p{margin:0;line-height:1.5;color:#E8ECF3;white-space:normal}
+  .sm-light .sm-main p{color:#2B3A4F}
   .sm-rule{width:180px;height:10px;border-radius:5px;background:#F3AF3D}
+  .sm-content .sm-rule{width:120px;height:8px;margin-top:-14px}
   .sm-swipe{font:600 32px 'Oswald',sans-serif;letter-spacing:.14em;color:#F3AF3D;margin-top:10px}
-  .sm-foot{display:flex;flex-direction:column;gap:8px;border-top:2px solid rgba(243,175,61,.45);padding-top:22px;position:relative}
+  .sm-light .sm-swipe{color:#B7791F}
+  .sm-foot{display:flex;flex-direction:column;gap:8px;border-top:2px solid rgba(243,175,61,.45);padding-top:22px}
   .sm-foot b{font:600 30px 'Oswald',sans-serif;letter-spacing:.08em;color:#fff}
-  .sm-foot small{font-size:22px;color:#AEB9CB;line-height:1.4}`;
+  .sm-light .sm-foot b{color:#0B2545}
+  .sm-foot small{font-size:22px;color:#AEB9CB;line-height:1.4}
+  .sm-light .sm-foot small{color:#5B6878}
+  .sm-bar{left:0;right:0;bottom:0;height:14px;background:rgba(243,175,61,.22)}
+  .sm-bar i{display:block;height:100%;background:#F3AF3D}`;
+
+  const THEMES = [['mix', 'Mix (best to read)'], ['dark', 'Navy'], ['light', 'Light']];
 
   function open(post, box, toast) {
     if (!document.getElementById('sm-css')) { const st = document.createElement('style'); st.id = 'sm-css'; st.textContent = CSS; document.head.appendChild(st); }
-    let lang = 'en', fmt = 'ig', slides = build(post, lang);
+    let lang = 'en', fmt = 'ig', slides = build(post, lang), theme = store.get('posts-slide-theme') || 'mix';
     const name = () => store.get('posts-agent-name');
 
     function render() {
       const f = FORMATS[fmt], total = slides.length, scale = 150 / W;
-      const opts = {lang, name: name()};
+      const opts = {lang, name: name(), theme};
       box.innerHTML = `<div class="sm-wrap card">
         <h2>MAKE SLIDES</h2>
         <div class="sm-opts" role="group" aria-label="Language">
@@ -128,6 +161,7 @@
           <button class="chip" data-lang="zh" aria-pressed="${lang === 'zh'}">中文</button>
         </div>
         <div class="sm-opts" role="group" aria-label="Size">${Object.entries(FORMATS).map(([k, v]) => `<button class="chip" data-fmt="${k}" aria-pressed="${k === fmt}">${v.label}</button>`).join('')}</div>
+        <div class="sm-opts" role="group" aria-label="Look">${THEMES.map(([k, v]) => `<button class="chip" data-theme="${k}" aria-pressed="${k === theme}">${v}</button>`).join('')}</div>
         <label for="smName">Name on slides</label>
         <input id="smName" value="${esc(name())}" placeholder="e.g. Su · ANT Wealth System">
         <div class="sm-strip">${slides.map((s, i) => `<div class="sm-thumb" style="width:${W * scale}px;height:${f.h * scale}px"><div class="sm-scale" style="transform:scale(${scale})">${slideHTML(s, i, total, f.h, opts)}</div></div>`).join('')}</div>
@@ -145,6 +179,7 @@
       const ed = box.querySelector('#smEdit');
       box.querySelector('#smEditBtn').onclick = () => { ed.hidden = !ed.hidden; };
       box.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; slides = build(post, lang); render(); });
+      box.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { theme = b.dataset.theme; store.set('posts-slide-theme', theme); render(); });
       box.querySelectorAll('[data-fmt]').forEach(b => b.onclick = () => { fmt = b.dataset.fmt; render(); });
       box.querySelector('#smName').onchange = e => { store.set('posts-agent-name', e.target.value.trim()); render(); };
       ed.onchange = e => {
@@ -164,7 +199,7 @@
     // Draw every slide full size, off screen, then turn it into a picture.
     async function makeFiles() {
       if (!window.html2canvas) await loadScript('vendor/html2canvas.min.js');
-      const f = FORMATS[fmt], total = slides.length, opts = {lang, name: name()};
+      const f = FORMATS[fmt], total = slides.length, opts = {lang, name: name(), theme};
       const stage = document.createElement('div'); stage.className = 'sm-stage'; document.body.appendChild(stage);
       try {
         await document.fonts?.ready;
@@ -173,7 +208,7 @@
           stage.innerHTML = slideHTML(slides[i], i, total, f.h, opts);
           const el = stage.firstElementChild;
           await Promise.all([...el.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
-          canvases.push(await html2canvas(el, {width: W, height: f.h, scale: 1, backgroundColor: '#0B2545', useCORS: true}));
+          canvases.push(await html2canvas(el, {width: W, height: f.h, scale: 1, backgroundColor: null, useCORS: true}));
           box.querySelector('#smMsg').textContent = 'Making slide ' + (i + 1) + ' of ' + total + '…';
         }
         const base = (post.title || 'post').replace(/[^\w一-鿿]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'post';
