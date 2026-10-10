@@ -123,7 +123,7 @@ const PLATFORMS = [
 ];
 
 const PILLARS = [
-  ['story', 'Real-life story'], ['life', 'L.I.F.E tip'], ['money', 'Money habit'],
+  ['aware', 'Did you know?'], ['story', 'Real-life story'], ['life', 'L.I.F.E tip'], ['money', 'Money habit'],
   ['behind', 'Behind the scenes'], ['wins', 'Client win'], ['festive', 'Festive']
 ];
 
@@ -141,10 +141,103 @@ const LABELS = {
   situation: "Client's situation (no names!)", situation_zh: '客户情况（中文，不写名字）',
   outcome: 'What the plan did for them', outcome_zh: '计划带来的帮助（中文）',
   festival: 'Festival (e.g. Deepavali)', festival_zh: '节日（中文，如：屠妖节）',
-  wish: 'Your wish', wish_zh: '祝福（中文）'
+  wish: 'Your wish', wish_zh: '祝福（中文）',
+  hook: '"Did you know…" line', hook_zh: '“你知道吗”开头（中文）',
+  what: 'What is it? (plain words)', what_zh: '是什么？（中文）',
+  who: 'Who is eligible?', who_zh: '谁可以享有？（中文）',
+  benefits: 'Benefits (one per line)', benefits_zh: '好处（中文，每行一个）',
+  watch: 'Good to know (limits / conditions)', watch_zh: '注意事项（中文）',
+  source: 'Check with (e.g. LHDN / PPA)'
+};
+
+// Ready-made example (checked Oct 2026 – confirm the latest rules with LHDN / PPA before posting).
+const EXAMPLES = {
+  prs: {hook: 'You can get up to RM3,000 tax relief a year just by saving for your own retirement through PRS.',
+    what: 'PRS (Private Retirement Scheme) is a voluntary, long-term retirement savings scheme approved by the Securities Commission and run through the Private Pension Administrator (PPA). Think of it as a top-up to your EPF, with funds you choose based on your age and risk comfort.',
+    who: 'Anyone aged 18 and above can open a PRS account. The tax relief is for individual taxpayers in Malaysia, and it is especially useful if you are self-employed, a freelancer or gig worker without EPF, or an employee who wants more than EPF for retirement.',
+    benefits: '• Tax relief up to RM3,000 a year (until YA 2030) – separate from your EPF and life insurance relief\n• Example: at an 11% tax rate, RM3,000 in PRS can lower your tax by about RM330\n• Extra savings for retirement, in funds that match your age and risk level',
+    watch: 'Money is meant for retirement: full withdrawal from age 55. Early withdrawal is only from Sub-account B and has an 8% tax penalty. The RM3,000 relief is shared with deferred annuity. PRS funds are investments, so returns are not guaranteed.',
+    source: 'LHDN / PPA',
+    hook_zh: '你知道吗？为自己存退休金，每年最高可以扣税 RM3,000！',
+    what_zh: 'PRS（私人退休计划）是由证券委员会批准、私人退休金管理局（PPA）管理的自愿长期退休储蓄计划，可以当作公积金（EPF）以外的补充。',
+    who_zh: '年满18岁都可以开户。扣税适用于马来西亚个人纳税人，特别适合没有EPF的自雇人士、自由职业者，以及想在EPF之外多存一份的上班族。',
+    benefits_zh: '✅ 每年最高 RM3,000 扣税（至 YA2030），与 EPF、人寿保险扣税分开计算\n✅ 例子：税率11%的话，存 RM3,000 大约可以少缴 RM330 税\n✅ 为退休多存一笔，按年龄和风险选择基金',
+    watch_zh: '这笔钱是为退休准备的：55岁可全额提取；提早只能从B户口提取，并扣8%税。RM3,000 额度与延期年金共享。PRS 是投资，回报不保证。'}
 };
 
 const T = [
+  // ---------- Did you know? (awareness & education) ----------
+  {p:'aware', name:'Did you know? – explain one thing', sub:'What it is · who can get it · the benefit · good to know', ex:'prs',
+   fb:`Did you know? {hook}
+
+💡 What is it?
+{what}
+
+👤 Who can get it?
+{who}
+
+✅ What's in it for you?
+{benefits}
+
+📌 Good to know
+{watch}
+
+Many people only find out about this at tax time. If you'd like to see whether it fits you, feel free to message me 😊
+
+General info only, not financial advice. Check the latest rules with {source}.`,
+   ig:`Did you know? 💡
+{hook}
+
+👤 Who can get it: {who}
+
+✅ The benefit:
+{benefits}
+
+Save 📌 & share with someone who should know this.
+DM me if you have questions.
+
+General info only – check the latest rules with {source}.
+
+#DidYouKnow #MalaysiaFinance #TaxRelief #PersonalFinance #FinancialPlanning #MoneyTips #KLlife #SaveThis`,
+   li:`{hook}
+
+What it is: {what}
+
+Who is eligible: {who}
+
+The benefit:
+{benefits}
+
+Good to know: {watch}
+
+Small, simple steps like this are often missed — not because people don't care, but because nobody explained it.
+
+Did you already know about this?
+
+General info only, not financial advice. Check the latest rules with {source}.
+
+#PersonalFinance #Malaysia #FinancialLiteracy #TaxPlanning`,
+   xt:`你知道吗？💡这个很多人不知道`,
+   xhs:`{hook_zh}
+
+💡 是什么？
+{what_zh}
+
+👤 谁可以享有？
+{who_zh}
+
+{benefits_zh}
+
+📌 注意事项
+{watch_zh}
+
+很多人到报税时才知道，先收藏📌 有问题欢迎私信我～
+
+以上为一般资讯，不构成理财建议，请以官方最新规定为准。
+
+#你知道吗 #马来西亚报税 #理财知识 #退休规划 #省税小技巧`,
+   img:'Big "DID YOU KNOW?" in gold on navy · one key number (e.g. RM3,000) · Text EN / 中文'},
+
   // ---------- Real-life story ----------
   {p:'story', name:'News / story → lesson', sub:"Your personal-story style (like the Anita Mui post)",
    fb:`{story}
@@ -507,7 +600,7 @@ Grateful for the families, colleagues and friends who make this work meaningful.
 ];
 
 /* ---------- state ---------- */
-let pillar = 'story', tplIdx = null, values = read('posts-values') || {};
+let pillar = 'aware', tplIdx = null, values = read('posts-values') || {};
 let queue = read('posts-queue') || [];
 let current = null;                       // {title, fb, ig, li, xt, xhs, img, note}
 
@@ -532,14 +625,20 @@ function renderFields() {
   const keys = [...new Set((t.fb + t.ig + t.li + t.xt + t.xhs + t.img).match(/\{(\w+)\}/g).map(s => s.slice(1, -1)))];
   const en = keys.filter(k => !k.endsWith('_zh')), zh = keys.filter(k => k.endsWith('_zh'));
   const box = k => {
-    const long = /story|personal|situation|outcome|fact|why/.test(k);
+    const long = /story|personal|situation|outcome|fact|why|hook|what|who|benefits|watch/.test(k);
     return `<label for="f_${k}">${esc(LABELS[k] || k)}</label>` + (long
       ? `<textarea id="f_${k}" data-k="${k}">${esc(values[k] || '')}</textarea>`
       : `<input id="f_${k}" data-k="${k}" value="${esc(values[k] || '')}">`);
   };
-  $('fields').innerHTML = `<h2 style="margin-top:16px">2 · FILL IN</h2>` + en.map(box).join('') +
+  $('fields').innerHTML = `<h2 style="margin-top:16px">2 · FILL IN</h2>` +
+    (t.ex ? `<button class="btn ghost small" id="loadEx" type="button">LOAD PRS EXAMPLE</button><p class="hint">Ready-made PRS tax relief post – check the latest rules before posting.</p>` : '') +
+    en.map(box).join('') +
     (zh.length ? `<h2 style="margin-top:16px">中文（小红书）</h2>` + zh.map(box).join('') : '');
 }
+$('fields').addEventListener('click', e => {
+  if (e.target.id !== 'loadEx') return;
+  Object.assign(values, EXAMPLES[T[tplIdx].ex]); write('posts-values', values); renderFields(); renderFromTemplate();
+});
 $('fields').addEventListener('input', e => {
   const k = e.target.dataset.k; if (!k) return;
   values[k] = e.target.value; write('posts-values', values); renderFromTemplate();

@@ -86,6 +86,12 @@ Scheduling (free):
 - **1 post a week** to start (may go to 3)
 - Build **A + B**
 
+## Focus change (10 Oct 2026)
+- Posts lead with **awareness & education** ("Did you know…?": what it is → who is eligible → the benefit → good to know → soft CTA → disclaimer), about 3 out of 4 posts. Stories, festive and behind-the-scenes posts fill the rest.
+- App: new first topic **Did you know?** with a template and a ready-made **PRS tax relief** example (LOAD PRS EXAMPLE).
+- PRS facts used (checked 10 Oct 2026; re-check before posting): relief up to RM3,000/yr until YA 2030, shared with deferred annuity, separate from EPF/life insurance relief; anyone 18+ can open; full withdrawal from 55; early withdrawal only from Sub-account B with 8% tax penalty; returns not guaranteed; example 11% rate → about RM330 less tax.
+- Reminder: PRS advice needs a PRS consultant licence, so keep PRS posts purely educational unless Su is licensed.
+
 ## Built
 - **A – Claude skill `su-social-posts`**: `PULSE/Social Posts Skill/SKILL.md` (upload as a zip in Claude → Settings → Capabilities → Skills). Su's voice, 4 platform formats, pillars, compliance, and a fixed output format the app can read.
 - **B – PULSE app → A-N-T tab → Social Posts** (`ant/posts.html`):
