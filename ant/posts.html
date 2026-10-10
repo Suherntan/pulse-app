@@ -93,6 +93,9 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
       <button class="btn ghost" id="copyPrompt">COPY MONTHLY PROMPT</button>
     </div>
     <p class="hint" id="pasteMsg"></p>
+    <h2 style="margin-top:18px">READY-MADE MONTHS</h2>
+    <p class="hint" style="margin:0 0 8px">Researched, education-first posts. Check each post's note before posting.</p>
+    <div class="chips" id="packs"></div>
   </section>
 
   <!-- Saved posts -->
@@ -713,6 +716,23 @@ function parseBatch(text) {
     return post;
   }).filter(p => p.fb || p.ig || p.li || p.xhs);
 }
+// Ready-made monthly packs (files in ant/packs/, same format as Claude's answer)
+const PACKS = [{label: 'November 2026 · 4 posts', file: 'packs/2026-11.txt'}];
+$('packs').innerHTML = PACKS.map((p, i) => `<button class="chip" data-pack="${i}">${esc(p.label)}</button>`).join('');
+$('packs').onclick = async e => {
+  const b = e.target.closest('[data-pack]'); if (!b) return;
+  try {
+    const r = await fetch(PACKS[+b.dataset.pack].file, {cache: 'no-store'});
+    if (!r.ok) throw new Error('not found');
+    const posts = parseBatch(await r.text());
+    const have = new Set(queue.map(q => q.title + '|' + q.date));
+    const fresh = posts.filter(p => !have.has(p.title + '|' + p.date));
+    fresh.slice().reverse().forEach(p => addToQueue(p, p.date));
+    toast(fresh.length ? fresh.length + ' posts added to My Posts' : 'Already in My Posts');
+    setMode('queue');
+  } catch (err) { toast('Could not load: ' + err.message); }
+};
+
 $('readPaste').onclick = () => {
   const posts = parseBatch($('paste').value);
   if (!posts.length) { $('pasteMsg').textContent = 'No posts found. Paste the whole answer from Claude (it starts with "### POST 1").'; return; }
