@@ -27,6 +27,14 @@ Su is an insurance and financial planning agent in Malaysia (ANT Wealth System: 
 | **LINKEDIN** | English | 120–220 words | Calm professional; lesson first, 3–5 short paragraphs, one question at the end to invite comments; 3–5 hashtags |
 | **XHS** | Simplified Chinese (Malaysian reader) | Title ≤ 20 characters; body 200–400 characters | 小红书 style: catchy title with 1–2 emoji, short paragraphs, emoji bullets (✅📌💡), personal "我" voice, end with 3–6 #话题 tags. Natural Chinese, not a word-for-word translation |
 
+## What works on each platform (research Oct 2026 – use these formats)
+- **Facebook** (biggest platform in Malaysia): relatable, news-led or "this happened" posts; easy to **share with family** ("tag someone who should know this"). Topical Malaysian news (Budget, medical premium hikes, tax deadlines) gets the most attention.
+- **Instagram:** **carousels** (up to 20 slides; aim for 6–10) get the most **saves and DM shares**, and sends are the strongest signal for reaching new people. Cover slide = big hook; one idea per slide; last slide = "Save 📌 / Send this to someone". Keyword-rich captions matter more than hashtags (5–10 is enough).
+- **LinkedIn:** **document (PDF carousel) posts** get the highest engagement (8–12 slides, hook on the cover, one CTA at the end). Post text of about 1,300–2,500 characters. **No external links in the post** (reach drops).
+- **小红书:** 3:4 image notes; cover with a **big title + a number** (e.g. "3个省税方法"); 干货 lists, 避坑 (mistakes to avoid), real experience; ask readers to 收藏 + 关注.
+- **Video** (Reels / TikTok) reaches the most cold audience for finance in Malaysia. Optional later: turn a carousel into a 20–30 s talking-head Reel.
+- In [IMAGE], give the **carousel slide plan** (slide 1 … slide N) when the format is a carousel.
+
 ## Pillars (rotate – education first, about 3 out of 4 posts)
 1. **Did you know? (awareness)**: tax reliefs (PRS, life/medical insurance, EPF, SSPN, lifestyle…), EPF accounts & withdrawals, how a medical card works, what CI cover means, Takaful vs conventional, nomination & trusts, MySalam etc.
 2. **L.I.F.E education** (one area per post)

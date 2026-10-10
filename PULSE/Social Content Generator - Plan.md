@@ -92,6 +92,15 @@ Scheduling (free):
 - PRS facts used (checked 10 Oct 2026; re-check before posting): relief up to RM3,000/yr until YA 2030, shared with deferred annuity, separate from EPF/life insurance relief; anyone 18+ can open; full withdrawal from 55; early withdrawal only from Sub-account B with 8% tax penalty; returns not guaranteed; example 11% rate → about RM330 less tax.
 - Reminder: PRS advice needs a PRS consultant licence, so keep PRS posts purely educational unless Su is licensed.
 
+## Platform research (10 Oct 2026) – what performs best
+- **Facebook:** the biggest platform in Malaysia. Relatable, news-led, "share with family" posts. Topical Malaysian money news (Budget 2026, medical card premium hikes of about 40–70%, tax deadline) gets attention.
+- **Instagram:** carousels (now up to 20 slides) lead on **saves and DM shares**, and sends are the strongest signal for reaching non-followers. Reels give the most cold reach. Keyword captions now matter more than hashtags (5–10 is enough).
+- **LinkedIn:** document / PDF carousel posts have the highest engagement (about 6–7%, 8–12 slides). Text of 1,300–2,500 characters. No external links. Polls are weak.
+- **小红书:** 3:4 image notes, big-title cover with a number, 干货 lists / 避坑 / real experience, asking readers to 收藏.
+- Finance video (TikTok / YouTube) reaches young Malaysians most. Optional later: carousel → short Reel.
+- First month built from this: `Social Posts - Nov 2026` (PRS relief, children's life-insurance relief under Budget 2026, medical card premium hikes, year-end tax checklist).
+- Not used: Agent Reach (reads XHS / X etc. with Su's logged-in accounts). It would need to run on Su's laptop with her logins, and it bypasses the platforms' official APIs (Terms of Service risk), so it is not run from the cloud.
+
 ## Built
 - **A – Claude skill `su-social-posts`**: `PULSE/Social Posts Skill/SKILL.md` (upload as a zip in Claude → Settings → Capabilities → Skills). Su's voice, 4 platform formats, pillars, compliance, and a fixed output format the app can read.
 - **B – PULSE app → A-N-T tab → Social Posts** (`ant/posts.html`):
