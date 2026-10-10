@@ -11,6 +11,8 @@ BGL notes → BGL vault. Claude skills/tools for every project → Claude Toolki
 - [[ANT_CLIENT_REGISTRATION_FORM]] – client policy registration form (moved from BGL)
 
 ## Other PULSE notes
+- [[Social Posts - Nov 2026]] – first month of posts (paste into the app)
+- [[Social Content Generator - Plan]] – FB / IG / LinkedIn posts: monthly Claude batch + free templates (draft)
 - [[PULSE_REMINDER_MENU_MARK_SENT_DEBUG]] – "PULSE Reminders" menu / Mark Sent issue (moved from BGL)
 - [[Client Tracker - Design Brief for Claude Code]] – fund tracker view
 

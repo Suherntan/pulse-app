@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Social Posts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2545; --gold:#F3AF3D; --gold-dark:#A86F14; --bg:#F4F2EC; --card:#fff;
+  --text:#1B2433; --text-light:#5F6673; --border:#DAD6CC; --red:#C9402B; --ok:#2E8B3E;
+  --head:'Oswald','Arial Narrow',sans-serif; --body:'Work Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none;font-size:30px;line-height:1;padding:0 4px 4px 0}
+header h1{font-family:var(--head);font-weight:600;font-size:20px;letter-spacing:.08em}
+main{max-width:760px;margin:0 auto;padding:16px;display:grid;gap:14px}
+.seg{display:flex;background:#fff;border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;min-height:44px;font:600 13px var(--head);letter-spacing:.08em;color:var(--navy);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--navy);color:#fff}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+h2{font-family:var(--head);font-weight:600;font-size:15px;letter-spacing:.12em;color:var(--navy);margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;min-height:40px;font:500 14px var(--body);cursor:pointer;color:var(--text)}
+.chip[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tpl{display:grid;gap:8px;margin-top:12px}
+.tpl button{text-align:left;border:1px solid var(--border);background:#FBF6EA;border-radius:10px;padding:12px;min-height:44px;font:600 14px var(--body);cursor:pointer;color:var(--navy)}
+.tpl button[aria-pressed=true]{border-color:var(--gold-dark);box-shadow:0 0 0 2px var(--gold)}
+.tpl small{display:block;font-weight:400;color:var(--text-light);margin-top:2px}
+label{display:block;font-size:13px;font-weight:600;color:var(--text-light);margin:10px 0 4px}
+input,textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font:15px var(--body);color:var(--text);background:#fff}
+textarea{min-height:80px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.hint{font-size:12px;color:var(--text-light);margin-top:6px}
+.out{display:grid;gap:12px}
+.pcard{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.pcard header{position:static;padding:10px 14px;gap:10px}
+.pcard header b{font-family:var(--head);letter-spacing:.1em;font-size:14px}
+.pcard header .count{margin-left:auto;font-size:12px;color:#C9D2E0}
+.pcard header .count.over{color:#FFB4A6;font-weight:700}
+.fb header{background:#1877F2}.ig header{background:linear-gradient(90deg,#833AB4,#E1306C,#F77737)}
+.li header{background:#0A66C2}.xhs header{background:#FF2442}
+.pcard .title{padding:10px 14px 0;font-weight:700}
+.pcard pre{white-space:pre-wrap;word-wrap:break-word;font:14px/1.55 var(--body);padding:12px 14px;margin:0}
+.pcard .acts{display:flex;gap:8px;padding:0 14px 12px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:10px 16px;min-height:44px;font:700 13px var(--head);letter-spacing:.08em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.btn.gold{background:var(--gold);color:var(--navy);box-shadow:0 3px 0 var(--gold-dark)}
+.btn.ghost{background:#EEF1F5;color:var(--navy)}
+.btn.small{min-height:40px;padding:8px 12px}
+.done{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-light);margin-left:auto}
+.done input{width:auto}
+.note{background:#FFF6E0;border:1px solid #F0D9A0;border-radius:10px;padding:10px 12px;font-size:13px}
+.qitem{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.qitem:last-child{border-bottom:0}
+.qitem button.open{flex:1;text-align:left;background:none;border:0;font:600 14px var(--body);color:var(--navy);cursor:pointer;min-height:44px}
+.qitem small{display:block;font-weight:400;color:var(--text-light)}
+.dots{display:flex;gap:4px}
+.dots span{width:24px;height:24px;border-radius:6px;font:700 10px var(--body);display:grid;place-items:center;background:#EEF1F5;color:#8A93A3}
+.dots span.on{background:var(--ok);color:#fff}
+.empty{color:var(--text-light);font-size:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:999px;font-weight:600;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header><a href="../index.html" aria-label="Back to PULSE">‹</a><h1>SOCIAL POSTS</h1></header>
+<main>
+  <div class="seg" role="group" aria-label="Mode">
+    <button id="mTpl" aria-pressed="true">TEMPLATES</button>
+    <button id="mClaude" aria-pressed="false">FROM CLAUDE</button>
+    <button id="mQueue" aria-pressed="false">MY POSTS</button>
+  </div>
+
+  <!-- Templates (free, no credits) -->
+  <section id="tplView" class="card">
+    <h2>1 · PICK A TOPIC</h2>
+    <div class="chips" id="pillars"></div>
+    <div class="tpl" id="tplList"></div>
+    <div id="fields"></div>
+    <p class="hint">Chinese boxes are for 小红书. Leave one empty and the English text is used instead.</p>
+  </section>
+
+  <!-- Paste Claude's monthly batch -->
+  <section id="claudeView" class="card" hidden>
+    <h2>PASTE CLAUDE'S POSTS</h2>
+    <p class="hint" style="margin:0 0 8px">In Claude (skill <b>su-social-posts</b>), ask: <i>"Make this month's posts: …your ideas…"</i>. Copy the whole answer and paste it here.</p>
+    <textarea id="paste" style="min-height:160px" placeholder="### POST 1 | 06/11/2026 | Money habits | Year-end tax relief&#10;[FB]&#10;…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn gold" id="readPaste">READ POSTS</button>
+      <button class="btn ghost" id="copyPrompt">COPY MONTHLY PROMPT</button>
+    </div>
+    <p class="hint" id="pasteMsg"></p>
+    <h2 style="margin-top:18px">READY-MADE MONTHS</h2>
+    <p class="hint" style="margin:0 0 8px">Researched, education-first posts. Check each post's note before posting.</p>
+    <div class="chips" id="packs"></div>
+  </section>
+
+  <!-- Saved posts -->
+  <section id="queueView" class="card" hidden>
+    <h2>MY POSTS</h2>
+    <div id="queue"></div>
+  </section>
+
+  <div class="out" id="out"></div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="ant-api.js"></script>
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
+const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+let tt; const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2200); };
+
+const PLATFORMS = [
+  {k:'fb',  name:'FACEBOOK',  cls:'fb',  limit:2000, open:'https://www.facebook.com/'},
+  {k:'ig',  name:'INSTAGRAM', cls:'ig',  limit:2200, open:'https://www.instagram.com/'},
+  {k:'li',  name:'LINKEDIN',  cls:'li',  limit:3000, open:'https://www.linkedin.com/feed/'},
+  {k:'xhs', name:'小红书 XHS', cls:'xhs', limit:1000, open:'https://www.xiaohongshu.com/', titleLimit:20}
+];
+
+const PILLARS = [
+  ['aware', 'Did you know?'], ['story', 'Real-life story'], ['life', 'L.I.F.E tip'], ['money', 'Money habit'],
+  ['behind', 'Behind the scenes'], ['wins', 'Client win'], ['festive', 'Festive']
+];
+
+// Field labels. Fields ending in _zh are the Chinese text for 小红书 (fall back to English).
+const LABELS = {
+  story: 'What happened (the story / news)', story_zh: '发生了什么（中文）',
+  personal: 'Your own experience (1–3 lines)', personal_zh: '你自己的经历（中文）',
+  lesson: 'The lesson in one line', lesson_zh: '一句话总结（中文）',
+  area: 'L.I.F.E area (e.g. Critical Illness)', area_zh: '保障类别（中文，如：重大疾病）',
+  fact: 'One simple fact or example', fact_zh: '一个简单例子（中文）',
+  habit: 'The money habit', habit_zh: '理财习惯（中文）',
+  tip1: 'Tip 1', tip2: 'Tip 2', tip3: 'Tip 3', tip1_zh: '小贴士 1（中文）', tip2_zh: '小贴士 2（中文）', tip3_zh: '小贴士 3（中文）',
+  moment: 'What you did / where you were', moment_zh: '你做了什么（中文）',
+  why: 'Why it matters to you', why_zh: '为什么对你重要（中文）',
+  situation: "Client's situation (no names!)", situation_zh: '客户情况（中文，不写名字）',
+  outcome: 'What the plan did for them', outcome_zh: '计划带来的帮助（中文）',
+  festival: 'Festival (e.g. Deepavali)', festival_zh: '节日（中文，如：屠妖节）',
+  wish: 'Your wish', wish_zh: '祝福（中文）',
+  hook: '"Did you know…" line', hook_zh: '“你知道吗”开头（中文）',
+  what: 'What is it? (plain words)', what_zh: '是什么？（中文）',
+  who: 'Who is eligible?', who_zh: '谁可以享有？（中文）',
+  benefits: 'Benefits (one per line)', benefits_zh: '好处（中文，每行一个）',
+  watch: 'Good to know (limits / conditions)', watch_zh: '注意事项（中文）',
+  source: 'Check with (e.g. LHDN / PPA)'
+};
+
+// Ready-made example (checked Oct 2026 – confirm the latest rules with LHDN / PPA before posting).
+const EXAMPLES = {
+  prs: {hook: 'You can get up to RM3,000 tax relief a year just by saving for your own retirement through PRS.',
+    what: 'PRS (Private Retirement Scheme) is a voluntary, long-term retirement savings scheme approved by the Securities Commission and run through the Private Pension Administrator (PPA). Think of it as a top-up to your EPF, with funds you choose based on your age and risk comfort.',
+    who: 'Anyone aged 18 and above can open a PRS account. The tax relief is for individual taxpayers in Malaysia, and it is especially useful if you are self-employed, a freelancer or gig worker without EPF, or an employee who wants more than EPF for retirement.',
+    benefits: '• Tax relief up to RM3,000 a year (until YA 2030) – separate from your EPF and life insurance relief\n• Example: at an 11% tax rate, RM3,000 in PRS can lower your tax by about RM330\n• Extra savings for retirement, in funds that match your age and risk level',
+    watch: 'Money is meant for retirement: full withdrawal from age 55. Early withdrawal is only from Sub-account B and has an 8% tax penalty. The RM3,000 relief is shared with deferred annuity. PRS funds are investments, so returns are not guaranteed.',
+    source: 'LHDN / PPA',
+    hook_zh: '你知道吗？为自己存退休金，每年最高可以扣税 RM3,000！',
+    what_zh: 'PRS（私人退休计划）是由证券委员会批准、私人退休金管理局（PPA）管理的自愿长期退休储蓄计划，可以当作公积金（EPF）以外的补充。',
+    who_zh: '年满18岁都可以开户。扣税适用于马来西亚个人纳税人，特别适合没有EPF的自雇人士、自由职业者，以及想在EPF之外多存一份的上班族。',
+    benefits_zh: '✅ 每年最高 RM3,000 扣税（至 YA2030），与 EPF、人寿保险扣税分开计算\n✅ 例子：税率11%的话，存 RM3,000 大约可以少缴 RM330 税\n✅ 为退休多存一笔，按年龄和风险选择基金',
+    watch_zh: '这笔钱是为退休准备的：55岁可全额提取；提早只能从B户口提取，并扣8%税。RM3,000 额度与延期年金共享。PRS 是投资，回报不保证。'}
+};
+
+const T = [
+  // ---------- Did you know? (awareness & education) ----------
+  {p:'aware', name:'Did you know? – explain one thing', sub:'What it is · who can get it · the benefit · good to know', ex:'prs',
+   fb:`Did you know? {hook}
+
+💡 What is it?
+{what}
+
+👤 Who can get it?
+{who}
+
+✅ What's in it for you?
+{benefits}
+
+📌 Good to know
+{watch}
+
+Many people only find out about this at tax time. If you'd like to see whether it fits you, feel free to message me 😊
+
+General info only, not financial advice. Check the latest rules with {source}.`,
+   ig:`Did you know? 💡
+{hook}
+
+👤 Who can get it: {who}
+
+✅ The benefit:
+{benefits}
+
+Save 📌 & share with someone who should know this.
+DM me if you have questions.
+
+General info only – check the latest rules with {source}.
+
+#DidYouKnow #MalaysiaFinance #TaxRelief #PersonalFinance #FinancialPlanning #MoneyTips #KLlife #SaveThis`,
+   li:`{hook}
+
+What it is: {what}
+
+Who is eligible: {who}
+
+The benefit:
+{benefits}
+
+Good to know: {watch}
+
+Small, simple steps like this are often missed — not because people don't care, but because nobody explained it.
+
+Did you already know about this?
+
+General info only, not financial advice. Check the latest rules with {source}.
+
+#PersonalFinance #Malaysia #FinancialLiteracy #TaxPlanning`,
+   xt:`你知道吗？💡这个很多人不知道`,
+   xhs:`{hook_zh}
+
+💡 是什么？
+{what_zh}
+
+👤 谁可以享有？
+{who_zh}
+
+{benefits_zh}
+
+📌 注意事项
+{watch_zh}
+
+很多人到报税时才知道，先收藏📌 有问题欢迎私信我～
+
+以上为一般资讯，不构成理财建议，请以官方最新规定为准。
+
+#你知道吗 #马来西亚报税 #理财知识 #退休规划 #省税小技巧`,
+   img:'Big "DID YOU KNOW?" in gold on navy · one key number (e.g. RM3,000) · Text EN / 中文'},
+
+  // ---------- Real-life story ----------
+  {p:'story', name:'News / story → lesson', sub:"Your personal-story style (like the Anita Mui post)",
+   fb:`{story}
+
+It hit close to home for me.
+
+{personal}
+
+It made me realise — {lesson}
+
+Planning isn't about expecting the worst. It's about making sure the people we love are looked after, the way we meant them to be — whatever happens.
+
+If this resonates with you, or you've been through something similar, feel free to message me. Happy to share what I've learned ❤️`,
+   ig:`{lesson}
+
+{story}
+
+It hit close to home for me. {personal}
+
+Love needs a plan, not just good intentions.
+DM me if you'd like to talk it through 🤍
+
+#FinancialPlanning #MalaysiaFinance #FamilyFirst #LifeLessons #ProtectWhatMatters #MoneyTalk #KLlife #PlanAhead`,
+   li:`{lesson}
+
+{story}
+
+This one stayed with me. {personal}
+
+What I see again and again in my work: most families don't lack love or effort — they lack a simple structure that keeps working when life changes.
+
+A few honest conversations now can save a lot of heartache later.
+
+What's one thing you wish your family had talked about earlier?
+
+#FinancialPlanning #Malaysia #FamilyWealth #Insurance`,
+   xt:`看完这个故事，我沉默了很久`,
+   xhs:`{story_zh}
+
+说实话，这件事让我想起了自己 👇
+{personal_zh}
+
+💡 我的体会：{lesson_zh}
+
+规划不是为了想坏事，
+而是确保我们爱的人，无论发生什么都被照顾好。
+
+如果你也有类似的经历，欢迎私信聊聊 🤍
+
+#理财规划 #家庭保障 #马来西亚生活 #人生感悟 #保险知识`,
+   img:'Photo or plain navy card · Text: "{lesson}"'},
+
+  {p:'story', name:'Personal "what I learned"', sub:'Short reflection from your own life',
+   fb:`Something I've been thinking about lately…
+
+{personal}
+
+{lesson}
+
+I'm sharing this because I know many of us carry the same worries quietly. You don't have to figure it all out alone — if you ever want to talk it through, my inbox is always open ❤️`,
+   ig:`A little reflection 🤍
+
+{personal}
+
+{lesson}
+
+Your inbox friend, always here to talk.
+
+#Reflection #MoneyMindset #FinancialPlanning #MalaysiaFinance #FamilyFirst #SelfGrowth #KLlife #PlanAhead`,
+   li:`A lesson I keep coming back to: {lesson}
+
+{personal}
+
+In my work I see that peace of mind rarely comes from earning more — it comes from knowing what happens if things don't go to plan.
+
+How do you make sure your family is prepared?
+
+#FinancialPlanning #Malaysia #Leadership #Insurance`,
+   xt:`这件事让我想通了 ✨`,
+   xhs:`最近一直在想一件事 👇
+
+{personal_zh}
+
+💡 {lesson_zh}
+
+分享出来，是因为我知道很多人也默默担心同样的事。
+不用一个人想通所有问题，想聊随时私信我 🤍
+
+#成长感悟 #理财思维 #家庭保障 #马来西亚 #生活日常`,
+   img:'Selfie or candid photo · Text: "What I learned"'},
+
+  // ---------- L.I.F.E tip ----------
+  {p:'life', name:'One L.I.F.E area explained', sub:'Hospital, disability, CI, death, education or investment',
+   fb:`Quick question: if {area} happened tomorrow, who would carry the cost?
+
+{fact}
+
+That's why, when I do an A-N-T review with families, we always check {area} first — not to scare anyone, but so there are no surprises.
+
+You don't need a perfect plan. You just need to know where the gaps are.
+
+If you'd like a simple check on yours, feel free to message me 😊`,
+   ig:`{area}: covered or not sure? 🤔
+
+{fact}
+
+Knowing your gaps = peace of mind.
+DM me "LIFE" for a simple check.
+
+#LIFEcheck #Insurance101 #MalaysiaFinance #FinancialPlanning #ProtectYourFamily #KnowYourCoverage #KLlife #HealthIsWealth`,
+   li:`Most people know they "have insurance". Far fewer know if their {area} cover is enough.
+
+{fact}
+
+In my A-N-T reviews we look at six areas — Hospitalization, Disability, Critical Illness, Death, Education and Investment — and compare what you have with what your family would actually need.
+
+When did you last review yours?
+
+#FinancialPlanning #Insurance #Malaysia #RiskManagement`,
+   xt:`你的{area_zh}保障够吗？🤔`,
+   xhs:`如果明天发生{area_zh}，费用谁来承担？
+
+📌 {fact_zh}
+
+所以我帮家庭做 A-N-T 规划时，一定先看这一项。
+不是为了吓人，而是避免措手不及。
+
+✅ 不需要完美的计划
+✅ 只要知道缺口在哪里
+
+想简单检查一下自己的保障，欢迎私信 😊
+
+#保险知识 #家庭保障 #马来西亚 #理财规划 #保障检查`,
+   img:'L.I.F.E pyramid with {area} highlighted · Text: "Is your {area} covered?"'},
+
+  {p:'life', name:'3 quick tips', sub:'List post – easy to read',
+   fb:`3 simple things about {area} most people miss 👇
+
+1️⃣ {tip1}
+2️⃣ {tip2}
+3️⃣ {tip3}
+
+Save this for later, or share it with someone who needs it. Questions? Message me anytime 😊`,
+   ig:`3 things about {area} most people miss 👇
+
+1️⃣ {tip1}
+2️⃣ {tip2}
+3️⃣ {tip3}
+
+Save 📌 & share with someone who needs this.
+
+#Tips #Insurance101 #FinancialPlanning #MalaysiaFinance #MoneyTips #ProtectYourFamily #KLlife #SaveThis`,
+   li:`3 points about {area} that often get missed:
+
+1. {tip1}
+2. {tip2}
+3. {tip3}
+
+Which one surprised you most?
+
+#FinancialPlanning #Insurance #Malaysia #PersonalFinance`,
+   xt:`{area_zh}的3个重点📌`,
+   xhs:`关于{area_zh}，很多人都忽略了这3点 👇
+
+1️⃣ {tip1_zh}
+2️⃣ {tip2_zh}
+3️⃣ {tip3_zh}
+
+先收藏📌 再转给需要的朋友～
+有问题欢迎私信 😊
+
+#干货分享 #保险知识 #理财小贴士 #马来西亚 #家庭保障`,
+   img:'Carousel: title card + 1 card per tip'},
+
+  // ---------- Money habit ----------
+  {p:'money', name:'One money habit', sub:'Budgeting, EPF, emergency fund, tax relief…',
+   fb:`A small habit that made a big difference for me: {habit}
+
+{why}
+
+It's not about being perfect with money. It's about small steps that add up over time.
+
+What's one money habit that works for you? Share below 👇`,
+   ig:`Small habit, big difference 💡
+
+{habit}
+
+{why}
+
+What's yours? Tell me below 👇
+
+#MoneyHabits #PersonalFinance #MalaysiaFinance #SavingTips #FinancialFreedom #BudgetTips #KLlife #SmallSteps`,
+   li:`One habit I recommend to almost every family I work with: {habit}
+
+{why}
+
+Consistency beats intensity — small steps, repeated, change outcomes.
+
+What habit has helped you most?
+
+#PersonalFinance #FinancialPlanning #Malaysia #Habits`,
+   xt:`一个改变我的理财小习惯💡`,
+   xhs:`坚持了这个小习惯，真的不一样 💡
+
+✅ {habit_zh}
+
+{why_zh}
+
+理财不用完美，小步慢慢来，时间会给你答案。
+
+你有什么好用的理财习惯？评论区告诉我 👇
+
+#理财习惯 #存钱 #马来西亚 #个人理财 #自律生活`,
+   img:'Simple icon card · Text: "{habit}"'},
+
+  {p:'money', name:'Year-end tax relief reminder', sub:'Nov–Dec · no numbers promised',
+   fb:`Friendly reminder before the year ends 📅
+
+Some insurance and savings can be claimed as tax relief — if they're in place before 31 December. Every year I meet people who only find out in April 😅
+
+{fact}
+
+Check what you can still claim this year — and if you'd like a hand looking at yours, just message me.`,
+   ig:`Tax season tip before 31 Dec 📅
+
+{fact}
+
+Check your reliefs now, thank yourself in April 😉
+
+#TaxRelief #LHDN #MalaysiaTax #YearEnd #PersonalFinance #MalaysiaFinance #MoneyTips #KLlife`,
+   li:`A practical year-end reminder: review your tax reliefs before 31 December.
+
+{fact}
+
+A 15-minute check now is far easier than wishing you had done it in April.
+
+Have you done your year-end review yet?
+
+#Tax #Malaysia #PersonalFinance #YearEnd`,
+   xt:`年底前一定要做这件事📅`,
+   xhs:`年底提醒 📅
+
+有些保险和储蓄，在12月31日前安排好，就可以申请扣税。
+每年都有朋友到了四月才发现来不及 😅
+
+📌 {fact_zh}
+
+趁现在检查一下还可以申报什么吧～需要帮忙可以私信我
+
+#年底扣税 #马来西亚报税 #LHDN #理财规划 #省税小技巧`,
+   img:'Calendar "31 DEC" in gold · Text: "Check your tax relief"'},
+
+  // ---------- Behind the scenes ----------
+  {p:'behind', name:'A day as an agent', sub:'Training, meeting, team moment',
+   fb:`Today: {moment}
+
+{why}
+
+People sometimes ask what my work is really like. Honestly? It's mostly listening — and helping families feel a little more prepared for whatever comes.
+
+Grateful for every conversation 🙏`,
+   ig:`Behind the scenes ✨
+
+{moment}
+
+{why}
+
+#DayInTheLife #AgentLife #FinancialPlanning #MalaysiaFinance #BehindTheScenes #Grateful #KLlife #WorkLife`,
+   li:`{moment}
+
+{why}
+
+The best part of this work isn't the products — it's the moment a family says "now I finally understand where we stand."
+
+#FinancialPlanning #ContinuousLearning #Malaysia #Insurance`,
+   xt:`我的工作日常✨`,
+   xhs:`今天的日常 ✨
+
+{moment_zh}
+
+{why_zh}
+
+常有人问我这份工作到底在做什么？
+其实大部分时间是在倾听，帮家庭多一份准备 🙏
+
+#工作日常 #保险人 #理财规划 #马来西亚 #打工人`,
+   img:'Real photo of your day · Text: "A day in my work"'},
+
+  // ---------- Client win ----------
+  {p:'wins', name:'Client story (with permission)', sub:'No names, no amounts unless agreed',
+   fb:`Shared with permission 🙏
+
+{situation}
+
+{outcome}
+
+Moments like this remind me why I do what I do. A plan only matters on the day you need it — and that day it mattered.
+
+If you've been putting off your own review, maybe this is your sign. Message me anytime ❤️`,
+   ig:`Why I do what I do 🤍
+
+{situation}
+
+{outcome}
+
+(Shared with permission)
+
+#ClientStory #WhyIDoWhatIDo #FinancialPlanning #MalaysiaFinance #ProtectYourFamily #Grateful #KLlife #RealStories`,
+   li:`A story shared with my client's permission:
+
+{situation}
+
+{outcome}
+
+A plan is quiet for years — until the day it isn't. That's the day it's built for.
+
+#FinancialPlanning #Insurance #Malaysia #ClientCare`,
+   xt:`这就是我坚持的原因🤍`,
+   xhs:`（已获客户同意分享 🙏）
+
+{situation_zh}
+
+{outcome_zh}
+
+这样的时刻，让我更确定自己在做对的事。
+计划平时不显眼，但需要它的那一天，它就是全部。
+
+#真实故事 #保险的意义 #家庭保障 #马来西亚 #理财规划`,
+   img:'Abstract photo (hands, family silhouette) · Text: "Why I do what I do"'},
+
+  // ---------- Festive ----------
+  {p:'festive', name:'Festive greeting', sub:'CNY, Raya, Deepavali, Christmas, Merdeka…',
+   fb:`Happy {festival} to you and your family! ✨
+
+{wish}
+
+Thank you for your trust and friendship this year — wishing you good health, peace and many happy moments together.`,
+   ig:`Happy {festival}! ✨
+
+{wish}
+
+#Malaysia #Family #Gratitude #FestiveSeason #MalaysiaBoleh #KLlife #Celebrate`,
+   li:`Wishing everyone celebrating a joyful {festival}.
+
+{wish}
+
+Grateful for the families, colleagues and friends who make this work meaningful.
+
+#Malaysia #Gratitude #Festive`,
+   xt:`{festival_zh}快乐 ✨`,
+   xhs:`祝大家{festival_zh}快乐 ✨
+
+{wish_zh}
+
+谢谢这一年的信任和陪伴，
+祝你和家人身体健康、平安喜乐 🙏
+
+#节日快乐 #马来西亚 #家人 #感恩`,
+   img:'Festive card in navy + gold with your photo · Text: "Happy {festival}"'}
+];
+
+/* ---------- state ---------- */
+let pillar = 'aware', tplIdx = null, values = read('posts-values') || {};
+let queue = read('posts-queue') || [];
+let current = null;                       // {title, fb, ig, li, xt, xhs, img, note}
+
+function fill(text) {
+  return String(text || '').replace(/\{(\w+)\}/g, (_, k) => {
+    let v = (values[k] || '').trim();
+    if (!v && k.endsWith('_zh')) v = (values[k.slice(0, -3)] || '').trim();
+    return v || '[' + (LABELS[k] || k) + ']';
+  });
+}
+
+function renderPillars() {
+  $('pillars').innerHTML = PILLARS.map(([k, n]) => `<button class="chip" data-p="${k}" aria-pressed="${k === pillar}">${n}</button>`).join('');
+  const list = T.map((t, i) => ({t, i})).filter(x => x.t.p === pillar);
+  $('tplList').innerHTML = list.map(({t, i}) => `<button data-t="${i}" aria-pressed="${i === tplIdx}">${esc(t.name)}<small>${esc(t.sub)}</small></button>`).join('');
+}
+$('pillars').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return; pillar = b.dataset.p; tplIdx = null; renderPillars(); $('fields').innerHTML = ''; $('out').innerHTML = ''; };
+$('tplList').onclick = e => { const b = e.target.closest('[data-t]'); if (!b) return; tplIdx = +b.dataset.t; renderPillars(); renderFields(); renderFromTemplate(); };
+
+function renderFields() {
+  const t = T[tplIdx];
+  const keys = [...new Set((t.fb + t.ig + t.li + t.xt + t.xhs + t.img).match(/\{(\w+)\}/g).map(s => s.slice(1, -1)))];
+  const en = keys.filter(k => !k.endsWith('_zh')), zh = keys.filter(k => k.endsWith('_zh'));
+  const box = k => {
+    const long = /story|personal|situation|outcome|fact|why|hook|what|who|benefits|watch/.test(k);
+    return `<label for="f_${k}">${esc(LABELS[k] || k)}</label>` + (long
+      ? `<textarea id="f_${k}" data-k="${k}">${esc(values[k] || '')}</textarea>`
+      : `<input id="f_${k}" data-k="${k}" value="${esc(values[k] || '')}">`);
+  };
+  $('fields').innerHTML = `<h2 style="margin-top:16px">2 · FILL IN</h2>` +
+    (t.ex ? `<button class="btn ghost small" id="loadEx" type="button">LOAD PRS EXAMPLE</button><p class="hint">Ready-made PRS tax relief post – check the latest rules before posting.</p>` : '') +
+    en.map(box).join('') +
+    (zh.length ? `<h2 style="margin-top:16px">中文（小红书）</h2>` + zh.map(box).join('') : '');
+}
+$('fields').addEventListener('click', e => {
+  if (e.target.id !== 'loadEx') return;
+  Object.assign(values, EXAMPLES[T[tplIdx].ex]); write('posts-values', values); renderFields(); renderFromTemplate();
+});
+$('fields').addEventListener('input', e => {
+  const k = e.target.dataset.k; if (!k) return;
+  values[k] = e.target.value; write('posts-values', values); renderFromTemplate();
+});
+
+function renderFromTemplate() {
+  if (tplIdx === null) return;
+  const t = T[tplIdx];
+  current = {title: t.name, fb: fill(t.fb), ig: fill(t.ig), li: fill(t.li), xt: fill(t.xt), xhs: fill(t.xhs), img: fill(t.img), note: ''};
+  renderOut(current, null);
+}
+
+/* ---------- output cards ---------- */
+function renderOut(post, qid) {
+  const q = qid != null ? queue.find(x => x.id === qid) : null;
+  const card = p => {
+    const text = post[p.k] || '';
+    if (!text.trim()) return '';
+    const n = [...text].length, over = n > p.limit;
+    const title = p.k === 'xhs' ? post.xt || '' : '';
+    const tOver = title && [...title].length > p.titleLimit;
+    return `<article class="pcard ${p.cls}">
+      <header><b>${p.name}</b><span class="count ${over || tOver ? 'over' : ''}">${title ? 'Title ' + [...title].length + '/' + p.titleLimit + ' · ' : ''}${n}/${p.limit}</span></header>
+      ${title ? `<div class="title">${esc(title)}</div>` : ''}
+      <pre>${esc(text)}</pre>
+      <div class="acts">
+        ${title ? `<button class="btn ghost small" data-copy="xt">COPY TITLE</button>` : ''}
+        <button class="btn gold small" data-copy="${p.k}">COPY</button>
+        <a class="btn ghost small" href="${p.open}" target="_blank" rel="noopener">OPEN APP</a>
+        ${q ? `<label class="done"><input type="checkbox" data-done="${p.k}"${q.done[p.k] ? ' checked' : ''}> Posted</label>` : ''}
+      </div></article>`;
+  };
+  $('out').innerHTML =
+    (post.note && post.note.trim() && post.note.trim() !== '-' ? `<div class="note"><b>Check:</b> ${esc(post.note)}</div>` : '') +
+    PLATFORMS.map(card).join('') +
+    (post.img ? `<div class="note"><b>Picture idea:</b> ${esc(post.img)}</div>` : '') +
+    (q ? '' : `<button class="btn ghost" id="saveQ">SAVE TO MY POSTS</button>`);
+  $('out').onclick = async e => {
+    const c = e.target.closest('[data-copy]');
+    if (c) {
+      try { await navigator.clipboard.writeText(post[c.dataset.copy]); toast('Copied – paste it in the app'); }
+      catch (_) { toast('Copy failed – press and hold the text to copy'); }
+      return;
+    }
+    if (e.target.id === 'saveQ') { addToQueue(post); toast('Saved to My Posts'); }
+  };
+  $('out').onchange = e => {
+    const k = e.target.dataset.done; if (!k || !q) return;
+    q.done[k] = e.target.checked; write('posts-queue', queue);
+  };
+}
+
+function addToQueue(post, date) {
+  queue.unshift({id: Date.now() + Math.random(), date: date || '', title: post.title, fb: post.fb, ig: post.ig, li: post.li, xt: post.xt, xhs: post.xhs, img: post.img, note: post.note || '', done: {}});
+  write('posts-queue', queue);
+}
+
+/* ---------- Claude batch ---------- */
+const MAP = {FB: 'fb', IG: 'ig', LINKEDIN: 'li', 'XHS-TITLE': 'xt', XHS: 'xhs', IMAGE: 'img', NOTE: 'note'};
+function parseBatch(text) {
+  return String(text).split(/^\s*#{2,4}\s*POST\b/mi).slice(1).map(block => {
+    const lines = block.split('\n');
+    const head = lines.shift().replace(/^\s*\d*\s*\|?\s*/, '').split('|').map(s => s.trim()).filter(Boolean);
+    const post = {title: head.slice(1).join(' · ') || head[0] || 'Post', date: head[0] || '', fb: '', ig: '', li: '', xt: '', xhs: '', img: '', note: ''};
+    let key = null;
+    lines.forEach(l => {
+      const m = l.trim().match(/^\[(FB|IG|LINKEDIN|XHS-TITLE|XHS|IMAGE|NOTE)\]$/i);
+      if (m) { key = MAP[m[1].toUpperCase()]; return; }
+      if (key) post[key] += (post[key] ? '\n' : '') + l;
+    });
+    Object.keys(MAP).forEach(k => { post[MAP[k]] = post[MAP[k]].replace(/^\s*```\s*$/gm, '').trim(); });
+    return post;
+  }).filter(p => p.fb || p.ig || p.li || p.xhs);
+}
+// Ready-made monthly packs (files in ant/packs/, same format as Claude's answer)
+const PACKS = [{label: 'November 2026 · 4 posts', file: 'packs/2026-11.txt'}];
+$('packs').innerHTML = PACKS.map((p, i) => `<button class="chip" data-pack="${i}">${esc(p.label)}</button>`).join('');
+$('packs').onclick = async e => {
+  const b = e.target.closest('[data-pack]'); if (!b) return;
+  try {
+    const r = await fetch(PACKS[+b.dataset.pack].file, {cache: 'no-store'});
+    if (!r.ok) throw new Error('not found');
+    const posts = parseBatch(await r.text());
+    const have = new Set(queue.map(q => q.title + '|' + q.date));
+    const fresh = posts.filter(p => !have.has(p.title + '|' + p.date));
+    fresh.slice().reverse().forEach(p => addToQueue(p, p.date));
+    toast(fresh.length ? fresh.length + ' posts added to My Posts' : 'Already in My Posts');
+    setMode('queue');
+  } catch (err) { toast('Could not load: ' + err.message); }
+};
+
+$('readPaste').onclick = () => {
+  const posts = parseBatch($('paste').value);
+  if (!posts.length) { $('pasteMsg').textContent = 'No posts found. Paste the whole answer from Claude (it starts with "### POST 1").'; return; }
+  posts.slice().reverse().forEach(p => addToQueue(p, p.date));
+  $('paste').value = '';
+  $('pasteMsg').textContent = '';
+  toast(posts.length + ' post' + (posts.length > 1 ? 's' : '') + ' saved to My Posts');
+  setMode('queue');
+};
+const MONTH_PROMPT = `Use my su-social-posts skill. Make this month's posts (1 per week, Wednesdays).
+Month: [month & year]
+Ideas (one per line, add any personal story you want in):
+-
+-
+-
+- `;
+$('copyPrompt').onclick = async () => { try { await navigator.clipboard.writeText(MONTH_PROMPT); toast('Prompt copied – paste it in Claude'); } catch (_) { toast('Copy failed'); } };
+
+/* ---------- My posts ---------- */
+function renderQueue() {
+  if (!queue.length) { $('queue').innerHTML = '<p class="empty">Nothing saved yet. Use a template or paste Claude\'s posts.</p>'; return; }
+  $('queue').innerHTML = queue.map(q => `<div class="qitem">
+      <button class="open" data-open="${q.id}">${esc(q.title)}<small>${esc(q.date || 'no date')}</small></button>
+      <div class="dots" aria-label="Posted on">${PLATFORMS.map(p => `<span class="${q.done[p.k] ? 'on' : ''}" title="${p.name}">${p.k.toUpperCase()}</span>`).join('')}</div>
+      <button class="btn ghost small" data-del="${q.id}" aria-label="Delete ${esc(q.title)}">×</button></div>`).join('');
+}
+$('queue').onclick = e => {
+  const o = e.target.closest('[data-open]'), d = e.target.closest('[data-del]');
+  if (o) { const q = queue.find(x => String(x.id) === o.dataset.open); if (q) { renderOut(q, q.id); $('out').scrollIntoView({behavior: 'smooth'}); } }
+  if (d && confirm('Delete this post from My Posts?')) { queue = queue.filter(x => String(x.id) !== d.dataset.del); write('posts-queue', queue); renderQueue(); $('out').innerHTML = ''; }
+};
+
+/* ---------- modes ---------- */
+function setMode(m) {
+  [['tpl', 'mTpl', 'tplView'], ['claude', 'mClaude', 'claudeView'], ['queue', 'mQueue', 'queueView']].forEach(([k, b, v]) => {
+    $(b).setAttribute('aria-pressed', k === m); $(v).hidden = k !== m;
+  });
+  $('out').innerHTML = '';
+  if (m === 'queue') renderQueue();
+  if (m === 'tpl') renderFromTemplate();
+}
+$('mTpl').onclick = () => setMode('tpl');
+$('mClaude').onclick = () => setMode('claude');
+$('mQueue').onclick = () => setMode('queue');
+
+renderPillars();
+})();
+</script>
+</body>
+</html>

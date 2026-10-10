@@ -102,6 +102,24 @@
 <h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#137333 stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=1 y=4 width=22 height=16 rx=2></rect><line x1=1 y1=10 x2=23 y2=10></line></svg> Payment Due</h3>
 <div id=payments-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
+<a id=post-today class="reminder-card" href="/ant/posts.html" style="display:none;text-decoration:none;color:inherit;border-left:4px solid #F3AF3D">
+<h3>&#9998; This week's post</h3>
+<p id=post-today-text style="margin:4px 0 0;font-size:14px"></p>
+</a>
+<script>
+// Social Posts: show this week's planned post (saved on this phone by /ant/posts.html)
+(function(){try{
+  var q=JSON.parse(localStorage.getItem('posts-queue')||'[]');if(!q.length)return;
+  var now=new Date();now.setHours(0,0,0,0);
+  var due=q.map(function(p){var m=String(p.date||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return{p:p,d:m?new Date(+m[3],m[2]-1,+m[1]):null};})
+    .filter(function(x){var left=['fb','ig','li','xhs'].some(function(k){return !(x.p.done||{})[k];});return x.d&&left&&x.d-now<=6*864e5;})
+    .sort(function(a,b){return a.d-b.d;})[0];
+  if(!due)return;
+  var late=due.d<now;
+  document.getElementById('post-today-text').textContent=(late?'Not posted yet: ':'')+due.p.title+' \u00b7 '+due.p.date;
+  document.getElementById('post-today').style.display='block';
+}catch(e){}})();
+</script>
 <div class="reminder-card followup-card">
 <h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#0B2545 stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> Follow-ups Today</h3>
 <div id=followups-list class=reminder-list><p class=placeholder>Loading...</p></div>
@@ -522,6 +540,9 @@
 <a class=ant-step href="/ant/slides.html"><span class=n>2</span><div><b>Present Slides</b><small>Lifestyle &middot; L.I.F.E</small></div><span class=go>&rsaquo;</span></a>
 <a class=ant-step href="/ant/analysis.html"><span class=n>3</span><div><b>A-N-T Analysis</b><small>Last analysis &middot; save PDF to Drive</small></div><span class=go>&rsaquo;</span></a>
 <a class=ant-step href="/ant/offer.html"><span class=n>4</span><div><b>Offer</b><small>Coverage summary &middot; proposed plans</small></div><span class=go>&rsaquo;</span></a>
+</div>
+<div class=ant-steps style="margin-top:14px">
+<a class=ant-step href="/ant/posts.html"><span class=n>&#9998;</span><div><b>Social Posts</b><small>FB &middot; IG &middot; LinkedIn &middot; 小红书</small></div><span class=go>&rsaquo;</span></a>
 </div>
 </section>
 </main>
