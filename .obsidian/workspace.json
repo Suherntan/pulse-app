@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "61b19f8834288319",
+        "id": "15fc4836a95f5db2",
         "type": "tabs",
         "children": [
           {
-            "id": "0f2c83a018137d13",
+            "id": "4731f81c3075e260",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -167,8 +167,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -181,6 +180,10 @@
       "bases:Create new base": false
     }
   },
-  "active": "0f2c83a018137d13",
-  "lastOpenFiles": []
+  "active": "4731f81c3075e260",
+  "lastOpenFiles": [
+    "PULSE/PULSE Home.md",
+    "PULSE/ANT_CLIENT_REGISTRATION_FORM.md",
+    "PULSE/PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md"
+  ]
 }

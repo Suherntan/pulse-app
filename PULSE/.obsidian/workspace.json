@@ -204,12 +204,15 @@
       "bases:Create new base": false
     }
   },
-  "active": "d24f4dbc3ad5bac8",
+  "active": "eb0ae9f81e8407a8",
   "lastOpenFiles": [
-    "Client Tracker - Design Brief for Claude Code 1.md",
+    "Skills & Tools Log.md",
+    "PULSE Home.md",
+    "ANT_CLIENT_REGISTRATION_FORM.md",
+    "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
     "Client Tracker - Design Brief for Claude Code.md",
     "Welcome.md",
-    "manulife_fund_scraper.py",
-    "Skills & Tools Log.md"
+    "Client Tracker - Design Brief for Claude Code 1.md",
+    "manulife_fund_scraper.py"
   ]
 }
