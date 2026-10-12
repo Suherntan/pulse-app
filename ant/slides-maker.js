@@ -87,7 +87,7 @@
         ${s.body ? `<p style="font-size:${bodySize}px">${esc(s.body).replace(/\n/g, '<br>')}</p>` : ''}
         ${s.kind === 'cover' ? `<div class="sm-swipe">${zh ? '向左滑 →' : 'Swipe →'}</div>` : ''}
       </div>
-      <div class="sm-foot"><b>${esc(opts.name || 'ANT Wealth System')}</b>${disc ? `<small>${esc(disc)}</small>` : ''}</div>
+      <div class="sm-foot"><b>${esc(opts.name || (opts.fbs ? '7 Financial Blind Spots' : 'ANT Wealth System'))}</b>${disc ? `<small>${esc(disc)}</small>` : ''}</div>
       <div class="sm-bar"><i style="width:${pct}%"></i></div>
     </div>`;
   }
@@ -165,7 +165,7 @@
         <div class="sm-opts" role="group" aria-label="Look">${THEMES.map(([k, v]) => `<button class="chip" data-theme="${k}" aria-pressed="${k === theme}">${v}</button>`).join('')}
           <button class="chip" id="smFbs" aria-pressed="${fbs}">7 Blind Spots logo</button></div>
         <label for="smName">Name on slides</label>
-        <input id="smName" value="${esc(name())}" placeholder="e.g. Su · ANT Wealth System">
+        <input id="smName" value="${esc(name())}" placeholder="${fbs ? '7 Financial Blind Spots' : 'ANT Wealth System'}">
         <div class="sm-strip">${slides.map((s, i) => `<div class="sm-thumb" style="width:${W * scale}px;height:${f.h * scale}px"><div class="sm-scale" style="transform:scale(${scale})">${slideHTML(s, i, total, f.h, opts)}</div></div>`).join('')}</div>
         <div class="sm-acts">
           <button class="btn gold" id="smSave">${f.pdf ? 'SAVE PDF' : 'SAVE PICTURES'}</button>
