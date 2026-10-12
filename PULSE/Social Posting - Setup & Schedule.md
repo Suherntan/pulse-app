@@ -48,3 +48,9 @@ Before scheduling each one: read the [NOTE] and re-check the facts (LHDN / PPA /
 - IG won't connect → IG must be Professional **and** linked to the FB Page (step 1).
 - Post failed → Buffer emails you; open it and press "Share now".
 - Buffer free shows "upgrade" for a feature → skip it, not needed.
+
+## Zernio vs Buffer (checked 12 Oct 2026)
+- Zernio = new name of "Late" (getlate.dev). Mainly a **posting API for apps/developers** (15 platforms, IG carousel, LinkedIn PDF).
+- Price (their pricing page, as found in search): first **2 accounts free**, then about **US$6/month per extra account** → FB + IG + LinkedIn = ~US$6/month. (Older listings say free = 10 posts/month – check before signing up.)
+- 小红书: **not listed** – still manual 定时发布.
+- Decision: **stay on Buffer free** for now. Zernio only makes sense later if we want a "Post now" button inside PULSE (PULSE → Apps Script → Zernio API).
