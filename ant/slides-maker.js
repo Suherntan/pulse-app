@@ -79,9 +79,8 @@
     return `<div class="sm-slide sm-${s.kind} ${light ? 'sm-light' : 'sm-dark'}" style="width:${W}px;height:${h}px;font-family:${bodyFont}">
       <div class="sm-bg"></div><div class="sm-ring"></div><div class="sm-dot"></div>
       ${s.kind === 'content' ? `<div class="sm-num">${String(i + 1).padStart(2, '0')}</div>` : ''}
-      <div class="sm-top"><img src="ant-assets/${light ? 'logo-dark' : 'logo-light'}.png" alt=""><span>${i + 1} / ${total}</span></div>
+      <div class="sm-top"><div class="sm-logos">${opts.fbs ? `<img src="ant-assets/fbs-logo-${light ? 'dark' : 'light'}.png" alt="7 Financial Blind Spots">` : ''}<img src="ant-assets/${light ? 'logo-dark' : 'logo-light'}.png" alt=""></div><span>${i + 1} / ${total}</span></div>
       <div class="sm-main">
-        ${opts.fbs && s.kind !== 'content' ? `<img class="sm-fbs" src="ant-assets/fbs-logo-${light ? 'dark' : 'light'}.png" alt="7 Financial Blind Spots">` : ''}
         ${tag ? `<div class="sm-tag">${esc(tag)}</div>` : ''}
         ${title ? `<h3 style="font-family:${headFont};font-size:${titleSize}px">${esc(title).replace(/\n/g, '<br>')}</h3>` : ''}
         ${s.kind !== 'end' ? '<div class="sm-rule"></div>' : ''}
@@ -121,7 +120,8 @@
   .sm-num{right:70px;top:150px;font:700 260px/1 'Oswald','Arial Narrow',sans-serif;color:rgba(11,37,69,.06)}
   .sm-dark .sm-num{color:rgba(255,255,255,.05)}
   .sm-top{display:flex;justify-content:space-between;align-items:center}
-  .sm-top img{height:76px}
+  .sm-logos{display:flex;align-items:center;gap:26px}
+  .sm-top img{height:76px;width:auto}
   .sm-top span{font:600 28px 'Oswald',sans-serif;letter-spacing:.12em;padding:8px 22px;border-radius:40px;background:rgba(243,175,61,.16);color:#F3AF3D}
   .sm-light .sm-top span{background:#0B2545;color:#F3AF3D}
   .sm-main{flex:1;display:flex;flex-direction:column;justify-content:center;gap:34px}
@@ -135,8 +135,6 @@
   .sm-light .sm-main p{color:#2B3A4F}
   .sm-rule{width:180px;height:10px;border-radius:5px;background:#F3AF3D}
   .sm-content .sm-rule{width:120px;height:8px;margin-top:-14px}
-  .sm-fbs{align-self:flex-start;height:230px;width:auto}
-  .sm-end .sm-fbs{align-self:center;height:200px}
   .sm-swipe{font:600 32px 'Oswald',sans-serif;letter-spacing:.14em;color:#F3AF3D;margin-top:10px}
   .sm-light .sm-swipe{color:#B7791F}
   .sm-foot{display:flex;flex-direction:column;gap:8px;border-top:2px solid rgba(243,175,61,.45);padding-top:22px}

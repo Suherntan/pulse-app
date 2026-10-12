@@ -7,7 +7,7 @@ Use this note for future development: social posts, lead magnet ("message me for
 - Cover: ![[7FBS-booklet-cover.jpg]]
 - Logo for dark backgrounds (gold 7 + white text): ![[7FBS-logo-gold-white.png]]
 - Logo for light backgrounds (gold 7 + navy text): ![[7FBS-logo-gold-navy.png]]
-- In the app: `ant/ant-assets/fbs-logo-light.png` (dark slides) and `fbs-logo-dark.png` (light slides). Used by **MAKE SLIDES** on the cover and last slide (chip "7 Blind Spots logo", on by default).
+- In the app: `ant/ant-assets/fbs-logo-light.png` (dark slides) and `fbs-logo-dark.png` (light slides). Used by **MAKE SLIDES** at the top of every slide, before the ANT logo, same height (chip "7 Blind Spots logo", on by default).
 - Cover look: dark green/black background, gold "7", white condensed italic bold text, gold "FREE GUIDE • MALAYSIA" bar, tagline "Costing Working Professionals & Business Owners Their Life's Earnings".
 - Note: the whole cover is one picture inside the PDF, so the logo was cut out of the picture (about 560 px wide). For print / big banners ask the designer for the original logo file.
 

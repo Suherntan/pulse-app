@@ -106,7 +106,7 @@ Scheduling (free):
 - **MAKE SLIDES** (Social Posts → open a post → MAKE SLIDES): builds branded carousel pictures from the post text – Instagram/FB 4:5 PNG, 小红书 3:4 PNG (中文), LinkedIn PDF. Editable text per slide, name on slides, SAVE or SHARE TO APP (phone share sheet). Free, on the phone (html2canvas + jsPDF already in the app).
 - **Slide look (10 Oct 2026)**: 3 looks – **Mix** (default: navy cover + last slide to stop the scroll, light cream reading slides), **Navy**, **Light**. Big "DID YOU KNOW?" tag on the cover, faint big slide number, page pill, gold progress bar at the bottom (shows there is more to swipe). Why: research says one idea per slide, strong hook cover, consistent look across posts, high-contrast easy-to-read text; light slides are easier for longer text, dark cover stands out in the feed. 小红书: 3:4 with a big clear title works best.
 
-- **7 Financial Blind Spots logo (12 Oct 2026)** on the cover + last slide (chip to turn off). See [[7 Financial Blind Spots - Booklet Reference]].
+- **7 Financial Blind Spots logo (12 Oct 2026)** at the top of every slide, left of the ANT logo, same height (chip to turn off). See [[7 Financial Blind Spots - Booklet Reference]].
 
 ## Built
 - **A – Claude skill `su-social-posts`**: `PULSE/Social Posts Skill/SKILL.md` (upload as a zip in Claude → Settings → Capabilities → Skills). Su's voice, 4 platform formats, pillars, compliance, and a fixed output format the app can read.
