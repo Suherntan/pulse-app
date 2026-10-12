@@ -81,6 +81,7 @@
       ${s.kind === 'content' ? `<div class="sm-num">${String(i + 1).padStart(2, '0')}</div>` : ''}
       <div class="sm-top"><img src="ant-assets/${light ? 'logo-dark' : 'logo-light'}.png" alt=""><span>${i + 1} / ${total}</span></div>
       <div class="sm-main">
+        ${opts.fbs && s.kind !== 'content' ? `<img class="sm-fbs" src="ant-assets/fbs-logo-${light ? 'dark' : 'light'}.png" alt="7 Financial Blind Spots">` : ''}
         ${tag ? `<div class="sm-tag">${esc(tag)}</div>` : ''}
         ${title ? `<h3 style="font-family:${headFont};font-size:${titleSize}px">${esc(title).replace(/\n/g, '<br>')}</h3>` : ''}
         ${s.kind !== 'end' ? '<div class="sm-rule"></div>' : ''}
@@ -134,6 +135,8 @@
   .sm-light .sm-main p{color:#2B3A4F}
   .sm-rule{width:180px;height:10px;border-radius:5px;background:#F3AF3D}
   .sm-content .sm-rule{width:120px;height:8px;margin-top:-14px}
+  .sm-fbs{align-self:flex-start;height:230px;width:auto}
+  .sm-end .sm-fbs{align-self:center;height:200px}
   .sm-swipe{font:600 32px 'Oswald',sans-serif;letter-spacing:.14em;color:#F3AF3D;margin-top:10px}
   .sm-light .sm-swipe{color:#B7791F}
   .sm-foot{display:flex;flex-direction:column;gap:8px;border-top:2px solid rgba(243,175,61,.45);padding-top:22px}
@@ -148,12 +151,12 @@
 
   function open(post, box, toast) {
     if (!document.getElementById('sm-css')) { const st = document.createElement('style'); st.id = 'sm-css'; st.textContent = CSS; document.head.appendChild(st); }
-    let lang = 'en', fmt = 'ig', slides = build(post, lang), theme = store.get('posts-slide-theme') || 'mix';
+    let lang = 'en', fmt = 'ig', slides = build(post, lang), theme = store.get('posts-slide-theme') || 'mix', fbs = store.get('posts-slide-fbs') !== 'off';
     const name = () => store.get('posts-agent-name');
 
     function render() {
       const f = FORMATS[fmt], total = slides.length, scale = 150 / W;
-      const opts = {lang, name: name(), theme};
+      const opts = {lang, name: name(), theme, fbs};
       box.innerHTML = `<div class="sm-wrap card">
         <h2>MAKE SLIDES</h2>
         <div class="sm-opts" role="group" aria-label="Language">
@@ -161,7 +164,8 @@
           <button class="chip" data-lang="zh" aria-pressed="${lang === 'zh'}">中文</button>
         </div>
         <div class="sm-opts" role="group" aria-label="Size">${Object.entries(FORMATS).map(([k, v]) => `<button class="chip" data-fmt="${k}" aria-pressed="${k === fmt}">${v.label}</button>`).join('')}</div>
-        <div class="sm-opts" role="group" aria-label="Look">${THEMES.map(([k, v]) => `<button class="chip" data-theme="${k}" aria-pressed="${k === theme}">${v}</button>`).join('')}</div>
+        <div class="sm-opts" role="group" aria-label="Look">${THEMES.map(([k, v]) => `<button class="chip" data-theme="${k}" aria-pressed="${k === theme}">${v}</button>`).join('')}
+          <button class="chip" id="smFbs" aria-pressed="${fbs}">7 Blind Spots logo</button></div>
         <label for="smName">Name on slides</label>
         <input id="smName" value="${esc(name())}" placeholder="e.g. Su · ANT Wealth System">
         <div class="sm-strip">${slides.map((s, i) => `<div class="sm-thumb" style="width:${W * scale}px;height:${f.h * scale}px"><div class="sm-scale" style="transform:scale(${scale})">${slideHTML(s, i, total, f.h, opts)}</div></div>`).join('')}</div>
@@ -180,6 +184,7 @@
       box.querySelector('#smEditBtn').onclick = () => { ed.hidden = !ed.hidden; };
       box.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; slides = build(post, lang); render(); });
       box.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { theme = b.dataset.theme; store.set('posts-slide-theme', theme); render(); });
+      box.querySelector('#smFbs').onclick = () => { fbs = !fbs; store.set('posts-slide-fbs', fbs ? 'on' : 'off'); render(); };
       box.querySelectorAll('[data-fmt]').forEach(b => b.onclick = () => { fmt = b.dataset.fmt; render(); });
       box.querySelector('#smName').onchange = e => { store.set('posts-agent-name', e.target.value.trim()); render(); };
       ed.onchange = e => {
@@ -199,7 +204,7 @@
     // Draw every slide full size, off screen, then turn it into a picture.
     async function makeFiles() {
       if (!window.html2canvas) await loadScript('vendor/html2canvas.min.js');
-      const f = FORMATS[fmt], total = slides.length, opts = {lang, name: name(), theme};
+      const f = FORMATS[fmt], total = slides.length, opts = {lang, name: name(), theme, fbs};
       const stage = document.createElement('div'); stage.className = 'sm-stage'; document.body.appendChild(stage);
       try {
         await document.fonts?.ready;
