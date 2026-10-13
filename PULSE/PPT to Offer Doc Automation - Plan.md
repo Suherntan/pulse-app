@@ -171,8 +171,8 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 
 ### How Option 3 works
 - One **master Google account** (e.g. a new Gmail just for the agency). It owns the PULSE Sheet, the Drive folders, the Slides/Offer templates and the script.
-- Advisors **never get the Sheet link**. They open the PULSE app and log in with their **Agent ID + PIN** (AGENTS tab in the master Sheet).
-- Every row saved gets an **Agent ID** column. The script only sends back rows that belong to that advisor. Master/leader sees all.
+- Advisors **never get the Sheet link**. They open the PULSE app and log in with their **Advisor ID + PIN** (ADVISORS tab in the master Sheet).
+- Every row saved gets an **Advisor ID** column. The script only sends back rows that belong to that advisor. Master/leader sees all.
 - Client folders: `PULSE/Advisors/<Advisor>/Clients/<Client ID – Name>/`.
 - **Automatic backup (free):** every Sunday the script copies the whole master Sheet into `PULSE/Backups/` (keep last 8 weeks). Code is already backed up on GitHub.
 - Advisor leaves the team → turn off their PIN. Their clients stay with the master.
@@ -191,15 +191,15 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 
 ### How data reaches the master (free)
 - Manager deploys a small **"Receiver"** script on the master Sheet (runs as the manager).
-- When an advisor presses Save / Make Offer / Closed, the advisor's script **sends the row** to the Receiver with the advisor's **Agent ID + secret key**.
-- Receiver checks the key and writes the row into the master tabs: **CLIENTS, OFFERS, SESSIONS, AGENTS** (each row tagged with Agent ID, upsert by Client ID so no duplicates).
+- When an advisor presses Save / Make Offer / Closed, the advisor's script **sends the row** to the Receiver with the advisor's **Advisor ID + secret key**.
+- Receiver checks the key and writes the row into the master tabs: **CLIENTS, OFFERS, SESSIONS, ADVISORS** (each row tagged with Advisor ID, upsert by Client ID so no duplicates).
 - Advisors **never get the master Sheet link** → they can't see each other's clients.
 - If the internet fails, the row waits in an "Outbox" tab on the advisor's Sheet; a free nightly timer re-sends it.
 - Manager kicks out an advisor → turn off their key. Data already sent stays in master.
 
 ### Planning big (10+ advisors)
 - **One shared code library ("PULSE Core")** owned by the manager. Each advisor's script just calls it. Fix a bug once → all advisors get it. (Without this, 10+ copies must be updated by hand.)
-- **Setup kit for new advisors:** a template Sheet → "Make a copy" → menu **PULSE ▸ Setup** asks for Agent ID + key → done in ~5 minutes. One PULSE app website for everyone; each advisor's own link is saved in the app's Settings.
+- **Setup kit for new advisors:** a template Sheet → "Make a copy" → menu **PULSE ▸ Setup** asks for Advisor ID + key → done in ~5 minutes. One PULSE app website for everyone; each advisor's own link is saved in the app's Settings.
 - **Size:** a Google Sheet holds 10 million cells ≈ 200,000+ client rows at ~40 columns. Fine for years. If it ever gets close, move old years to an archive Sheet.
 - **Weekly backup** of the master Sheet (Sunday, keep 8 weeks) – free.
 - **Policy point for the agency:** client files stay in each advisor's own Drive. If an advisor leaves, the agency keeps the *data* (in master) but not the files. Decide if that's OK.
@@ -216,11 +216,11 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 | Zoho CRM | Free for ~3 users only | Real CRM | Paid for 10+ advisors | ❌ |
 | Microsoft 365 / OneDrive | Mostly paid | Word/PowerPoint native | Power Automate paid | ❌ |
 
-**Recommendation:** build on Google now (free, fastest). Design the data (Client ID, Agent ID, same columns) so we can move the master to **Supabase** later without redoing the advisors' side.
+**Recommendation:** build on Google now (free, fastest). Design the data (Client ID, Advisor ID, same columns) so we can move the master to **Supabase** later without redoing the advisors' side.
 
 ## ✅ Decisions (6 Oct 2026, part 3)
 
-- **Platform:** Google now, Supabase later (keep Client ID / Agent ID / same columns so the move is easy).
+- **Platform:** Google now, Supabase later (keep Client ID / Advisor ID / same columns so the move is easy).
 - **Master gets data only** – no files, no PDFs.
 - Form: **no** Occupation / Monthly Income.
 - **Slide 2** = knowledge sharing, same for every client. Redesigned in A-N-T style: Lifestyle ← Plan A (Earning, stops if sickness/accident/death/retirement) ← Plan B (Financial Planning). Tagline: "Plan A builds your lifestyle. Plan B protects it."
@@ -289,10 +289,10 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Tested with the real Code.gs + ANT.gs on a fake sheet: link to CLOSING, add new to APPROACH, +60 phone match, move to PRESENTATION, same-day redo no duplicate remark, CLOSING stays.
 
 ## ✅ Step 2 built (8 Oct 2026) – manager's Master Sheet
-- `ANT-Master.gs` in the manager's own Google Sheet: tabs AGENTS / CLIENTS / ANALYSIS / LOG, receiver web app, Add Advisor (ID + secret key), Turn Advisor On/Off, weekly backup (keep 8).
+- `ANT-Master.gs` in the manager's own Google Sheet: tabs ADVISORS / CLIENTS / ANALYSIS / LOG, receiver web app, Add Advisor (ID + secret key), Turn Advisor On/Off, weekly backup (keep 8).
 - `ANT.gs` (advisor): A-N-T → Connect to Master; every save also sends the data (no files, no links); failures wait in ANT_OUTBOX and re-send nightly; Send Everything (one-time).
 - Testing with a separate free "ANT Master" Gmail; real manager later = same steps, advisors just reconnect.
-- Tested: send, update without duplicates, master down → retry, wrong key, advisor turned off, Agent ID can't be faked.
+- Tested: send, update without duplicates, master down → retry, wrong key, advisor turned off, Advisor ID can't be faked.
 - Setup steps: see [[A-N-T Step 2 - Master Setup Guide]].
 - ⏸ **On hold (9 Oct 2026):** setup waits until Su meets the agency manager. Code is ready on master; setup ≈ 15 min (Part A manager, Part B each advisor).
 
@@ -319,7 +319,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
     - Copy to master as type **offer** (ANT-Master.gs now has an OFFERS tab) – only once Step 2 is set up
     - Su to do: paste new Code.gs + ANT.gs → Deploy → Manage deployments → Edit → New version
   - [x] **Search finds existing PULSE clients (9 Oct)** – Fact-Find search also lists APPROACH / PRESENTATION / CLOSING / SR clients with no A-N-T yet ("CLOSING · no A-N-T yet"); tap = Fact-Find pre-filled (name, phone, email, birthday); saving gives a C-number and links that same pipeline row
-  - [x] **Master numbering (9 Oct)** – master adds **Master ID** = Agent ID + number (SH01-C-0001, SH01-A-0003, SH01-O-0002). **Agent ID = initials + number (e.g. SH01)** so the manager can tell advisors apart; changing it in Set Up A-N-T also updates rows already saved; analysis/offer rows also get **Master Client ID**. Advisors keep their own short numbers
+  - [x] **Master numbering (9 Oct)** – master adds **Master ID** = Advisor ID + number (SH01-C-0001, SH01-A-0003, SH01-O-0002). **Advisor ID = initials + number (e.g. SH01)** so the manager can tell advisors apart; changing it in Set Up A-N-T also updates rows already saved; analysis/offer rows also get **Master Client ID**. Advisors keep their own short numbers
 - [x] Education / Investment return % hints on slide 3 (9 Oct): fixed, **next to the FINANCIAL GOALS box** – EDUCATION "~4% P.A. / SHORT TERM / LEAST RISK", INVESTMENT "~8% P.A. / LONG TERM / HIGHER RISK" (columns made a bit narrower to fit). To change: `TIERS` in ant/slides.html
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push

@@ -30,7 +30,7 @@ Ask him these and note the answers:
    - **His own separate site** (his own Vercel) → see **section 7** at the end.
 2. **His Google Sheet tab names.** A-N-T expects pipeline tabs named exactly `APPROACH`, `PRESENTATION`, `CLOSING`, `SR`.
    - If his names differ, either rename the tabs, or change `ANT_PIPELINE_TABS` near the top of `ANT.gs` to his names.
-3. **Agent ID.** Use his **initials + a number**, for example `SP01`, using letters and numbers only. Agency managers use this to tell advisors apart.
+3. **Advisor ID.** Use his **initials + a number**, for example `SP01`, using letters and numbers only. Agency managers use this to tell advisors apart.
 4. **Settings.** In his sheet: **PULSE Reminders → My Settings**. Advisor name and WhatsApp number must be filled in. They're printed on the PDFs.
 
 ---
@@ -79,7 +79,7 @@ The new Code.gs finds columns **by their titles** (NAME, CONTACT, EMAIL, BIRTHDA
 1. Go back to the **Google Sheet** and reload the page (F5). A new menu **A-N-T** appears (it can take about 10 seconds).
 2. **A-N-T → Set Up A-N-T (one-time)**.
    - Google asks for permission the first time: **Continue → choose his account → Advanced → Go to … (unsafe) → Allow**. This is his own script, so it is safe.
-   - Type his Agent ID, e.g. `SP01` → OK.
+   - Type his Advisor ID, e.g. `SP01` → OK.
    - A box shows his name, phone and the Drive folder link. If name or phone is wrong, fix them in **PULSE Reminders → My Settings**.
 3. **Publish the new code (very important):** Apps Script → **Deploy → Manage deployments** → pencil icon (**Edit**) → **Version: New version** → **Deploy**.
    - This keeps the **same web app link**, so his PULSE app keeps working.

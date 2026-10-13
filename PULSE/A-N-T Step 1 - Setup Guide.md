@@ -71,7 +71,7 @@ Click 💾 **Save**.
 1. Go back to the Sheet and **reload the page**. A new menu **A-N-T** appears.
 2. **A-N-T → Set Up A-N-T (one-time)**.
 3. Google asks for permission (first time only) → choose your account → **Advanced → Go to project → Allow**. (Needed so it can make folders in your Drive.)
-4. Type your **Agent ID** = your initials + a number (e.g. `SH01`) → OK.
+4. Type your **Advisor ID** = your initials + a number (e.g. `SH01`) → OK.
 5. It shows your name, phone and the new Drive folder link. Name or phone wrong? Fix in **PULSE Reminders → My Settings**.
 
 ### 4. Publish the new version (important!)
@@ -136,10 +136,16 @@ To remove a client completely:
 |---|---|
 | Form says **NOT CONNECTED** | Link wrong, or step 4 (New version) not done. |
 | "Unknown action: antSaveClient" | Step 2 pieces not pasted, or step 4 not done. |
-| "CONNECTED – RUN A-N-T SETUP" | Do step 3 (Agent ID missing). |
+| "CONNECTED – RUN A-N-T SETUP" | Do step 3 (Advisor ID missing). |
 | "Save the client in the Fact-Find form first" | The analysis needs a saved client (with a C-number). |
 
 ## Files (GitHub)
 - `ANT.gs` – new backend file
 - `Code.gs` – 3 small additions (routing + menu)
 - `ant/form.html`, `ant/slides.html`, `ant/analysis.html`, `ant/ant-api.js`, `ant/vendor/` (free PDF tools, MIT licence)
+
+## Update 13 Oct 2026 – "Agent" is now "Advisor"
+- Columns **Agent ID → Advisor ID**, **Agent Name → Advisor Name**; Master tab **AGENTS → ADVISORS**; SETTINGS labels → "Advisor Name" / "Advisor WhatsApp Number"; menu "My Settings (Advisor Name & WhatsApp Number)".
+- **Nothing to do by hand.** After pasting the new `Code.gs` + `ANT.gs` (and `ANT-Master.gs` on the manager sheet) and deploying a **New version**, the old column/tab names are renamed automatically the first time the sheet is used. Data stays in place.
+- An advisor still on the old script can keep sending to an updated Master (it maps "Agent ID" to "Advisor ID").
+- Message templates: `{agent}` still works; `{advisor}` works too.
