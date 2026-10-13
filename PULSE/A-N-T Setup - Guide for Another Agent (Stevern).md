@@ -1,6 +1,6 @@
 # A-N-T Setup – Guide for Another Agent (Stevern)
 
-> **For Claude:** you are helping **Stevern**, an insurance agent who already runs his own copy of the PULSE app. Guide him step by step to add **A-N-T** (Fact-Find → Slides → A-N-T Analysis → Offer Document) to his PULSE.
+> **For Claude:** you are helping **Stevern**, an insurance advisor who already runs his own copy of the PULSE app. Guide him step by step to add **A-N-T** (Fact-Find → Slides → A-N-T Analysis → Offer Document) to his PULSE.
 > - He is not technical. Use **simple English, no jargon**, one step at a time, and wait for him to confirm each step before the next.
 > - Everything is **free** (Google Sheets, Apps Script, Drive, the shared PULSE web page). Do not suggest paid tools.
 > - His client data stays **in his own Google account**. Nothing goes to Su's account.
@@ -30,8 +30,8 @@ Ask him these and note the answers:
    - **His own separate site** (his own Vercel) → see **section 7** at the end.
 2. **His Google Sheet tab names.** A-N-T expects pipeline tabs named exactly `APPROACH`, `PRESENTATION`, `CLOSING`, `SR`.
    - If his names differ, either rename the tabs, or change `ANT_PIPELINE_TABS` near the top of `ANT.gs` to his names.
-3. **Agent ID.** Use his **initials + a number**, for example `SP01`, using letters and numbers only. Agency managers use this to tell agents apart.
-4. **Settings.** In his sheet: **PULSE Reminders → My Settings**. Agent name and WhatsApp number must be filled in. They're printed on the PDFs.
+3. **Advisor ID.** Use his **initials + a number**, for example `SP01`, using letters and numbers only. Agency managers use this to tell advisors apart.
+4. **Settings.** In his sheet: **PULSE Reminders → My Settings**. Advisor name and WhatsApp number must be filled in. They're printed on the PDFs.
 
 ---
 
@@ -79,7 +79,7 @@ The new Code.gs finds columns **by their titles** (NAME, CONTACT, EMAIL, BIRTHDA
 1. Go back to the **Google Sheet** and reload the page (F5). A new menu **A-N-T** appears (it can take about 10 seconds).
 2. **A-N-T → Set Up A-N-T (one-time)**.
    - Google asks for permission the first time: **Continue → choose his account → Advanced → Go to … (unsafe) → Allow**. This is his own script, so it is safe.
-   - Type his Agent ID, e.g. `SP01` → OK.
+   - Type his Advisor ID, e.g. `SP01` → OK.
    - A box shows his name, phone and the Drive folder link. If name or phone is wrong, fix them in **PULSE Reminders → My Settings**.
 3. **Publish the new code (very important):** Apps Script → **Deploy → Manage deployments** → pencil icon (**Edit**) → **Version: New version** → **Deploy**.
    - This keeps the **same web app link**, so his PULSE app keeps working.
@@ -110,7 +110,7 @@ The new Code.gs finds columns **by their titles** (NAME, CONTACT, EMAIL, BIRTHDA
 ## 7. Only if he uses his own separate website
 
 The A-N-T pages live in the `ant/` folder of Su's site. Two choices:
-- **A (easiest, free):** he uses **Su's shared PULSE link**. It's built for many agents: each phone has its own password and its own Google Sheet link, and no data is shared.
+- **A (easiest, free):** he uses **Su's shared PULSE link**. It's built for many advisors: each phone has its own password and its own Google Sheet link, and no data is shared.
 - **B:** copy into his site: the whole `ant/` folder, plus the A-N-T tab parts of `index.html` (the tab button `data-tab=ant`, the `<main id=tab-ant>` section, the matching CSS in `css/style.css`), plus `js/lock.js`. Then redeploy his site. This means more upkeep, because every future update must be copied again.
 
 Recommend **A**.

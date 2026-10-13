@@ -1229,9 +1229,9 @@ function getAgentSettings_() {
 
   if (!sheet) {
     sheet = ss.insertSheet(AGENT_SETTINGS_SHEET_NAME);
-    sheet.getRange("A1").setValue("Agent Name").setFontWeight("bold");
+    sheet.getRange("A1").setValue("Advisor Name").setFontWeight("bold");
     sheet.getRange("B1").setValue("YOUR NAME HERE");
-    sheet.getRange("A2").setValue("Agent WhatsApp Number").setFontWeight("bold");
+    sheet.getRange("A2").setValue("Advisor WhatsApp Number").setFontWeight("bold");
     sheet.getRange("B2").setValue("PASTE_YOUR_OWN_WHATSAPP_NUMBER_HERE");
     sheet.getRange("A3").setValue("Country Code (for WhatsApp numbers)").setFontWeight("bold");
     sheet.getRange("B3").setValue(COUNTRY_CODE);
@@ -1239,6 +1239,10 @@ function getAgentSettings_() {
     sheet.setColumnWidth(1, 260);
     sheet.setColumnWidth(2, 260);
   }
+
+  // Old label "Agent ..." becomes "Advisor ..." (only the label; the values in B stay)
+  if (sheet.getRange("A1").getValue() === "Agent Name") sheet.getRange("A1").setValue("Advisor Name");
+  if (sheet.getRange("A2").getValue() === "Agent WhatsApp Number") sheet.getRange("A2").setValue("Advisor WhatsApp Number");
 
   var agentName = String(sheet.getRange("B1").getValue() || "").trim();
   var agentWhatsApp = String(sheet.getRange("B2").getValue() || "").trim();
@@ -1255,7 +1259,7 @@ function getAgentSettings_() {
 // from SETTINGS. Every function that builds a customer-facing message
 // should run its template through this before sending.
 function fillAgentName_(template, agentName) {
-  return String(template).split("{agent}").join(agentName);
+  return String(template).split("{agent}").join(agentName).split("{advisor}").join(agentName);
 }
 
 // Menu entry point: makes sure the SETTINGS tab exists (creating it with
@@ -1271,7 +1275,7 @@ function openAgentSettings() {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("PULSE Reminders")
-    .addItem("My Settings (Agent Name & WhatsApp Number)", "openAgentSettings")
+    .addItem("My Settings (Advisor Name & WhatsApp Number)", "openAgentSettings")
     .addSeparator()
     .addItem("Refresh Today's Reminders", "buildTodayReminders")
     .addItem("Debug: Why Does This Reminder Keep Coming Back?", "debugRemindersCheck")

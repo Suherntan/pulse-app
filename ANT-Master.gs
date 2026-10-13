@@ -7,33 +7,33 @@
  * that sheet: Extensions > Apps Script > replace Code.gs with this.
  *
  * Agents' PULSE sheets send rows here (data only, no files). Each agent
- * needs an Agent ID + secret key from the AGENTS tab, so nobody else
+ * needs an Advisor ID + secret key from the ADVISORS tab, so nobody else
  * can write in, and agents never get access to this sheet.
  *
- * Tabs: AGENTS · CLIENTS · ANALYSIS · OFFERS · LOG
+ * Tabs: ADVISORS · CLIENTS · ANALYSIS · OFFERS · LOG
  * Menu: A-N-T Master > Set Up / Add Agent / Turn Agent On-Off /
  *       Weekly Backup On-Off
  * =====================================================================
  */
 
-var M_AGENTS = 'AGENTS';
+var M_AGENTS = 'ADVISORS';
 var M_CLIENTS = 'CLIENTS';
 var M_ANALYSIS = 'ANALYSIS';
 var M_OFFERS = 'OFFERS';
 var M_LOG = 'LOG';
-var M_AGENT_HEADERS = ['Agent ID', 'Agent Name', 'Phone', 'Secret Key', 'Active', 'Added', 'Last Received'];
-var M_LOG_HEADERS = ['Time', 'Agent ID', 'Type', 'Record ID', 'Result'];
+var M_AGENT_HEADERS = ['Advisor ID', 'Advisor Name', 'Phone', 'Secret Key', 'Active', 'Added', 'Last Received'];
+var M_LOG_HEADERS = ['Time', 'Advisor ID', 'Type', 'Record ID', 'Result'];
 var M_BACKUP_FOLDER = 'A-N-T Master Backups';
 var M_BACKUP_KEEP = 8;
 
 // Each type: which tab it goes to and which column identifies the record.
-// Every agent numbers from C-0001, so the master adds the Agent ID in front:
+// Every advisor numbers from C-0001, so the master adds the Advisor ID in front:
 // Master ID "SH01-C-0001" (and "SH01-A-0003", "SH01-O-0002"). Analysis and
 // offer rows also get "Master Client ID", so a client's rows can be found across tabs.
 var M_TYPES = {
-  client:   { sheet: M_CLIENTS,  idKey: 'Client ID',   headers: ['Master ID', 'Agent ID', 'Client ID', 'Received'] },
-  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID', headers: ['Master ID', 'Master Client ID', 'Agent ID', 'Analysis ID', 'Client ID', 'Received'] },
-  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID',    headers: ['Master ID', 'Master Client ID', 'Agent ID', 'Offer ID', 'Client ID', 'Received'] }
+  client:   { sheet: M_CLIENTS,  idKey: 'Client ID',   headers: ['Master ID', 'Advisor ID', 'Client ID', 'Received'] },
+  analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID', headers: ['Master ID', 'Master Client ID', 'Advisor ID', 'Analysis ID', 'Client ID', 'Received'] },
+  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID',    headers: ['Master ID', 'Master Client ID', 'Advisor ID', 'Offer ID', 'Client ID', 'Received'] }
 };
 function mMasterId_(agentId, id) { return id ? agentId + '-' + id : ''; }
 
@@ -47,8 +47,8 @@ function onOpen() {
     .createMenu('A-N-T Master')
     .addItem('Set Up Master (one-time)', 'masterSetup')
     .addSeparator()
-    .addItem('Add Agent (gives Agent ID + secret key)', 'masterAddAgent')
-    .addItem('Turn Agent On / Off', 'masterToggleAgent')
+    .addItem('Add Advisor (gives Advisor ID + secret key)', 'masterAddAgent')
+    .addItem('Turn Advisor On / Off', 'masterToggleAgent')
     .addSeparator()
     .addItem('Turn On Weekly Backup (Sunday)', 'masterBackupOn')
     .addItem('Turn Off Weekly Backup', 'masterBackupOff')
@@ -66,52 +66,52 @@ function masterSetup() {
   }
   SpreadsheetApp.getUi().alert('A-N-T Master is ready',
     'Next:\n1. Deploy > New deployment > Web app\n   Execute as: Me · Who has access: Anyone\n' +
-    '2. Copy the Web app URL – every agent needs it.\n3. A-N-T Master > Add Agent for each agent.',
+    '2. Copy the Web app URL – every advisor needs it.\n3. A-N-T Master > Add Advisor for each advisor.',
     SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function masterAddAgent() {
   var ui = SpreadsheetApp.getUi();
-  var idRes = ui.prompt('Add Agent', 'Agent ID = the agent\'s initials + a number (e.g. SH01)', ui.ButtonSet.OK_CANCEL);
+  var idRes = ui.prompt('Add Advisor', 'Advisor ID = the advisor\'s initials + a number (e.g. SH01)', ui.ButtonSet.OK_CANCEL);
   if (idRes.getSelectedButton() !== ui.Button.OK) return;
   var agentId = idRes.getResponseText().replace(/\s+/g, '').toUpperCase();
   if (!agentId) return;
-  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Agent ID: letters and numbers only, e.g. SH01.'); return; }
+  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Advisor ID: letters and numbers only, e.g. SH01.'); return; }
 
   var sheet = mSheet_(M_AGENTS, M_AGENT_HEADERS);
-  var found = mFind_(sheet, 'Agent ID', agentId);
+  var found = mFind_(sheet, 'Advisor ID', agentId);
   if (found) {
-    var again = ui.alert('Agent exists', agentId + ' already has a key:\n\n' + found.row['Secret Key'] +
+    var again = ui.alert('Advisor exists', agentId + ' already has a key:\n\n' + found.row['Secret Key'] +
       '\n\nMake a NEW key? (the old one stops working)', ui.ButtonSet.YES_NO);
     if (again !== ui.Button.YES) return;
   }
-  var nameRes = ui.prompt('Add Agent', 'Agent name (optional)', ui.ButtonSet.OK_CANCEL);
+  var nameRes = ui.prompt('Add Advisor', 'Advisor name (optional)', ui.ButtonSet.OK_CANCEL);
   if (nameRes.getSelectedButton() !== ui.Button.OK) return;
 
   var key = Utilities.getUuid().replace(/-/g, '').slice(0, 24);
-  mUpsert_(sheet, 'Agent ID', {
-    'Agent ID': agentId,
-    'Agent Name': nameRes.getResponseText().trim() || (found ? found.row['Agent Name'] : ''),
+  mUpsert_(sheet, 'Advisor ID', {
+    'Advisor ID': agentId,
+    'Advisor Name': nameRes.getResponseText().trim() || (found ? found.row['Advisor Name'] : ''),
     'Secret Key': key,
     'Active': 'Yes',
     'Added': found ? found.row['Added'] : new Date()
   });
   ui.alert('Give these to ' + agentId,
     'Master link:\n' + (ScriptApp.getService().getUrl() || '(deploy the Web app first, then copy its URL)') +
-    '\n\nAgent ID: ' + agentId + '\nSecret key: ' + key +
-    '\n\nThe agent enters them in their PULSE sheet: A-N-T > Connect to Master.', ui.ButtonSet.OK);
+    '\n\nAdvisor ID: ' + agentId + '\nSecret key: ' + key +
+    '\n\nThe advisor enters them in their PULSE sheet: A-N-T > Connect to Master.', ui.ButtonSet.OK);
 }
 
 function masterToggleAgent() {
   var ui = SpreadsheetApp.getUi();
-  var res = ui.prompt('Turn Agent On / Off', 'Agent ID', ui.ButtonSet.OK_CANCEL);
+  var res = ui.prompt('Turn Advisor On / Off', 'Advisor ID', ui.ButtonSet.OK_CANCEL);
   if (res.getSelectedButton() !== ui.Button.OK) return;
   var sheet = mSheet_(M_AGENTS, M_AGENT_HEADERS);
-  var found = mFind_(sheet, 'Agent ID', res.getResponseText().trim().toUpperCase());
-  if (!found) { ui.alert('Agent not found.'); return; }
+  var found = mFind_(sheet, 'Advisor ID', res.getResponseText().trim().toUpperCase());
+  if (!found) { ui.alert('Advisor not found.'); return; }
   var now = String(found.row['Active']).toLowerCase() === 'yes' ? 'No' : 'Yes';
-  mUpsert_(sheet, 'Agent ID', { 'Agent ID': found.row['Agent ID'], 'Active': now });
-  ui.alert(found.row['Agent ID'] + ' is now ' + (now === 'Yes' ? 'ON (can send data)' : 'OFF (data already sent stays here)'));
+  mUpsert_(sheet, 'Advisor ID', { 'Advisor ID': found.row['Advisor ID'], 'Active': now });
+  ui.alert(found.row['Advisor ID'] + ' is now ' + (now === 'Yes' ? 'ON (can send data)' : 'OFF (data already sent stays here)'));
 }
 
 
@@ -133,14 +133,14 @@ function doPost(e) {
 
   var agents = mSheet_(M_AGENTS, M_AGENT_HEADERS);
   var agentId = String(body.agentId || '').trim().toUpperCase();
-  var agent = mFind_(agents, 'Agent ID', agentId);
+  var agent = mFind_(agents, 'Advisor ID', agentId);
   if (!agent || String(agent.row['Secret Key']) !== String(body.key || '')) {
-    return mJson_({ ok: false, error: 'Agent ID or secret key is wrong' });
+    return mJson_({ ok: false, error: 'Advisor ID or secret key is wrong' });
   }
   if (String(agent.row['Active']).toLowerCase() !== 'yes') {
-    return mJson_({ ok: false, error: 'This agent is turned off by the manager' });
+    return mJson_({ ok: false, error: 'This advisor is turned off by the manager' });
   }
-  if (body.ping) return mJson_({ ok: true, agentName: agent.row['Agent Name'] });
+  if (body.ping) return mJson_({ ok: true, agentName: agent.row['Advisor Name'] });
 
   var t = M_TYPES[body.type];
   if (!t || !body.record || !body.record[t.idKey]) return mJson_({ ok: false, error: 'Unknown record' });
@@ -149,15 +149,15 @@ function doPost(e) {
   lock.waitLock(20000);
   try {
     var rec = {};
-    Object.keys(body.record).forEach(function (k) { rec[k] = body.record[k]; });
-    rec['Agent ID'] = agentId;                       // always the verified agent, never what was sent
+    Object.keys(body.record).forEach(function (k) { rec[M_HEADER_RENAMES[k] || k] = body.record[k]; }); // old scripts still send "Agent ID"
+    rec['Advisor ID'] = agentId;                       // always the verified advisor, never what was sent
     rec['Received'] = new Date();
     rec['Master ID'] = mMasterId_(agentId, rec[t.idKey]);
     if (body.type !== 'client') rec['Master Client ID'] = mMasterId_(agentId, rec['Client ID']);
     var sheet = mSheet_(t.sheet, t.headers);
     mAddHeaders_(sheet, Object.keys(rec));
-    var res = mUpsert_(sheet, [ 'Agent ID', t.idKey ], rec);
-    mUpsert_(agents, 'Agent ID', { 'Agent ID': agentId, 'Last Received': new Date() });
+    var res = mUpsert_(sheet, [ 'Advisor ID', t.idKey ], rec);
+    mUpsert_(agents, 'Advisor ID', { 'Advisor ID': agentId, 'Last Received': new Date() });
     mSheet_(M_LOG, M_LOG_HEADERS).appendRow([new Date(), agentId, body.type, rec[t.idKey], res.isNew ? 'added' : 'updated']);
     return mJson_({ ok: true, isNew: res.isNew });
   } finally {
@@ -208,6 +208,11 @@ function mSheet_(name, headers) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   PropertiesService.getScriptProperties().setProperty('M_SHEET_ID', ss.getId());
   var sh = ss.getSheetByName(name);
+  // Old tab name "AGENTS" is now "ADVISORS" – rename it, keep everything in it.
+  if (!sh && M_OLD_TABS[name] && ss.getSheetByName(M_OLD_TABS[name])) {
+    sh = ss.getSheetByName(M_OLD_TABS[name]).setName(name);
+  }
+  if (sh) mRenameHeaders_(sh);
   if (!sh) {
     sh = ss.insertSheet(name);
     sh.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -230,6 +235,20 @@ function mDateFormats_(sh) {
 
 function mStyleHeader_(sh) {
   sh.getRange(1, 1, 1, sh.getLastColumn()).setFontWeight('bold').setBackground('#0B2545').setFontColor('#FFFFFF');
+}
+
+var M_OLD_TABS = { 'ADVISORS': 'AGENTS' };
+var M_HEADER_RENAMES = { 'Agent ID': 'Advisor ID', 'Agent Name': 'Advisor Name' };
+// Old column names renamed in place (the data under them stays).
+function mRenameHeaders_(sh) {
+  if (!sh.getLastColumn()) return;
+  var rng = sh.getRange(1, 1, 1, sh.getLastColumn()), row = rng.getValues()[0], changed = false;
+  row = row.map(function (h) {
+    var to = M_HEADER_RENAMES[String(h)];
+    if (to && row.indexOf(to) === -1) { changed = true; return to; }
+    return h;
+  });
+  if (changed) rng.setValues([row]);
 }
 
 function mHeaders_(sh) {

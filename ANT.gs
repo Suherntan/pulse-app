@@ -14,7 +14,7 @@
  *   - Drive folder "PULSE A-N-T Clients" with one sub-folder per client,
  *     holding that client's A-N-T Analysis and Offer Document PDFs.
  *
- * One-time setup: menu A-N-T > Set Up A-N-T. It asks for the Agent ID,
+ * One-time setup: menu A-N-T > Set Up A-N-T. It asks for the Advisor ID,
  * creates the tabs and the Drive folder. Agent name and phone come from
  * the existing SETTINGS tab (PULSE Reminders > My Settings).
  * =====================================================================
@@ -45,14 +45,14 @@ var ANT_AREA_LABELS = {
 };
 
 var ANT_CLIENT_HEADERS = [
-  'Client ID', 'Agent ID', 'Name', 'DOB', 'Age', 'Phone', 'Email',
+  'Client ID', 'Advisor ID', 'Name', 'DOB', 'Age', 'Phone', 'Email',
   'Motivation', 'Goals', 'Retire Age', 'Retire Cash / Month', 'Other Goals',
   'Important People', 'Spouse Job', 'Children Ages', 'Parents Depending', 'Other People',
   'Consent', 'Pipeline Stage', 'Folder Link', 'Created', 'Updated'
 ];
 
 var ANT_ANALYSIS_HEADERS = (function () {
-  var h = ['Analysis ID', 'Client ID', 'Agent ID', 'Client Name', 'Date'];
+  var h = ['Analysis ID', 'Client ID', 'Advisor ID', 'Client Name', 'Date'];
   ANT_AREAS.forEach(function (k) {
     var l = ANT_AREA_LABELS[k];
     h.push(l + ' Current', l + ' Goal', l + ' Gap');
@@ -63,12 +63,12 @@ var ANT_ANALYSIS_HEADERS = (function () {
 // Offer Document columns, same as the page: EXISTING / OFFER 1 / OFFER 2 / VALUE UP.
 var ANT_OFFER_SLOTS = [['existing', 'Existing'], ['offer1', 'Offer 1'], ['offer2', 'Offer 2'], ['valueup', 'Value Up']];
 var ANT_OFFER_HEADERS = (function () {
-  var h = ['Offer ID', 'Client ID', 'Agent ID', 'Client Name', 'Date'];
+  var h = ['Offer ID', 'Client ID', 'Advisor ID', 'Client Name', 'Date'];
   ANT_OFFER_SLOTS.forEach(function (s) { h.push(s[1] + ' Plan', s[1] + ' Basic Life', s[1] + ' Annual Premium'); });
   return h.concat(['Offer Table', 'PDF Link']);
 })();
 
-var ANT_LOG_HEADERS = ['Time', 'Agent ID', 'Client ID', 'Action', 'Detail'];
+var ANT_LOG_HEADERS = ['Time', 'Advisor ID', 'Client ID', 'Action', 'Detail'];
 
 
 // ---------------------------------------------------------------------
@@ -93,13 +93,13 @@ function antSetup() {
   var current = props.getProperty(ANT_PROP_AGENT_ID) || '';
 
   var res = ui.prompt('A-N-T Setup',
-    'Agent ID = your initials + a number, same as your agency manager has for you (e.g. SH01)' +
+    'Advisor ID = your initials + a number, same as your agency manager has for you (e.g. SH01)' +
     (current ? '\nCurrent: ' + current + ' (leave empty to keep it)' : ''),
     ui.ButtonSet.OK_CANCEL);
   if (res.getSelectedButton() !== ui.Button.OK) return;
   var agentId = res.getResponseText().replace(/\s+/g, '').toUpperCase() || current;
-  if (!agentId) { ui.alert('Agent ID is needed. Please run Set Up again.'); return; }
-  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Agent ID: letters and numbers only, e.g. SH01. Please run Set Up again.'); return; }
+  if (!agentId) { ui.alert('Advisor ID is needed. Please run Set Up again.'); return; }
+  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Advisor ID: letters and numbers only, e.g. SH01. Please run Set Up again.'); return; }
   props.setProperty(ANT_PROP_AGENT_ID, agentId);
   if (current && current !== agentId) antRenameAgent_(current, agentId);
 
@@ -115,19 +115,19 @@ function antSetup() {
   var s = getAgentSettings_();
 
   ui.alert('A-N-T is ready',
-    'Agent ID: ' + agentId + '\nAgent name: ' + s.agentName + '\nPhone: ' + (s.agentWhatsApp || '(not set)') +
+    'Advisor ID: ' + agentId + '\nAdvisor name: ' + s.agentName + '\nPhone: ' + (s.agentWhatsApp || '(not set)') +
     '\n\nClient folders: ' + folder.getUrl() +
     '\n\nName or phone wrong? Fix them in PULSE Reminders > My Settings.' +
     '\nRemember: Deploy > Manage deployments > Edit > New version, so the app sees this code.',
     ui.ButtonSet.OK);
 }
 
-// Agent ID changed in Set Up (e.g. AG-001 → SH01): update the rows already saved.
+// Advisor ID changed in Set Up (e.g. AG-001 → SH01): update the rows already saved.
 function antRenameAgent_(oldId, newId) {
   [[ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], [ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS], [ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
     var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(t[0]);
     if (!sh || sh.getLastRow() < 2) return;
-    var col = antHeaderOrder_(sh, t[1]).indexOf('Agent ID');
+    var col = antHeaderOrder_(sh, t[1]).indexOf('Advisor ID');
     if (col === -1) return;
     var rng = sh.getRange(2, col + 1, sh.getLastRow() - 1, 1);
     rng.setValues(rng.getValues().map(function (r) { return [String(r[0]) === oldId ? newId : r[0]]; }));
@@ -251,7 +251,7 @@ function antSaveClient(data) {
 
     var values = {
       'Client ID': clientId,
-      'Agent ID': agentId,
+      'Advisor ID': agentId,
       'Name': String(data.name).trim(),
       'DOB': antDateFromIso_(data.dob),
       'Age': data.age != null ? data.age : '',
@@ -321,7 +321,7 @@ function antSaveAnalysis(data) {
     }
 
     var values = {
-      'Analysis ID': analysisId, 'Client ID': data.clientId, 'Agent ID': agentId,
+      'Analysis ID': analysisId, 'Client ID': data.clientId, 'Advisor ID': agentId,
       'Client Name': client.row['Name'], 'Date': now, 'Notes': data.notes || '', 'PDF Link': pdfLink
     };
     var totalGap = 0;
@@ -388,7 +388,7 @@ function antSaveOffer(data) {
     var cell = function (v) { v = String(v == null ? '' : v).trim(); return v === '-' ? '' : v; };
     var basic = rows.filter(function (r) { return r.label === 'Basic Life Coverage'; })[0] || {};
     var values = {
-      'Offer ID': offerId, 'Client ID': data.clientId, 'Agent ID': agentId,
+      'Offer ID': offerId, 'Client ID': data.clientId, 'Advisor ID': agentId,
       'Client Name': client.row['Name'], 'Date': now,
       'Offer Table': JSON.stringify({ clientLabel: offer.clientLabel || '', rows: rows, premium: premium, plans: plans }),
       'PDF Link': pdfLink
@@ -738,6 +738,7 @@ function antSheet_(name, headers) {
     antApplyDateFormats_(sh);
     return sh;
   }
+  antRenameHeaders_(sh);
   // Add any header that is missing (e.g. after an update), never remove.
   var have = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0].map(String);
   var missing = headers.filter(function (h) { return have.indexOf(h) === -1; });
@@ -749,8 +750,22 @@ function antSheet_(name, headers) {
   return sh;
 }
 
+// Old column names renamed in place (the data under them stays): "agent" is now "advisor".
+var ANT_HEADER_RENAMES = { 'Agent ID': 'Advisor ID', 'Agent Name': 'Advisor Name' };
+function antRenameHeaders_(sh) {
+  if (!sh.getLastColumn()) return;
+  var rng = sh.getRange(1, 1, 1, sh.getLastColumn()), row = rng.getValues()[0], changed = false;
+  row = row.map(function (h) {
+    var to = ANT_HEADER_RENAMES[String(h)];
+    if (to && row.indexOf(to) === -1) { changed = true; return to; }
+    return h;
+  });
+  if (changed) rng.setValues([row]);
+}
+
 // Header names in the order they sit on the sheet (columns can be moved).
 function antHeaderOrder_(sheet, headers) {
+  antRenameHeaders_(sheet);
   return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
 }
 
