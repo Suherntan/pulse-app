@@ -1,11 +1,11 @@
 ---
 name: su-social-posts
-description: Writes Su's social media posts (insurance & financial planning agent, Malaysia) for Facebook, Instagram, LinkedIn (English) and Xiaohongshu / XHS (Simplified Chinese) with an awareness & education focus ("Did you know…?": what it is, who is eligible, the benefit) in Su's warm personal style. Use when Su asks for posts, captions, a monthly content batch, or a post about a topic, news story or personal story.
+description: Writes Su's social media posts (insurance & financial planning advisor, Malaysia) for Facebook, Instagram, LinkedIn (English) and Xiaohongshu / XHS (Simplified Chinese) with an awareness & education focus ("Did you know…?": what it is, who is eligible, the benefit) in Su's warm personal style. Use when Su asks for posts, captions, a monthly content batch, or a post about a topic, news story or personal story.
 ---
 
 # Su's social posts
 
-Su is an insurance and financial planning agent in Malaysia (ANT Wealth System: Analyze · Navigate · Transform; L.I.F.E = Hospitalization, Disability, Critical Illness, Death, Education, Investment). Posts build trust with relatives, friends and their circles. They **never hard-sell**.
+Su is an insurance and financial planning advisor in Malaysia (ANT Wealth System: Analyze · Navigate · Transform; L.I.F.E = Hospitalization, Disability, Critical Illness, Death, Education, Investment). Posts build trust with relatives, friends and their circles. They **never hard-sell**.
 
 **Main focus: awareness & education.** Most posts teach one useful thing people don't know ("Did you know…?"): what it is, who is eligible, the benefit, and what to watch out for. Personal stories support this, and are not the main point.
 
@@ -13,6 +13,7 @@ Su is an insurance and financial planning agent in Malaysia (ANT Wealth System: 
 - Personal, warm, honest, written as a real person rather than a company. Simple English, no jargon (explain any term in plain words).
 - **Education posts (default):** "Did you know…?" hook → **What is it?** → **Who is eligible?** → **What's the benefit?** (a simple worked example if possible) → **Good to know** (limits, conditions) → very soft CTA → one-line disclaimer.
 - **Story posts:** hook (real-life or news story) → "It hit close to home for me…" + Su's own experience → one short lesson line → simple explanation → local (Malaysia) angle → very soft CTA ("feel free to message me").
+- Su is a **financial advisor**: always say "advisor" (中文: 理财顾问), never "agent" (代理).
 - No pricing, no product names, no "limited time", no comparing insurers.
 - **Compliance:** never promise or guarantee returns. Say "historically / around / depends". Client stories only if Su says she has permission, with no names. If unsure, add a line to the note for Su.
 - **Facts must be correct and current** (Malaysia: LHDN, EPF/KWSP, PPA, SC, BNM). Say which year the rule is for (e.g. "YA 2026"). If you are not sure a figure is still current, still write the post but list it under [NOTE] for Su to check. End education posts with: "General info only, not financial advice. Check the latest rules with LHDN / [agency]." (中文: "以上为一般资讯，不构成理财建议，请以官方最新规定为准。")

@@ -54,9 +54,9 @@ Sum Assured: 500,000
 
 ## Sharing the budget between "agents" (tools)
 
-> Note 6 Oct: "agents" here = software tools. For **human insurance agents** sharing the system, see "Master account" below.
+> Note 6 Oct: "agents" here = software tools. For **human insurance advisors** sharing the system, see "Master account" below.
 
-- **One source of truth:** the PULSE Google Sheet. Every agent (Apps Script, Claude, Zapier if ever used) reads and writes the same sheet. No duplicate databases.
+- **One source of truth:** the PULSE Google Sheet. Every tool (Apps Script, Claude, Zapier if ever used) reads and writes the same sheet. No duplicate databases.
 - **Apps Script = daily worker (free).** Does the repeat work.
 - **Claude = builder / fixer only.** Called when building, changing, or when a PPT can't be read.
 - **Free limits to watch (Google, free account):** 90 min/day of trigger run time, 100 emails/day. Our flow uses about 5–10 seconds per offer, so plenty.
@@ -158,65 +158,65 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 - Free Google Drive = 15 GB. The sample deck is ~26 MB (big photos). One copy per client → ~500 decks fills the drive.
 - Fix (free): compress the deck photos once (target 3–5 MB), and keep only the PDF for old clients.
 
-## 🔐 Master account for a team of agents (6 Oct 2026)
+## 🔐 Master account for a team of advisors (6 Oct 2026)
 
-"Agents" = the insurance agents in your team. Everything they enter must also live in one **master account** (backup + overview).
+"Advisors" = the insurance advisors in your team. Everything they enter must also live in one **master account** (backup + overview).
 
-| Option | Cost | Agents see others' clients? | Backup | Verdict |
+| Option | Cost | Advisors see others' clients? | Backup | Verdict |
 |---|---|---|---|---|
-| 1. One Google Sheet shared with all agents | Free | **Yes** – everyone sees & can delete everything | Weak (1 bad delete hits all) | ❌ Not safe for client data |
-| 2. Each agent own Sheet, copied up to master | Free | No | Good | ⚠️ Works, but many sheets to set up & keep in sync |
-| **3. Master owns everything, agents use PULSE app only** | **Free** | **No** – app shows each agent only their own clients | **Best** – all in one place | ✅ **Recommended** |
+| 1. One Google Sheet shared with all advisors | Free | **Yes** – everyone sees & can delete everything | Weak (1 bad delete hits all) | ❌ Not safe for client data |
+| 2. Each advisor own Sheet, copied up to master | Free | No | Good | ⚠️ Works, but many sheets to set up & keep in sync |
+| **3. Master owns everything, advisors use PULSE app only** | **Free** | **No** – app shows each advisor only their own clients | **Best** – all in one place | ✅ **Recommended** |
 | 4. Google Workspace (paid) + Shared Drive | ~US$7 per user / month | Controlled by admin | Best | Later, when the team grows |
 
 ### How Option 3 works
 - One **master Google account** (e.g. a new Gmail just for the agency). It owns the PULSE Sheet, the Drive folders, the Slides/Offer templates and the script.
-- Agents **never get the Sheet link**. They open the PULSE app and log in with their **Agent ID + PIN** (AGENTS tab in the master Sheet).
-- Every row saved gets an **Agent ID** column. The script only sends back rows that belong to that agent. Master/leader sees all.
-- Client folders: `PULSE/Agents/<Agent>/Clients/<Client ID – Name>/`.
+- Advisors **never get the Sheet link**. They open the PULSE app and log in with their **Agent ID + PIN** (AGENTS tab in the master Sheet).
+- Every row saved gets an **Agent ID** column. The script only sends back rows that belong to that advisor. Master/leader sees all.
+- Client folders: `PULSE/Advisors/<Advisor>/Clients/<Client ID – Name>/`.
 - **Automatic backup (free):** every Sunday the script copies the whole master Sheet into `PULSE/Backups/` (keep last 8 weeks). Code is already backed up on GitHub.
-- Agent leaves the team → turn off their PIN. Their clients stay with the master.
+- Advisor leaves the team → turn off their PIN. Their clients stay with the master.
 
 ### Limits to watch (master account, free)
-- **Storage 15 GB shared by all agents.** Big decks fill it fast → compress decks, keep PDFs. If needed, Google One 100 GB is a low monthly cost.
+- **Storage 15 GB shared by all advisors.** Big decks fill it fast → compress decks, keep PDFs. If needed, Google One 100 GB is a low monthly cost.
 - Script limits are per master account – fine for a small team (each action takes a few seconds).
-- Client data = personal data: agents should tell clients their info is stored by the agency (consent line on the form).
+- Client data = personal data: advisors should tell clients their info is stored by the agency (consent line on the form).
 
-## ✅ Decision (6 Oct 2026): each agent hosts, manager only collects DATA
+## ✅ Decision (6 Oct 2026): each advisor hosts, manager only collects DATA
 
-- 10+ agents → plan big.
-- **Each agent uses their own Google account** for everything: own PULSE Sheet, Drive, form, slides, offer docs, script. (Replaces Option 3 above.)
-- **Agency manager's account = master DATA only.** No forms, slides or docs there. Manager sees all agents.
-- Bonus: each agent has their own free 15 GB → the storage problem goes away.
+- 10+ advisors → plan big.
+- **Each advisor uses their own Google account** for everything: own PULSE Sheet, Drive, form, slides, offer docs, script. (Replaces Option 3 above.)
+- **Agency manager's account = master DATA only.** No forms, slides or docs there. Manager sees all advisors.
+- Bonus: each advisor has their own free 15 GB → the storage problem goes away.
 
 ### How data reaches the master (free)
 - Manager deploys a small **"Receiver"** script on the master Sheet (runs as the manager).
-- When an agent presses Save / Make Offer / Closed, the agent's script **sends the row** to the Receiver with the agent's **Agent ID + secret key**.
+- When an advisor presses Save / Make Offer / Closed, the advisor's script **sends the row** to the Receiver with the advisor's **Agent ID + secret key**.
 - Receiver checks the key and writes the row into the master tabs: **CLIENTS, OFFERS, SESSIONS, AGENTS** (each row tagged with Agent ID, upsert by Client ID so no duplicates).
-- Agents **never get the master Sheet link** → they can't see each other's clients.
-- If the internet fails, the row waits in an "Outbox" tab on the agent's Sheet; a free nightly timer re-sends it.
-- Manager kicks out an agent → turn off their key. Data already sent stays in master.
+- Advisors **never get the master Sheet link** → they can't see each other's clients.
+- If the internet fails, the row waits in an "Outbox" tab on the advisor's Sheet; a free nightly timer re-sends it.
+- Manager kicks out an advisor → turn off their key. Data already sent stays in master.
 
-### Planning big (10+ agents)
-- **One shared code library ("PULSE Core")** owned by the manager. Each agent's script just calls it. Fix a bug once → all agents get it. (Without this, 10+ copies must be updated by hand.)
-- **Setup kit for new agents:** a template Sheet → "Make a copy" → menu **PULSE ▸ Setup** asks for Agent ID + key → done in ~5 minutes. One PULSE app website for everyone; each agent's own link is saved in the app's Settings.
+### Planning big (10+ advisors)
+- **One shared code library ("PULSE Core")** owned by the manager. Each advisor's script just calls it. Fix a bug once → all advisors get it. (Without this, 10+ copies must be updated by hand.)
+- **Setup kit for new advisors:** a template Sheet → "Make a copy" → menu **PULSE ▸ Setup** asks for Agent ID + key → done in ~5 minutes. One PULSE app website for everyone; each advisor's own link is saved in the app's Settings.
 - **Size:** a Google Sheet holds 10 million cells ≈ 200,000+ client rows at ~40 columns. Fine for years. If it ever gets close, move old years to an archive Sheet.
 - **Weekly backup** of the master Sheet (Sunday, keep 8 weeks) – free.
-- **Policy point for the agency:** client files stay in each agent's own Drive. If an agent leaves, the agency keeps the *data* (in master) but not the files. Decide if that's OK.
+- **Policy point for the agency:** client files stay in each advisor's own Drive. If an advisor leaves, the agency keeps the *data* (in master) but not the files. Decide if that's OK.
 
 ## Other options besides Google (6 Oct 2026)
 
 | Option | Free plan (check before sign-up) | Good | Not so good | Verdict |
 |---|---|---|---|---|
-| **Google (current plan)** | Free, 15 GB per account | Already built, Slides/Docs native, agents know it | Not a "real" database; logins are DIY | ✅ Start here |
-| **Supabase** (real database) | ~500 MB database + 1 GB files, real logins | Built for many users; "each agent sees only own rows, manager sees all" is built-in | Big rebuild of PULSE; free project pauses if unused ~1 week; still need Google for Slides/Docs | ⭐ Upgrade path when team grows (30+) |
+| **Google (current plan)** | Free, 15 GB per account | Already built, Slides/Docs native, advisors know it | Not a "real" database; logins are DIY | ✅ Start here |
+| **Supabase** (real database) | ~500 MB database + 1 GB files, real logins | Built for many users; "each advisor sees only own rows, manager sees all" is built-in | Big rebuild of PULSE; free project pauses if unused ~1 week; still need Google for Slides/Docs | ⭐ Upgrade path when team grows (30+) |
 | Firebase (Google) | Free database + logins; file storage needs paid plan | Similar to Supabase | Files not free anymore; more setup | Maybe |
 | Cloudflare D1 + Workers (already used in `small-dew-3892`) | 5 GB database, 100k requests/day | Very cheap, fast, already have account | Most coding work, no Slides/Docs | Later, techy option |
-| Airtable | 1,000 records per base | Easy | Far too small for 10+ agents; paid ~US$20/user/month | ❌ |
-| Zoho CRM | Free for ~3 users only | Real CRM | Paid for 10+ agents | ❌ |
+| Airtable | 1,000 records per base | Easy | Far too small for 10+ advisors; paid ~US$20/user/month | ❌ |
+| Zoho CRM | Free for ~3 users only | Real CRM | Paid for 10+ advisors | ❌ |
 | Microsoft 365 / OneDrive | Mostly paid | Word/PowerPoint native | Power Automate paid | ❌ |
 
-**Recommendation:** build on Google now (free, fastest). Design the data (Client ID, Agent ID, same columns) so we can move the master to **Supabase** later without redoing the agents' side.
+**Recommendation:** build on Google now (free, fastest). Design the data (Client ID, Agent ID, same columns) so we can move the master to **Supabase** later without redoing the advisors' side.
 
 ## ✅ Decisions (6 Oct 2026, part 3)
 
@@ -232,8 +232,8 @@ Drive folder  PULSE/Clients/C-0001 - Tan Ah Kow/
 - Preview file: `ant/slides.html` (pictures in `ant/ant-assets/`)
 
 ### Update (6 Oct 2026, part 4) – back to original layout
-- Keep the **original slide layout, wording and click order**; only colours/design change (navy + gold, ANT logo, Oswald font). No small explanation text – the agent explains.
-- Slide 2 click order (matches the agent's script): food → clothes → house → education → EARNING → PLAN A → red X → PLAN B → FINANCIAL PLANNING. LIFESTYLE, INCOME and the arrow are there from the start. Typo "PLANING" fixed to "PLANNING".
+- Keep the **original slide layout, wording and click order**; only colours/design change (navy + gold, ANT logo, Oswald font). No small explanation text – the advisor explains.
+- Slide 2 click order (matches the advisor's script): food → clothes → house → education → EARNING → PLAN A → red X → PLAN B → FINANCIAL PLANNING. LIFESTYLE, INCOME and the arrow are there from the start. Typo "PLANING" fixed to "PLANNING".
 - Slide 3: title L.I.F.E; columns CURRENT STATUS · L.I.F.E (gap, automatic) · FINANCIAL GOALS. Each click: banner sweeps in (bottom first), a white brush mark drags the word out – long words run past the right side of the triangle. Return-% hints removed.
 - Part 5: **solid colours** (no gradients/see-through), the 4 photos above LIFESTYLE replaced by a **gold icon diagram** (food · clothing · house · education, linked to LIFESTYLE), **ANT logo redrawn on the navy background** (`ant-assets/logo-light.png`).
 - Part 6: keep the banner colours. **Slide 1 cover restyled** (Your wealth. Our purpose. + original tagline, growth chart, A·N·T blocks, 4 pillars). Slide 2 gold given depth (darker bottom edge + shadow) and a soft spotlight background. Slide 3: smaller triangle, **L.I.F.E title** bigger with gold 3D edge + underline, logo at the upper right.
@@ -258,13 +258,13 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 
 ### A-N-T Analysis PDF – `ant/analysis.html`
 - Opened from the slides with the **Save A-N-T Analysis** button.
-- One A4 page: navy header with logo + date · client box (name, Client ID, age, agent) · L.I.F.E pyramid + table (Current Status, L.I.F.E, Financial Goals, totals) · **Priority** list (gaps, most urgent first) · Notes box (type before saving). **No signature lines.** Agent **name + phone** shown in the client box and footer (from the agent's profile, set once in PULSE settings).
+- One A4 page: navy header with logo + date · client box (name, Client ID, age, advisor) · L.I.F.E pyramid + table (Current Status, L.I.F.E, Financial Goals, totals) · **Priority** list (gaps, most urgent first) · Notes box (type before saving). **No signature lines.** Advisor **name + phone** shown in the client box and footer (from the advisor's profile, set once in PULSE settings).
 - PDF is **for records only** – not sent to the client.
 - Logo position on slides 1 & 2: **on hold**.
 - **Save as PDF** button (free, phone or laptop print → Save as PDF). File name: `A-N-T Analysis – <client> – <date>`.
 - Next build step: script saves the PDF into the client's Drive folder automatically and sends the numbers to the master.
 
-## ✅ Step 1 built (6 Oct 2026) – agent's own Google account
+## ✅ Step 1 built (6 Oct 2026) – advisor's own Google account
 - New `ANT.gs` + 3 small additions in `Code.gs`. Tabs ANT_CLIENTS / ANT_ANALYSIS / ANT_LOG, Drive folder per client.
 - Form: real search/load/save (C-0001 IDs from the sheet). Header shows DEMO / CONNECTED.
 - Analysis page: **Save to Drive** makes the PDF in the browser (exact look, A4) and stores it in the client's folder; **Download PDF** still works offline.
@@ -289,12 +289,12 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 - Tested with the real Code.gs + ANT.gs on a fake sheet: link to CLOSING, add new to APPROACH, +60 phone match, move to PRESENTATION, same-day redo no duplicate remark, CLOSING stays.
 
 ## ✅ Step 2 built (8 Oct 2026) – manager's Master Sheet
-- `ANT-Master.gs` in the manager's own Google Sheet: tabs AGENTS / CLIENTS / ANALYSIS / LOG, receiver web app, Add Agent (ID + secret key), Turn Agent On/Off, weekly backup (keep 8).
-- `ANT.gs` (agent): A-N-T → Connect to Master; every save also sends the data (no files, no links); failures wait in ANT_OUTBOX and re-send nightly; Send Everything (one-time).
-- Testing with a separate free "ANT Master" Gmail; real manager later = same steps, agents just reconnect.
-- Tested: send, update without duplicates, master down → retry, wrong key, agent turned off, Agent ID can't be faked.
+- `ANT-Master.gs` in the manager's own Google Sheet: tabs AGENTS / CLIENTS / ANALYSIS / LOG, receiver web app, Add Advisor (ID + secret key), Turn Advisor On/Off, weekly backup (keep 8).
+- `ANT.gs` (advisor): A-N-T → Connect to Master; every save also sends the data (no files, no links); failures wait in ANT_OUTBOX and re-send nightly; Send Everything (one-time).
+- Testing with a separate free "ANT Master" Gmail; real manager later = same steps, advisors just reconnect.
+- Tested: send, update without duplicates, master down → retry, wrong key, advisor turned off, Agent ID can't be faked.
 - Setup steps: see [[A-N-T Step 2 - Master Setup Guide]].
-- ⏸ **On hold (9 Oct 2026):** setup waits until Su meets the agency manager. Code is ready on master; setup ≈ 15 min (Part A manager, Part B each agent).
+- ⏸ **On hold (9 Oct 2026):** setup waits until Su meets the agency manager. Code is ready on master; setup ≈ 15 min (Part A manager, Part B each advisor).
 
 ## 📋 Status & to-do (9 Oct 2026)
 **Live:** A-N-T tab in PULSE (Fact-Find → Slides → Analysis PDF to Drive), pipeline link, dd/mm/yyyy dates. Repo on laptop moved to `C:\PULSE-app`; auto-backup working.
@@ -319,7 +319,7 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
     - Copy to master as type **offer** (ANT-Master.gs now has an OFFERS tab) – only once Step 2 is set up
     - Su to do: paste new Code.gs + ANT.gs → Deploy → Manage deployments → Edit → New version
   - [x] **Search finds existing PULSE clients (9 Oct)** – Fact-Find search also lists APPROACH / PRESENTATION / CLOSING / SR clients with no A-N-T yet ("CLOSING · no A-N-T yet"); tap = Fact-Find pre-filled (name, phone, email, birthday); saving gives a C-number and links that same pipeline row
-  - [x] **Master numbering (9 Oct)** – master adds **Master ID** = Agent ID + number (SH01-C-0001, SH01-A-0003, SH01-O-0002). **Agent ID = initials + number (e.g. SH01)** so the manager can tell agents apart; changing it in Set Up A-N-T also updates rows already saved; analysis/offer rows also get **Master Client ID**. Agents keep their own short numbers
+  - [x] **Master numbering (9 Oct)** – master adds **Master ID** = Agent ID + number (SH01-C-0001, SH01-A-0003, SH01-O-0002). **Agent ID = initials + number (e.g. SH01)** so the manager can tell advisors apart; changing it in Set Up A-N-T also updates rows already saved; analysis/offer rows also get **Master Client ID**. Advisors keep their own short numbers
 - [x] Education / Investment return % hints on slide 3 (9 Oct): fixed, **next to the FINANCIAL GOALS box** – EDUCATION "~4% P.A. / SHORT TERM / LEAST RISK", INVESTMENT "~8% P.A. / LONG TERM / HIGHER RISK" (columns made a bit narrower to fit). To change: `TIERS` in ant/slides.html
 - [ ] Logo position on slides 1 & 2 (on hold)
 - [ ] Optional: auto-backup.bat → pull before push
@@ -333,13 +333,13 @@ Google Slides tables have **no formulas**, so the automatic Gap needs one of:
 ## Full flow (review – 6 Oct 2026)
 
 ```
-0. Manager setup (once): master Sheet + Receiver + PULSE Core library; give each agent an ID + key
-   Agent setup (once): copy template Sheet → PULSE ▸ Setup
-1. Agent opens PULSE app (their own)
+0. Manager setup (once): master Sheet + Receiver + PULSE Core library; give each advisor an ID + key
+   Advisor setup (once): copy template Sheet → PULSE ▸ Setup
+1. Advisor opens PULSE app (their own)
 2. New client → Fact-Find FORM → Save
-      → saved in agent's own Sheet + Drive folder  ──copy of data──▶ master
+      → saved in advisor's own Sheet + Drive folder  ──copy of data──▶ master
 3. "Make Slides" → A-N-T deck copied & filled from the form → saved in client folder
-4. Agent presents the deck
+4. Advisor presents the deck
 5. "✅ Presented – Make Offer" → Offer Doc + PDF in client folder
       → OFFERS row + PRESENTATION tab updated
 6. Client closes → status Closed → CLOSING tab updated

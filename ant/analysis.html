@@ -102,7 +102,7 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
       <div><small>Client</small><b id="cName">—</b></div>
       <div><small>Client ID</small><b id="cId">—</b></div>
       <div><small>Age</small><b id="cAge">—</b></div>
-      <div><small>Agent</small><b id="cAgent">—</b><span class="ph" id="cAgentPh"></span></div>
+      <div><small>Advisor</small><b id="cAgent">—</b><span class="ph" id="cAgentPh"></span></div>
     </div>
 
     <section id="bgSec">
@@ -157,7 +157,7 @@ const SAMPLE = {life:{
   criticalIllness:{current:100000,goal:1000000}, death:{current:5000,goal:100000},
   education:{current:null,goal:null}, investment:{current:500000,goal:4500000}}};
 const analysis = read('ant-analysis-current') || SAMPLE;
-const client = read('ant-factfind-current') || {name:'Sample Client', clientId:'C-0000', age:'—', agentName:'Agent Name', agentPhone:'012-000 0000'};
+const client = read('ant-factfind-current') || {name:'Sample Client', clientId:'C-0000', age:'—', agentName:'Advisor Name', agentPhone:'012-000 0000'};
 
 const now = new Date(analysis.savedAt || Date.now());
 const dmy = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();

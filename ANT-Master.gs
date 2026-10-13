@@ -47,8 +47,8 @@ function onOpen() {
     .createMenu('A-N-T Master')
     .addItem('Set Up Master (one-time)', 'masterSetup')
     .addSeparator()
-    .addItem('Add Agent (gives Agent ID + secret key)', 'masterAddAgent')
-    .addItem('Turn Agent On / Off', 'masterToggleAgent')
+    .addItem('Add Advisor (gives Agent ID + secret key)', 'masterAddAgent')
+    .addItem('Turn Advisor On / Off', 'masterToggleAgent')
     .addSeparator()
     .addItem('Turn On Weekly Backup (Sunday)', 'masterBackupOn')
     .addItem('Turn Off Weekly Backup', 'masterBackupOff')
@@ -66,13 +66,13 @@ function masterSetup() {
   }
   SpreadsheetApp.getUi().alert('A-N-T Master is ready',
     'Next:\n1. Deploy > New deployment > Web app\n   Execute as: Me · Who has access: Anyone\n' +
-    '2. Copy the Web app URL – every agent needs it.\n3. A-N-T Master > Add Agent for each agent.',
+    '2. Copy the Web app URL – every advisor needs it.\n3. A-N-T Master > Add Advisor for each advisor.',
     SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function masterAddAgent() {
   var ui = SpreadsheetApp.getUi();
-  var idRes = ui.prompt('Add Agent', 'Agent ID = the agent\'s initials + a number (e.g. SH01)', ui.ButtonSet.OK_CANCEL);
+  var idRes = ui.prompt('Add Advisor', 'Agent ID = the advisor\'s initials + a number (e.g. SH01)', ui.ButtonSet.OK_CANCEL);
   if (idRes.getSelectedButton() !== ui.Button.OK) return;
   var agentId = idRes.getResponseText().replace(/\s+/g, '').toUpperCase();
   if (!agentId) return;
@@ -81,11 +81,11 @@ function masterAddAgent() {
   var sheet = mSheet_(M_AGENTS, M_AGENT_HEADERS);
   var found = mFind_(sheet, 'Agent ID', agentId);
   if (found) {
-    var again = ui.alert('Agent exists', agentId + ' already has a key:\n\n' + found.row['Secret Key'] +
+    var again = ui.alert('Advisor exists', agentId + ' already has a key:\n\n' + found.row['Secret Key'] +
       '\n\nMake a NEW key? (the old one stops working)', ui.ButtonSet.YES_NO);
     if (again !== ui.Button.YES) return;
   }
-  var nameRes = ui.prompt('Add Agent', 'Agent name (optional)', ui.ButtonSet.OK_CANCEL);
+  var nameRes = ui.prompt('Add Advisor', 'Advisor name (optional)', ui.ButtonSet.OK_CANCEL);
   if (nameRes.getSelectedButton() !== ui.Button.OK) return;
 
   var key = Utilities.getUuid().replace(/-/g, '').slice(0, 24);
@@ -99,16 +99,16 @@ function masterAddAgent() {
   ui.alert('Give these to ' + agentId,
     'Master link:\n' + (ScriptApp.getService().getUrl() || '(deploy the Web app first, then copy its URL)') +
     '\n\nAgent ID: ' + agentId + '\nSecret key: ' + key +
-    '\n\nThe agent enters them in their PULSE sheet: A-N-T > Connect to Master.', ui.ButtonSet.OK);
+    '\n\nThe advisor enters them in their PULSE sheet: A-N-T > Connect to Master.', ui.ButtonSet.OK);
 }
 
 function masterToggleAgent() {
   var ui = SpreadsheetApp.getUi();
-  var res = ui.prompt('Turn Agent On / Off', 'Agent ID', ui.ButtonSet.OK_CANCEL);
+  var res = ui.prompt('Turn Advisor On / Off', 'Agent ID', ui.ButtonSet.OK_CANCEL);
   if (res.getSelectedButton() !== ui.Button.OK) return;
   var sheet = mSheet_(M_AGENTS, M_AGENT_HEADERS);
   var found = mFind_(sheet, 'Agent ID', res.getResponseText().trim().toUpperCase());
-  if (!found) { ui.alert('Agent not found.'); return; }
+  if (!found) { ui.alert('Advisor not found.'); return; }
   var now = String(found.row['Active']).toLowerCase() === 'yes' ? 'No' : 'Yes';
   mUpsert_(sheet, 'Agent ID', { 'Agent ID': found.row['Agent ID'], 'Active': now });
   ui.alert(found.row['Agent ID'] + ' is now ' + (now === 'Yes' ? 'ON (can send data)' : 'OFF (data already sent stays here)'));
@@ -138,7 +138,7 @@ function doPost(e) {
     return mJson_({ ok: false, error: 'Agent ID or secret key is wrong' });
   }
   if (String(agent.row['Active']).toLowerCase() !== 'yes') {
-    return mJson_({ ok: false, error: 'This agent is turned off by the manager' });
+    return mJson_({ ok: false, error: 'This advisor is turned off by the manager' });
   }
   if (body.ping) return mJson_({ ok: true, agentName: agent.row['Agent Name'] });
 

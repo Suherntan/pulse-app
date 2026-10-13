@@ -115,7 +115,7 @@ function antSetup() {
   var s = getAgentSettings_();
 
   ui.alert('A-N-T is ready',
-    'Agent ID: ' + agentId + '\nAgent name: ' + s.agentName + '\nPhone: ' + (s.agentWhatsApp || '(not set)') +
+    'Agent ID: ' + agentId + '\nAdvisor name: ' + s.agentName + '\nPhone: ' + (s.agentWhatsApp || '(not set)') +
     '\n\nClient folders: ' + folder.getUrl() +
     '\n\nName or phone wrong? Fix them in PULSE Reminders > My Settings.' +
     '\nRemember: Deploy > Manage deployments > Edit > New version, so the app sees this code.',

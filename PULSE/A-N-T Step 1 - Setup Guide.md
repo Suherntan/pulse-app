@@ -1,8 +1,8 @@
-# A-N-T Step 1 – Setup Guide (agent's own Google account)
+# A-N-T Step 1 – Setup Guide (advisor's own Google account)
 
 - **Created:** 6 Oct 2026
 - **Cost:** $0 (Google Sheets, Drive, Apps Script – all free)
-- **Time:** about 10 minutes, once per agent
+- **Time:** about 10 minutes, once per advisor
 
 ## What Step 1 does
 - **Fact-Find form** saves each client into your PULSE Google Sheet → new tab **ANT_CLIENTS** (Client ID C-0001, C-0002 …).
