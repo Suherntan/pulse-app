@@ -15,6 +15,17 @@ class ToLeadTest(unittest.TestCase):
         self.assertEqual(lead["phone"], "+60 3-1234 5678")
         self.assertIn("https://example.com", lead["notes"])
 
+    def test_angle_goes_into_notes(self):
+        lead = find_leads.to_lead({"displayName": {"text": "A"}, "nationalPhoneNumber": "03-1"},
+                                  "law firm in KL", "Gap 06")
+        self.assertIn("angle: Gap 06", lead["notes"])
+
+    def test_collect_accepts_string_and_object_queries(self):
+        place = {"id": "a", "displayName": {"text": "A"}, "nationalPhoneNumber": "03-111 2222"}
+        with mock.patch.object(find_leads, "search", return_value=[place]):
+            leads = find_leads.collect([{"q": "x", "angle": "Gap 01"}], "key", 10)
+        self.assertIn("angle: Gap 01", leads[0]["notes"])
+
     def test_drops_listing_without_phone(self):
         self.assertIsNone(find_leads.to_lead({"displayName": {"text": "X"}}, "q"))
 
