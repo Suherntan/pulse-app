@@ -114,6 +114,62 @@ function addWebLead(data) {
   return { success: true };
 }
 
+/** Dashboard: leads still waiting for a decision (STATUS = NEW), newest first. */
+function getNewLeads() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LEADS_SHEET_NAME);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  var tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, LEADS_HEADERS.length).getValues();
+  var out = [];
+  values.forEach(function (r, i) {
+    if (String(r[9]).trim().toUpperCase() !== 'NEW') return;
+    out.push({
+      rowNumber: i + 2,
+      date: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : String(r[0]),
+      source: String(r[1]), name: String(r[2]), company: String(r[3]),
+      phone: String(r[4]), email: String(r[5]), interest: String(r[6]), notes: String(r[7])
+    });
+  });
+  return out.reverse().slice(0, 50);
+}
+
+/**
+ * Dashboard buttons. { rowNumber, expectedPhone, action: 'approach' | 'dismiss' }
+ * 'approach' copies the lead onto the APPROACH tab (so it counts as an
+ * approach from that moment) and marks it MOVED here.
+ */
+function leadAction(data) {
+  var row = Number(data && data.rowNumber);
+  var action = data && data.action;
+  if (!row || row < 2 || (action !== 'approach' && action !== 'dismiss')) {
+    return { success: false, error: 'Bad request.' };
+  }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LEADS_SHEET_NAME);
+    if (!sheet || row > sheet.getLastRow()) return { success: false, error: 'Lead not found -- refresh.' };
+    var r = sheet.getRange(row, 1, 1, LEADS_HEADERS.length).getValues()[0];
+    if (leadPhoneKey_(r[4]) !== leadPhoneKey_(data.expectedPhone) || String(r[9]).toUpperCase() !== 'NEW') {
+      return { success: false, error: 'This lead changed -- refresh and try again.' };
+    }
+    if (action === 'approach') {
+      var res = addActivity({
+        activityType: 'APPROACH',
+        name: String(r[2] || r[3]),
+        contact: String(r[4]),
+        nature: 'Lead (' + String(r[1]).toLowerCase() + ')',
+        remarks: [r[3], r[6], r[7]].filter(String).join(' | ')
+      });
+      if (!res.success) return res;
+    }
+    sheet.getRange(row, 10).setValue(action === 'approach' ? 'MOVED' : 'DISMISSED');
+    return { success: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /**
  * Finder robot. Expected: { secret, leads: [{ name, company, phone,
  * email, notes }] }. Public-business listings only.

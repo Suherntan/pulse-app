@@ -694,6 +694,8 @@ function doGet(e) {
         return jsonResponse(getFundPipelineData());
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
+      case 'leads':
+        return jsonResponse(getNewLeads());
       // A-N-T (see ANT.gs)
       case 'antProfile':
         return jsonResponse(antProfile());
@@ -733,6 +735,8 @@ function doPost(e) {
         return jsonResponse(addWebLead(data));
       case 'addFinderLeads':
         return jsonResponse(addFinderLeads(data));
+      case 'leadAction':
+        return jsonResponse(leadAction(data));
       // A-N-T (see ANT.gs)
       case 'antSaveClient':
         return jsonResponse(antSaveClient(data));
