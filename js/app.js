@@ -228,6 +228,12 @@ function renderTodayTab(data) {
 // APPROACH counts until you press "To Approach".
 var currentLeads = [];
 
+// WhatsApp link with the lead's first-message template already filled in
+// (wording lives on the SETTINGS tab of the Sheet). You still press Send.
+function leadWaHref(phone, message) {
+    return 'https://wa.me/' + phone + (message ? '?text=' + encodeURIComponent(message) : '');
+}
+
 async function loadAndRenderLeads() {
     var el = document.getElementById('leads-list');
     if (!el || typeof API === 'undefined' || !API.getApiUrl()) return;
@@ -253,7 +259,7 @@ function renderLeadsList() {
             .filter(Boolean).map(escapeHtml).join(' &middot; ');
         var wa = normalizePhoneJS(l.phone);
         var waBtn = wa
-            ? '<a class="reminder-action-btn wa" href="https://wa.me/' + wa + '" target="_blank" rel="noopener" title="WhatsApp">&#128172;</a>'
+            ? '<a class="reminder-action-btn wa" href="' + leadWaHref(wa, l.waMessage) + '" target="_blank" rel="noopener" title="WhatsApp (message ready)">&#128172;</a>'
             : '';
         return '<div class="reminder-item"><div class="reminder-item-info">' +
             '<span class="name">' + escapeHtml(title) + '</span>' +
@@ -320,7 +326,7 @@ function renderLeadsTab() {
         var sub = [l.name ? l.company : '', l.interest, l.source === 'FINDER' ? 'public listing' : 'web form', formatNiceDate(l.date)]
             .filter(Boolean).map(escapeHtml).join(' &middot; ');
         var wa = normalizePhoneJS(l.phone);
-        var waBtn = wa ? '<a class="reminder-action-btn wa" href="https://wa.me/' + wa + '" target="_blank" rel="noopener" title="WhatsApp">&#128172;</a>' : '';
+        var waBtn = wa ? '<a class="reminder-action-btn wa" href="' + leadWaHref(wa, l.waMessage) + '" target="_blank" rel="noopener" title="WhatsApp (message ready)">&#128172;</a>' : '';
         var actions;
         if (l.status === 'NEW') {
             actions = waBtn +

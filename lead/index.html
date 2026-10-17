@@ -90,7 +90,8 @@ $('f').addEventListener('submit', async e => {
     });
     const out = await res.json();
     if (!out.success) throw new Error(out.error || 'Something went wrong.');
-    $('card').innerHTML = '<h1>Thank you!</h1><p class="sub">I received your details and will contact you soon.</p>';
+    $('card').innerHTML = '<h1>Thank you!</h1><p class="sub">I received your details and will contact you soon.' +
+      ($('email').value.trim() ? ' Please also check your email.' : '') + '</p>';
   } catch (err) {
     msg(err.message || 'Could not send. Please try again.', 'err');
     $('go').disabled = false;
