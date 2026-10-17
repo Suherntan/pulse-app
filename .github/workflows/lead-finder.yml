@@ -1,0 +1,26 @@
+name: Lead finder
+
+on:
+  schedule:
+    - cron: "0 1 * * 1"   # every Monday 09:00 Malaysia time
+  workflow_dispatch:       # "Run workflow" button
+
+permissions:
+  contents: read
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test
+        run: python -m unittest discover -s leadfinder -p "test_*.py"
+      - name: Find leads and send to LEADS INBOX
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          PULSE_API_URL: ${{ secrets.PULSE_API_URL }}
+          LEAD_FINDER_SECRET: ${{ secrets.LEAD_FINDER_SECRET }}
+        run: python leadfinder/find_leads.py

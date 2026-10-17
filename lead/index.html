@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get in touch</title>
+<style>
+:root{--navy:#0B2545;--gold:#F3AF3D;--gold-dark:#A86F14;--bg:#F4F2EC;--text:#1B2433;--light:#5F6673;--border:#DAD6CC;--red:#C9402B;--ok:#2E8B3E}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--navy);color:#fff;padding:18px 16px;text-align:center;font-weight:700;letter-spacing:.06em}
+main{max-width:480px;margin:0 auto;padding:20px 16px 40px}
+.card{background:#fff;border-radius:16px;padding:20px 16px;box-shadow:0 6px 18px rgba(11,37,69,.08)}
+h1{font-size:22px;color:var(--navy);margin-bottom:6px}
+p.sub{color:var(--light);font-size:14px;margin-bottom:18px}
+label{display:block;font-size:13px;font-weight:600;color:var(--light);margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font:500 16px system-ui,sans-serif;background:#fff;color:var(--text)}
+textarea{min-height:72px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,175,61,.25)}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;margin-top:16px;color:var(--text)}
+.consent input{width:22px;height:22px;flex:none;accent-color:var(--navy);margin-top:1px}
+button{width:100%;margin-top:18px;border:0;border-radius:12px;padding:14px;font:700 16px system-ui,sans-serif;background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark);cursor:pointer}
+button:disabled{opacity:.6;cursor:default}
+#msg{margin-top:14px;font-size:14px;font-weight:600;text-align:center;min-height:20px}
+#msg.err{color:var(--red)} #msg.ok{color:var(--ok)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+</style>
+</head>
+<body>
+<header id="brand">YOUR NAME · FINANCIAL ADVISOR</header>
+<main>
+  <div class="card" id="card">
+    <h1>Let's have a chat</h1>
+    <p class="sub">Leave your details and I'll contact you personally. No obligation.</p>
+    <form id="f" novalidate>
+      <label for="name">Your name *</label>
+      <input id="name" autocomplete="name" maxlength="80" required>
+      <label for="phone">Phone (WhatsApp) *</label>
+      <input id="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" placeholder="e.g. 012-345 6789" required>
+      <label for="email">Email (optional)</label>
+      <input id="email" type="email" autocomplete="email" maxlength="100">
+      <label for="interest">I'm interested in</label>
+      <select id="interest">
+        <option value="">Not sure yet</option>
+        <option>Retirement planning</option>
+        <option>Children's education</option>
+        <option>Medical / critical illness protection</option>
+        <option>Savings &amp; investment</option>
+        <option>Business / company coverage</option>
+      </select>
+      <label for="notes">Anything else? (optional)</label>
+      <textarea id="notes" maxlength="500"></textarea>
+      <div class="hp" aria-hidden="true"><label>Website<input id="website" tabindex="-1" autocomplete="off"></label></div>
+      <label class="consent"><input type="checkbox" id="consent">
+        <span>I agree to be contacted by phone, WhatsApp or email about financial planning, and that my details are stored for this purpose only (PDPA). *</span></label>
+      <button type="submit" id="go">SEND</button>
+      <div id="msg" role="status"></div>
+    </form>
+  </div>
+</main>
+<script>
+// EDIT THESE TWO LINES, then publish this folder with the rest of the site.
+const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';   // ends with /exec
+const AGENT_NAME = 'YOUR NAME';
+
+document.getElementById('brand').textContent = AGENT_NAME.toUpperCase() + ' · FINANCIAL ADVISOR';
+
+const $ = id => document.getElementById(id);
+const msg = (t, c) => { $('msg').textContent = t; $('msg').className = c || ''; };
+
+$('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!$('name').value.trim()) return msg('Please enter your name.', 'err');
+  if ($('phone').value.replace(/\D/g, '').length < 8) return msg('Please enter a valid phone number.', 'err');
+  if (!$('consent').checked) return msg('Please tick the consent box.', 'err');
+  if (API_URL.startsWith('PASTE_')) return msg('This form is not connected yet.', 'err');
+
+  $('go').disabled = true; msg('Sending…');
+  try {
+    const url = new URL(API_URL); url.searchParams.set('action', 'addWebLead');
+    // text/plain avoids a CORS preflight, which Apps Script cannot answer.
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        name: $('name').value, phone: $('phone').value, email: $('email').value,
+        interest: $('interest').value, notes: $('notes').value,
+        website: $('website').value, consent: $('consent').checked
+      })
+    });
+    const out = await res.json();
+    if (!out.success) throw new Error(out.error || 'Something went wrong.');
+    $('card').innerHTML = '<h1>Thank you!</h1><p class="sub">I received your details and will contact you soon.</p>';
+  } catch (err) {
+    msg(err.message || 'Could not send. Please try again.', 'err');
+    $('go').disabled = false;
+  }
+});
+</script>
+</body>
+</html>

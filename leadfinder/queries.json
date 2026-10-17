@@ -1,0 +1,10 @@
+{
+  "max_per_query": 10,
+  "queries": [
+    "restaurant in Petaling Jaya",
+    "dental clinic in Kuala Lumpur",
+    "tuition centre in Subang Jaya",
+    "renovation contractor in Klang",
+    "car workshop in Shah Alam"
+  ]
+}

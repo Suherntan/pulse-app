@@ -728,6 +728,11 @@ function doPost(e) {
         return jsonResponse(addPipelineClient(data));
       case 'importFundData':
         return jsonResponse(importFundData(data));
+      // Leads inbox (see Leads.gs)
+      case 'addWebLead':
+        return jsonResponse(addWebLead(data));
+      case 'addFinderLeads':
+        return jsonResponse(addFinderLeads(data));
       // A-N-T (see ANT.gs)
       case 'antSaveClient':
         return jsonResponse(antSaveClient(data));
