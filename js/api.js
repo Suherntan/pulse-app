@@ -328,6 +328,21 @@ const API = {
     },
 
     /**
+     * New leads waiting on the LEADS INBOX tab
+     */
+    async fetchLeads() {
+        return this.get('leads');
+    },
+
+    /**
+     * Move a lead to APPROACH or dismiss it
+     * @param {object} data - { rowNumber, expectedPhone, action: 'approach'|'dismiss' }
+     */
+    async leadAction(data) {
+        return this.post('leadAction', data);
+    },
+
+    /**
      * Add or update a fund research entry (upserted by fund name)
      * @param {object} fundData - Fund details
      */
