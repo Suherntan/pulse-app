@@ -1423,3 +1423,26 @@ h3 {
     .tab { min-width: 0; padding: 10px 1px; font-size: 11px; }
     .tab .tab-icon svg { width: 18px; height: 18px; }
 }
+
+/* --- New Leads card (Today tab) --- */
+.lead-btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--navy, #0B2545);
+    border-radius: 999px;
+    padding: 0 12px;
+    height: 40px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.lead-btn-dismiss {
+    width: 40px;
+    padding: 0;
+    font-size: 1.2rem;
+}
+
+.lead-btn:active {
+    transform: scale(0.95);
+}
