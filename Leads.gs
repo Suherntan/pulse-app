@@ -25,6 +25,52 @@ var LEADS_HEADERS = ['DATE ADDED', 'SOURCE', 'NAME', 'COMPANY', 'PHONE', 'EMAIL'
 var LEADS_MAX_PER_HOUR = 60;   // all sources together; stops form spam floods
 var LEADS_MAX_BATCH = 100;     // finder leads per request
 
+// ---------------------------------------------------------------
+// Message wording lives on the SETTINGS tab (rows 5-9), so you can edit it
+// in the sheet any time -- no redeploy needed. The rows are created with
+// these defaults the first time they are needed.
+// Placeholders: {name} {company} {agent} {guide}
+// ---------------------------------------------------------------
+var LEAD_TEMPLATE_ROWS = [
+  { key: 'waBusiness', row: 5, label: 'Lead WhatsApp message (business, from finder)',
+    text: 'Hi, this is {agent}. I help business owners and professionals in Malaysia close the gaps in their financial plan. I put together a short free guide, "7 Financial Blind Spots". May I send it to the owner of {company}? Happy to stop if it is not relevant.' },
+  { key: 'waPerson', row: 6, label: 'Lead WhatsApp message (person, from web form)',
+    text: 'Hi {name}, thank you for reaching out. This is {agent}. I will send you the free "7 Financial Blind Spots" guide, and we can find a time for a short chat. When are you free this week?' },
+  { key: 'mailSubject', row: 7, label: 'Lead welcome email subject',
+    text: 'Your free 7 Financial Blind Spots guide' },
+  { key: 'mailBody', row: 8, label: 'Lead welcome email body',
+    text: 'Hi {name},\n\nThank you for getting in touch. I am {agent}, and I will contact you personally soon.\n\nIn the meantime, here is the free guide: {guide}\n\nIf you would rather not hear from me, just reply "stop" and I will not contact you again.\n\nRegards,\n{agent}' },
+  { key: 'guide', row: 9, label: 'Free guide link (optional)', text: '' }
+];
+
+function getLeadTemplates_() {
+  var settings = getAgentSettings_();           // makes sure SETTINGS exists
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(AGENT_SETTINGS_SHEET_NAME);
+  var out = { agent: settings.agentName };
+  LEAD_TEMPLATE_ROWS.forEach(function (t) {
+    var labelCell = sheet.getRange(t.row, 1);
+    if (!String(labelCell.getValue()).trim()) {
+      labelCell.setValue(t.label).setFontWeight('bold');
+      sheet.getRange(t.row, 2).setValue(t.text).setWrap(true);
+    }
+    out[t.key] = String(sheet.getRange(t.row, 2).getValue() || '');
+  });
+  return out;
+}
+
+function fillLeadTemplate_(template, vars) {
+  var text = String(template);
+  // No guide link set: drop the line that mentions it instead of sending "{guide}".
+  if (!vars.guide) {
+    text = text.split('\n').filter(function (line) { return line.indexOf('{guide}') === -1; }).join('\n');
+  }
+  return text.split('{name}').join(vars.name || 'there')
+             .split('{company}').join(vars.company || 'your company')
+             .split('{agent}').join(vars.agent || '')
+             .split('{advisor}').join(vars.agent || '')
+             .split('{guide}').join(vars.guide || '');
+}
+
 function getLeadsSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(LEADS_SHEET_NAME);
@@ -97,8 +143,28 @@ function addWebLead(data) {
       leadClean_(data.email, 100), leadClean_(data.interest, 60),
       leadClean_(data.notes, 500), 'Yes ' + new Date().toISOString(), 'NEW'
     ]);
+    var newRow = sheet.getLastRow();
   } finally {
     lock.releaseLock();
+  }
+
+  // Automatic welcome email (only if they typed a valid email; they ticked consent).
+  var theirEmail = leadClean_(data.email, 100);
+  var welcomeNote = '';
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(theirEmail)) {
+    try {
+      var tpl = getLeadTemplates_();
+      var vars = { name: name, agent: tpl.agent, guide: tpl.guide };
+      MailApp.sendEmail(theirEmail, fillLeadTemplate_(tpl.mailSubject, vars),
+        fillLeadTemplate_(tpl.mailBody, vars), { name: tpl.agent });
+      welcomeNote = 'welcome email sent';
+    } catch (err) {
+      welcomeNote = 'welcome email FAILED';
+    }
+    try {
+      var noteCell = sheet.getRange(newRow, 8);
+      noteCell.setValue([noteCell.getValue(), welcomeNote].filter(String).join(' | '));
+    } catch (err2) { /* the note is a bonus */ }
   }
 
   try {
@@ -124,6 +190,7 @@ function getNewLeads(status) {
   if (!sheet || sheet.getLastRow() < 2) return [];
   var tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
   var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, LEADS_HEADERS.length).getValues();
+  var tpl = getLeadTemplates_();
   var out = [];
   values.forEach(function (r, i) {
     var st = String(r[9]).trim().toUpperCase();
@@ -133,7 +200,9 @@ function getNewLeads(status) {
       rowNumber: i + 2,
       date: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : String(r[0]),
       source: String(r[1]), name: String(r[2]), company: String(r[3]),
-      phone: String(r[4]), email: String(r[5]), interest: String(r[6]), notes: String(r[7])
+      phone: String(r[4]), email: String(r[5]), interest: String(r[6]), notes: String(r[7]),
+      waMessage: fillLeadTemplate_(String(r[1]) === 'FINDER' ? tpl.waBusiness : tpl.waPerson,
+        { name: String(r[2]), company: String(r[3]), agent: tpl.agent, guide: tpl.guide })
     });
   });
   return out.reverse().slice(0, want === 'ALL' ? 500 : 50);
