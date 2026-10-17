@@ -330,13 +330,14 @@ const API = {
     /**
      * New leads waiting on the LEADS INBOX tab
      */
-    async fetchLeads() {
-        return this.get('leads');
+    async fetchLeads(status) {
+        // always sends a status, so it is never served from the cache
+        return this.get('leads', { status: status || 'NEW' });
     },
 
     /**
      * Move a lead to APPROACH or dismiss it
-     * @param {object} data - { rowNumber, expectedPhone, action: 'approach'|'dismiss' }
+     * @param {object} data - { rowNumber, expectedPhone, action: 'approach'|'dismiss'|'restore' }
      */
     async leadAction(data) {
         return this.post('leadAction', data);
