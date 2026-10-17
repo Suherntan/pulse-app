@@ -36,26 +36,35 @@ def search(query, api_key, max_results):
     return out.get("places", [])
 
 
-def to_lead(place, query):
+def split_query(item):
+    """A query is either a plain string or {"q": ..., "angle": ...}."""
+    if isinstance(item, dict):
+        return item["q"], item.get("angle", "")
+    return item, ""
+
+
+def to_lead(place, query, angle=""):
     phone = place.get("internationalPhoneNumber") or place.get("nationalPhoneNumber") or ""
     name = (place.get("displayName") or {}).get("text", "")
     if not name or not phone:
         return None
     notes = " | ".join(x for x in (place.get("formattedAddress", ""),
                                    place.get("websiteUri", ""),
-                                   "search: " + query) if x)
+                                   "search: " + query,
+                                   ("angle: " + angle) if angle else "") if x)
     return {"name": "", "company": name, "phone": phone, "email": "", "notes": notes}
 
 
 def collect(queries, api_key, max_results, seen_ids=None):
     leads, seen_ids = [], set(seen_ids or ())
-    for query in queries:
+    for item in queries:
+        query, angle = split_query(item)
         for place in search(query, api_key, max_results):
             pid = place.get("id")
             if pid in seen_ids:
                 continue
             seen_ids.add(pid)
-            lead = to_lead(place, query)
+            lead = to_lead(place, query, angle)
             if lead:
                 leads.append(lead)
     return leads
