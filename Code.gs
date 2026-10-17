@@ -695,7 +695,7 @@ function doGet(e) {
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
       case 'leads':
-        return jsonResponse(getNewLeads());
+        return jsonResponse(getNewLeads(e.parameter.status));
       // A-N-T (see ANT.gs)
       case 'antProfile':
         return jsonResponse(antProfile());

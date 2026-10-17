@@ -114,34 +114,42 @@ function addWebLead(data) {
   return { success: true };
 }
 
-/** Dashboard: leads still waiting for a decision (STATUS = NEW), newest first. */
-function getNewLeads() {
+/**
+ * Dashboard: leads newest first. status = 'NEW' (default, the Today card),
+ * 'MOVED', 'DISMISSED' or 'ALL' (the full Leads page).
+ */
+function getNewLeads(status) {
+  var want = String(status || 'NEW').toUpperCase();
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LEADS_SHEET_NAME);
   if (!sheet || sheet.getLastRow() < 2) return [];
   var tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
   var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, LEADS_HEADERS.length).getValues();
   var out = [];
   values.forEach(function (r, i) {
-    if (String(r[9]).trim().toUpperCase() !== 'NEW') return;
+    var st = String(r[9]).trim().toUpperCase();
+    if (want !== 'ALL' && st !== want) return;
     out.push({
+      status: st,
       rowNumber: i + 2,
       date: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : String(r[0]),
       source: String(r[1]), name: String(r[2]), company: String(r[3]),
       phone: String(r[4]), email: String(r[5]), interest: String(r[6]), notes: String(r[7])
     });
   });
-  return out.reverse().slice(0, 50);
+  return out.reverse().slice(0, want === 'ALL' ? 500 : 50);
 }
 
 /**
- * Dashboard buttons. { rowNumber, expectedPhone, action: 'approach' | 'dismiss' }
+ * Dashboard buttons. { rowNumber, expectedPhone, action: 'approach' | 'dismiss' | 'restore' }
  * 'approach' copies the lead onto the APPROACH tab (so it counts as an
- * approach from that moment) and marks it MOVED here.
+ * approach from that moment) and marks it MOVED here. 'restore' puts a
+ * DISMISSED lead back to NEW (a MOVED lead can't be restored: it is
+ * already on APPROACH).
  */
 function leadAction(data) {
   var row = Number(data && data.rowNumber);
   var action = data && data.action;
-  if (!row || row < 2 || (action !== 'approach' && action !== 'dismiss')) {
+  if (!row || row < 2 || (action !== 'approach' && action !== 'dismiss' && action !== 'restore')) {
     return { success: false, error: 'Bad request.' };
   }
   var lock = LockService.getScriptLock();
@@ -150,7 +158,7 @@ function leadAction(data) {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LEADS_SHEET_NAME);
     if (!sheet || row > sheet.getLastRow()) return { success: false, error: 'Lead not found -- refresh.' };
     var r = sheet.getRange(row, 1, 1, LEADS_HEADERS.length).getValues()[0];
-    if (leadPhoneKey_(r[4]) !== leadPhoneKey_(data.expectedPhone) || String(r[9]).toUpperCase() !== 'NEW') {
+    if (leadPhoneKey_(r[4]) !== leadPhoneKey_(data.expectedPhone) || String(r[9]).toUpperCase() !== (action === 'restore' ? 'DISMISSED' : 'NEW')) {
       return { success: false, error: 'This lead changed -- refresh and try again.' };
     }
     if (action === 'approach') {
@@ -163,7 +171,7 @@ function leadAction(data) {
       });
       if (!res.success) return res;
     }
-    sheet.getRange(row, 10).setValue(action === 'approach' ? 'MOVED' : 'DISMISSED');
+    sheet.getRange(row, 10).setValue(action === 'approach' ? 'MOVED' : action === 'restore' ? 'NEW' : 'DISMISSED');
     return { success: true };
   } finally {
     lock.releaseLock();

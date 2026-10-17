@@ -1446,3 +1446,54 @@ h3 {
 .lead-btn:active {
     transform: scale(0.95);
 }
+
+/* --- All Leads page --- */
+.lead-viewall {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.leads-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.lead-chip {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.lead-chip.active {
+    background: var(--navy, #0B2545);
+    border-color: var(--navy, #0B2545);
+    color: #fff;
+}
+
+.leads-search {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.lead-notes {
+    display: block;
+    margin-top: 2px;
+    word-break: break-word;
+}
+
+.lead-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #137333;
+    align-self: center;
+}
