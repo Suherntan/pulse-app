@@ -230,6 +230,18 @@ var currentLeads = [];
 
 // WhatsApp link with the lead's first-message template already filled in
 // (wording lives on the SETTINGS tab of the Sheet). You still press Send.
+// Email button (mailto) for leads that have an email address
+function leadMailBtn(l) {
+    if (!l.email) return '';
+    return '<a class="reminder-action-btn email" href="mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@') +
+        '" title="Email ' + escapeHtml(l.email) + '">&#9993;</a>';
+}
+
+// What to show under a lead's name: phone, or the email when there is no phone
+function leadContactText(l) {
+    return l.phone || l.email || '';
+}
+
 function leadWaHref(phone, message) {
     return 'https://wa.me/' + phone + (message ? '?text=' + encodeURIComponent(message) : '');
 }
@@ -261,9 +273,10 @@ function renderLeadsList() {
         var waBtn = wa
             ? '<a class="reminder-action-btn wa" href="' + leadWaHref(wa, l.waMessage) + '" target="_blank" rel="noopener" title="WhatsApp (message ready)">&#128172;</a>'
             : '';
+        waBtn += leadMailBtn(l);
         return '<div class="reminder-item"><div class="reminder-item-info">' +
             '<span class="name">' + escapeHtml(title) + '</span>' +
-            '<span class="detail">' + escapeHtml(l.phone) + (sub ? ' &middot; ' + sub : '') + '</span>' +
+            '<span class="detail">' + escapeHtml(leadContactText(l)) + (sub ? ' &middot; ' + sub : '') + '</span>' +
             '</div><div class="reminder-actions">' + waBtn +
             '<button class="lead-btn" onclick="handleLeadAction(' + i + ',\'approach\')">To Approach</button>' +
             '<button class="lead-btn lead-btn-dismiss" onclick="handleLeadAction(' + i + ',\'dismiss\')" title="Dismiss">&times;</button>' +
@@ -326,7 +339,7 @@ function renderLeadsTab() {
         var sub = [l.name ? l.company : '', l.interest, l.source === 'FINDER' ? 'public listing' : 'web form', formatNiceDate(l.date)]
             .filter(Boolean).map(escapeHtml).join(' &middot; ');
         var wa = normalizePhoneJS(l.phone);
-        var waBtn = wa ? '<a class="reminder-action-btn wa" href="' + leadWaHref(wa, l.waMessage) + '" target="_blank" rel="noopener" title="WhatsApp (message ready)">&#128172;</a>' : '';
+        var waBtn = (wa ? '<a class="reminder-action-btn wa" href="' + leadWaHref(wa, l.waMessage) + '" target="_blank" rel="noopener" title="WhatsApp (message ready)">&#128172;</a>' : '') + leadMailBtn(l);
         var actions;
         if (l.status === 'NEW') {
             actions = waBtn +
@@ -339,7 +352,7 @@ function renderLeadsTab() {
         }
         return '<div class="reminder-item"><div class="reminder-item-info">' +
             '<span class="name">' + escapeHtml(title) + '</span>' +
-            '<span class="detail">' + escapeHtml(l.phone) + (sub ? ' &middot; ' + sub : '') + '</span>' +
+            '<span class="detail">' + escapeHtml(leadContactText(l)) + (sub ? ' &middot; ' + sub : '') + '</span>' +
             (l.notes ? '<span class="detail lead-notes">' + escapeHtml(l.notes) + '</span>' : '') +
             '</div><div class="reminder-actions">' + actions + '</div></div>';
     }).join('');
@@ -349,7 +362,7 @@ async function handleLeadTabAction(index, action) {
     var lead = visibleLeads[index];
     if (!lead) return;
     try {
-        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, action: action });
+        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, expectedEmail: lead.email, action: action });
         showToast(action === 'approach' ? 'Added to APPROACH' : action === 'restore' ? 'Lead restored' : 'Lead dismissed');
         if (action === 'approach') loadAllData();
     } catch (e) {
@@ -363,7 +376,7 @@ async function handleLeadAction(index, action) {
     var lead = currentLeads[index];
     if (!lead) return;
     try {
-        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, action: action });
+        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, expectedEmail: lead.email, action: action });
         showToast(action === 'approach' ? 'Added to APPROACH' : 'Lead dismissed');
         await loadAndRenderLeads();
         if (action === 'approach') loadAllData();

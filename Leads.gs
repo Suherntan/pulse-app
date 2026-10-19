@@ -96,13 +96,25 @@ function leadPhoneKey_(raw) {
   return digits.length >= 8 ? digits.slice(-9) : '';   // last 9 digits
 }
 
+function leadEmailKey_(raw) {
+  var e = String(raw || '').trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? 'e:' + e : '';
+}
+
+/** Phone key when there is a phone, otherwise the email key ('' if neither). */
+function leadKey_(phone, email) {
+  return leadPhoneKey_(phone) || leadEmailKey_(email);
+}
+
 function existingLeadPhoneKeys_(sheet) {
   var keys = {};
   var last = sheet.getLastRow();
   if (last < 2) return keys;
-  sheet.getRange(2, 5, last - 1, 1).getValues().forEach(function (r) {
+  sheet.getRange(2, 5, last - 1, 2).getValues().forEach(function (r) {
     var k = leadPhoneKey_(r[0]);
     if (k) keys[k] = true;
+    var ek = leadEmailKey_(r[1]);
+    if (ek) keys[ek] = true;
   });
   return keys;
 }
@@ -227,16 +239,16 @@ function leadAction(data) {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LEADS_SHEET_NAME);
     if (!sheet || row > sheet.getLastRow()) return { success: false, error: 'Lead not found -- refresh.' };
     var r = sheet.getRange(row, 1, 1, LEADS_HEADERS.length).getValues()[0];
-    if (leadPhoneKey_(r[4]) !== leadPhoneKey_(data.expectedPhone) || String(r[9]).toUpperCase() !== (action === 'restore' ? 'DISMISSED' : 'NEW')) {
+    if (leadKey_(r[4], r[5]) !== leadKey_(data.expectedPhone, data.expectedEmail) || String(r[9]).toUpperCase() !== (action === 'restore' ? 'DISMISSED' : 'NEW')) {
       return { success: false, error: 'This lead changed -- refresh and try again.' };
     }
     if (action === 'approach') {
       var res = addActivity({
         activityType: 'APPROACH',
         name: String(r[2] || r[3]),
-        contact: String(r[4]),
+        contact: String(r[4] || r[5]),            // phone, or the email when there is no phone
         nature: 'Lead (' + String(r[1]).toLowerCase() + ')',
-        remarks: [r[3], r[6], r[7]].filter(String).join(' | ')
+        remarks: [r[3], r[5], r[6], r[7]].filter(String).join(' | ')
       });
       if (!res.success) return res;
     }
@@ -267,9 +279,15 @@ function addFinderLeads(data) {
     var rows = [];
     var skipped = 0;
     leads.forEach(function (l) {
-      var key = leadPhoneKey_(l.phone);
-      if (!key || seen[key]) { skipped++; return; }
-      seen[key] = true;
+      var phoneKey = leadPhoneKey_(l.phone);
+      var emailKey = leadEmailKey_(l.email);
+      // Needs a phone or an email, and neither may already be in the inbox.
+      if ((!phoneKey && !emailKey) || (phoneKey && seen[phoneKey]) || (emailKey && seen[emailKey])) {
+        skipped++;
+        return;
+      }
+      if (phoneKey) seen[phoneKey] = true;
+      if (emailKey) seen[emailKey] = true;
       rows.push([
         new Date(), 'FINDER', leadClean_(l.name, 80), leadClean_(l.company, 120),
         leadClean_(l.phone, 30), leadClean_(l.email, 100), '',
