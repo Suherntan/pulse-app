@@ -136,7 +136,7 @@ To remove a client completely:
 |---|---|
 | Form says **NOT CONNECTED** | Link wrong, or step 4 (New version) not done. |
 | "Unknown action: antSaveClient" | Step 2 pieces not pasted, or step 4 not done. |
-| "You do not have permission to call DriveApp.createFolder" | New code needs Google Drive permission. Apps Script → pick function **antShowFolderLink** → **Run** → Review permissions → your account → Advanced → Go to … (unsafe) → **Allow**. Then Deploy → Manage deployments → ✏️ → **New version**. |
+| "You do not have permission to call DriveApp.createFolder" | New code needs Google Drive permission. Apps Script → pick function **antShowFolderLink** → **Run** → Review permissions → your account → Advanced → Go to … (unsafe) → **Allow**. A box then opens **in the Google Sheet tab** (not in Apps Script) – switch to the Sheet and click **OK**, or the run waits and ends with "Exceeded maximum execution time" (harmless, permission is already saved). Then Deploy → Manage deployments → ✏️ → **New version**. |
 | "CONNECTED – RUN A-N-T SETUP" | Do step 3 (Advisor ID missing). |
 | "Save the client in the Fact-Find form first" | The analysis needs a saved client (with a C-number). |
 
