@@ -1,5 +1,5 @@
 {
-  "max_per_query": 10,
+  "max_per_query": 20,
   "queries": [
     {
       "q": "specialist clinic in Petaling Jaya",
