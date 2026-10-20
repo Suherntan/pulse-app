@@ -1124,6 +1124,21 @@ function searchClients(query) {
   });
 }
 
+// ---------------------------------------------------------------------
+// Library mode. When this code runs as the "PULSE" library, the advisor's
+// small connector script calls PULSE.pulseUse({...}) first and passes in its
+// OWN properties, cache, lock and ScriptApp. A library's own copies are shared
+// by every advisor, so settings (Advisor ID, counters, Master key) and
+// triggers must always come from the advisor's side. Pasted directly into a
+// sheet (no connector), the normal services are used.
+// ---------------------------------------------------------------------
+var PULSE_HOST_ = null;
+function pulseUse(host) { PULSE_HOST_ = host || null; }
+function pulseProps_() { return (PULSE_HOST_ && PULSE_HOST_.props) || PropertiesService.getScriptProperties(); }
+function pulseCache_() { return (PULSE_HOST_ && PULSE_HOST_.cache) || CacheService.getScriptCache(); }
+function pulseLock_() { return (PULSE_HOST_ && PULSE_HOST_.lock) || LockService.getScriptLock(); }
+function pulseApp_() { return (PULSE_HOST_ && PULSE_HOST_.app) || ScriptApp; }
+
 // Trial switch lives in ANT.gs; sheets without ANT.gs are always on.
 function pulseLicence_() {
   try { return typeof antLicence_ === 'function' ? antLicence_() : { ok: true }; }
@@ -1678,7 +1693,7 @@ function runDailyAutomation() {
 
 function createDailyTrigger() {
   removeDailyTrigger();
-  ScriptApp.newTrigger("runDailyAutomation")
+  pulseApp_().newTrigger("runDailyAutomation")
     .timeBased()
     .everyDays(1)
     .atHour(7)
@@ -1687,11 +1702,11 @@ function createDailyTrigger() {
 }
 
 function removeDailyTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
+  var triggers = pulseApp_().getProjectTriggers();
   triggers.forEach(function (t) {
     var fn = t.getHandlerFunction();
     if (fn === "runDailyAutomation" || fn === "buildTodayReminders") {
-      ScriptApp.deleteTrigger(t);
+      pulseApp_().deleteTrigger(t);
     }
   });
   SpreadsheetApp.getActive().toast("Daily auto-refresh + auto-emails turned OFF.", "PULSE Reminders", 5);
@@ -1714,7 +1729,7 @@ function remindManulifeImport() {
   if (!email) return; // nothing we can do without an address
 
   var settings = getAgentSettings_();
-  var stamp = PropertiesService.getScriptProperties().getProperty(LAST_MANULIFE_IMPORT_KEY);
+  var stamp = pulseProps_().getProperty(LAST_MANULIFE_IMPORT_KEY);
   var sinceLine = "This is your first one — no Manulife import has been recorded yet.";
   if (stamp) {
     var last = new Date(stamp);
@@ -1741,7 +1756,7 @@ function remindManulifeImport() {
 
 function createMonthlyManulifeReminder() {
   removeMonthlyManulifeReminder();
-  ScriptApp.newTrigger("remindManulifeImport")
+  pulseApp_().newTrigger("remindManulifeImport")
     .timeBased()
     .onMonthDay(1)
     .atHour(8)
@@ -1753,10 +1768,10 @@ function createMonthlyManulifeReminder() {
 }
 
 function removeMonthlyManulifeReminder() {
-  var triggers = ScriptApp.getProjectTriggers();
+  var triggers = pulseApp_().getProjectTriggers();
   triggers.forEach(function (t) {
     if (t.getHandlerFunction() === "remindManulifeImport") {
-      ScriptApp.deleteTrigger(t);
+      pulseApp_().deleteTrigger(t);
     }
   });
   SpreadsheetApp.getActive().toast("Monthly Manulife import reminder is OFF.", "PULSE Reminders", 5);
@@ -3822,7 +3837,7 @@ function importPaymentModeAndAddress() {
 
   // Stamp when this ran, so the monthly reminder email can say how long
   // it's been since the last refresh.
-  PropertiesService.getScriptProperties().setProperty(LAST_MANULIFE_IMPORT_KEY, new Date().toISOString());
+  pulseProps_().setProperty(LAST_MANULIFE_IMPORT_KEY, new Date().toISOString());
 
   ui.alert(
     "Import complete.\n\n" +
@@ -4484,7 +4499,7 @@ function syncAppointmentStatusFromCalendar() {
 
 function createDailyAppointmentSyncTrigger() {
   removeDailyAppointmentSyncTrigger();
-  ScriptApp.newTrigger("syncAppointmentStatusFromCalendar")
+  pulseApp_().newTrigger("syncAppointmentStatusFromCalendar")
     .timeBased()
     .everyDays(1)
     .atHour(6)
@@ -4493,10 +4508,10 @@ function createDailyAppointmentSyncTrigger() {
 }
 
 function removeDailyAppointmentSyncTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
+  var triggers = pulseApp_().getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === "syncAppointmentStatusFromCalendar") {
-      ScriptApp.deleteTrigger(triggers[i]);
+      pulseApp_().deleteTrigger(triggers[i]);
     }
   }
 }

@@ -90,7 +90,7 @@ function antAddMenu_() {
 
 function antSetup() {
   var ui = SpreadsheetApp.getUi();
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   var current = props.getProperty(ANT_PROP_AGENT_ID) || '';
 
   var res = ui.prompt('A-N-T Setup',
@@ -149,7 +149,7 @@ function antProfile() {
   var s = getAgentSettings_();
   return {
     ok: true,
-    agentId: PropertiesService.getScriptProperties().getProperty(ANT_PROP_AGENT_ID) || '',
+    agentId: pulseProps_().getProperty(ANT_PROP_AGENT_ID) || '',
     agentName: s.agentName,
     agentPhone: s.agentWhatsApp
   };
@@ -235,7 +235,7 @@ function antSaveClient(data) {
   if (!data || !String(data.name || '').trim()) return { ok: false, error: 'Client name is required' };
   if (!data.consent) return { ok: false, error: 'Client consent is required' };
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     var sheet = antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
@@ -297,7 +297,7 @@ function antSaveAnalysis(data) {
   var client = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', data.clientId);
   if (!client) return { ok: false, error: 'Client not found: ' + data.clientId };
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     var sheet = antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
@@ -363,7 +363,7 @@ function antSaveOffer(data) {
   if (!client) return { ok: false, error: 'Client not found: ' + data.clientId };
   var offer = data.offer || {};
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     var sheet = antSheet_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS);
@@ -615,7 +615,7 @@ function antSetClientStage_(clientId, stage) {
 
 function antConnectMaster() {
   var ui = SpreadsheetApp.getUi();
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   if (!props.getProperty(ANT_PROP_AGENT_ID)) { ui.alert('Run A-N-T > Set Up A-N-T first.'); return; }
 
   var u = ui.prompt('Connect to Master', 'Master link from your manager (starts with https://script.google.com/)', ui.ButtonSet.OK_CANCEL);
@@ -629,8 +629,8 @@ function antConnectMaster() {
   if (!res.ok) { ui.alert('Not connected', res.error + '\n\nCheck the link and key with your manager, then try again.', ui.ButtonSet.OK); return; }
 
   // Re-send anything that failed, every night.
-  var has = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'antFlushOutbox'; });
-  if (!has) ScriptApp.newTrigger('antFlushOutbox').timeBased().everyDays(1).atHour(1).create();
+  var has = pulseApp_().getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'antFlushOutbox'; });
+  if (!has) pulseApp_().newTrigger('antFlushOutbox').timeBased().everyDays(1).atHour(1).create();
 
   ui.alert('Connected to Master ✓',
     'From now on every saved client and analysis is also copied to your manager (data only, no files).' +
@@ -639,7 +639,7 @@ function antConnectMaster() {
 
 // Returns 'sent', 'queued' (will retry) or 'off' (not connected).
 function antSendToMaster_(type, values) {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   if (!props.getProperty(ANT_PROP_MASTER_URL)) return 'off';
   var record = antMasterRecord_(values);
   var res = antPostMaster_({ type: type, record: record });
@@ -664,7 +664,7 @@ function antFlushOutbox() {
 
 function antSendAllToMaster() {
   var ui = SpreadsheetApp.getUi();
-  if (!PropertiesService.getScriptProperties().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
+  if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
   var counts = { sent: 0, queued: 0 };
   [['client', ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], ['analysis', ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS],
    ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
@@ -689,7 +689,7 @@ function antMasterRecord_(values) {
 }
 
 function antPostMaster_(payload) {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   payload.agentId = props.getProperty(ANT_PROP_AGENT_ID);
   payload.key = props.getProperty(ANT_PROP_MASTER_KEY);
   try {
@@ -709,9 +709,9 @@ function antPostMaster_(payload) {
 // whether this advisor is still on. Not connected, or Master unreachable
 // → PULSE keeps working (an outage never locks anyone out).
 function antLicence_() {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   if (!props.getProperty(ANT_PROP_MASTER_URL)) return { ok: true };
-  var cache = CacheService.getScriptCache();
+  var cache = pulseCache_();
   var hit = cache.get('ANT_LICENCE');
   if (hit) return JSON.parse(hit);
   var res = antPostMaster_({ ping: true });
@@ -722,7 +722,7 @@ function antLicence_() {
 
 // Manager turned the advisor back on? Run this to re-check now instead of waiting.
 function antRecheckLicence() {
-  CacheService.getScriptCache().remove('ANT_LICENCE');
+  pulseCache_().remove('ANT_LICENCE');
   var l = antLicence_();
   SpreadsheetApp.getUi().alert(l.ok ? 'PULSE is on ✓' : l.error);
 }
@@ -819,7 +819,7 @@ function antFindRow_(name, headers, key, value) {
 // new client can't land in the old Drive folder or pipeline link. The highest
 // number ever given is kept in Script Properties (ANT_LAST_C- / A- / O-).
 function antNextId_(sheet, prefix) {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   var key = 'ANT_LAST_' + prefix;
   var max = Number(props.getProperty(key)) || 0;
   if (sheet.getLastRow() > 1) {
@@ -848,7 +848,7 @@ function antHighestFolderNumber_() {
 }
 
 function antRootFolder_() {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   var id = props.getProperty(ANT_PROP_ROOT_FOLDER);
   if (id) {
     try { return DriveApp.getFolderById(id); } catch (e) { /* deleted – make a new one */ }

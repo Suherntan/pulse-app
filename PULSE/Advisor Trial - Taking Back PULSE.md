@@ -41,5 +41,5 @@ Question: an advisor tries PULSE for 3 months; if they stop, how do we take it b
 | **Library (recommended)** – all PULSE code lives in ONE Apps Script project in Su's account; advisor's Sheet keeps only a short "connector" script that calls it | Free | **Yes** – one master copy | Remove their access to the library → automation stops at once (plus trial switch) | They need "view" access to use a library, so a determined person could still read/copy it; library calls are a little slower |
 | Central script run by Su for everyone | Free | Yes, hidden | Instant | All emails/WhatsApp reminders would come from **Su's** Gmail; Su's daily Google limits shared by all advisors; Su can see all their clients – not suitable |
 | Google Workspace add-on | Paid / Google review | Yes, hidden | Uninstall | Heavy setup, Google verification |
-- Library bonus: **one update reaches every advisor** (no more pasting Code.gs/ANT.gs per person).
-- Status: proposal – waiting for Su's go-ahead.
+- Library bonus: update the code **once** in Su's library; each advisor then only switches to the new version number (2 min) instead of pasting Code.gs/ANT.gs.
+- Status: **built 20 Oct 2026** – see [[PULSE Library - Setup Guide]].
