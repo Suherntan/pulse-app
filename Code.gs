@@ -673,6 +673,8 @@ function doGet(e) {
   // widget calls the bare URL with no query string, so it relies on
   // this default rather than passing an action explicitly.
   var action = (e && e.parameter && e.parameter.action) || 'fetchAll';
+  var lic = pulseLicence_();
+  if (!lic.ok) return jsonResponse({ error: lic.error, trialEnded: true });
 
   try {
     switch (action) {
@@ -711,6 +713,8 @@ function doGet(e) {
 
 function doPost(e) {
   var action = e.parameter.action;
+  var lic = pulseLicence_();
+  if (!lic.ok) return jsonResponse({ error: lic.error, trialEnded: true });
 
   try {
     var data = JSON.parse(e.postData.contents);
@@ -1118,6 +1122,12 @@ function searchClients(query) {
       paymentDue: row.paymentDue
     };
   });
+}
+
+// Trial switch lives in ANT.gs; sheets without ANT.gs are always on.
+function pulseLicence_() {
+  try { return typeof antLicence_ === 'function' ? antLicence_() : { ok: true }; }
+  catch (err) { return { ok: true }; }
 }
 
 function jsonResponse(data) {

@@ -21,7 +21,7 @@ var M_CLIENTS = 'CLIENTS';
 var M_ANALYSIS = 'ANALYSIS';
 var M_OFFERS = 'OFFERS';
 var M_LOG = 'LOG';
-var M_AGENT_HEADERS = ['Advisor ID', 'Advisor Name', 'Phone', 'Secret Key', 'Active', 'Added', 'Last Received'];
+var M_AGENT_HEADERS = ['Advisor ID', 'Advisor Name', 'Phone', 'Secret Key', 'Active', 'Trial Ends', 'Added', 'Last Received'];
 var M_LOG_HEADERS = ['Time', 'Advisor ID', 'Type', 'Record ID', 'Result'];
 var M_BACKUP_FOLDER = 'A-N-T Master Backups';
 var M_BACKUP_KEEP = 8;
@@ -88,12 +88,18 @@ function masterAddAgent() {
   var nameRes = ui.prompt('Add Advisor', 'Advisor name (optional)', ui.ButtonSet.OK_CANCEL);
   if (nameRes.getSelectedButton() !== ui.Button.OK) return;
 
+  var trialRes = ui.prompt('Add Advisor', 'Trial end date (dd/mm/yyyy), e.g. 3 months from today.\nLeave blank = no end date.', ui.ButtonSet.OK_CANCEL);
+  if (trialRes.getSelectedButton() !== ui.Button.OK) return;
+  var trialEnds = mParseDate_(trialRes.getResponseText());
+  if (trialRes.getResponseText().trim() && !trialEnds) { ui.alert('Date not understood – use dd/mm/yyyy, e.g. 20/01/2027.'); return; }
+
   var key = Utilities.getUuid().replace(/-/g, '').slice(0, 24);
   mUpsert_(sheet, 'Advisor ID', {
     'Advisor ID': agentId,
     'Advisor Name': nameRes.getResponseText().trim() || (found ? found.row['Advisor Name'] : ''),
     'Secret Key': key,
     'Active': 'Yes',
+    'Trial Ends': trialEnds || '',
     'Added': found ? found.row['Added'] : new Date()
   });
   ui.alert('Give these to ' + agentId,
@@ -138,7 +144,11 @@ function doPost(e) {
     return mJson_({ ok: false, error: 'Advisor ID or secret key is wrong' });
   }
   if (String(agent.row['Active']).toLowerCase() !== 'yes') {
-    return mJson_({ ok: false, error: 'This advisor is turned off by the manager' });
+    return mJson_({ ok: false, off: true, error: 'PULSE is switched off for this advisor. Please contact your manager.' });
+  }
+  var trialEnds = mParseDate_(agent.row['Trial Ends']);
+  if (trialEnds && new Date() > new Date(trialEnds.getTime() + 24 * 3600 * 1000)) {
+    return mJson_({ ok: false, off: true, error: 'Your PULSE trial has ended. Please contact your manager to continue.' });
   }
   if (body.ping) return mJson_({ ok: true, agentName: agent.row['Advisor Name'] });
 
@@ -227,7 +237,7 @@ function mSheet_(name, headers) {
 
 // Master date columns show dd/mm/yyyy like the PULSE tabs.
 function mDateFormats_(sh) {
-  var f = { 'Added': 'dd/mm/yyyy', 'Last Received': 'dd/mm/yyyy hh:mm', 'Received': 'dd/mm/yyyy hh:mm', 'Time': 'dd/mm/yyyy hh:mm' };
+  var f = { 'Added': 'dd/mm/yyyy', 'Trial Ends': 'dd/mm/yyyy', 'Last Received': 'dd/mm/yyyy hh:mm', 'Received': 'dd/mm/yyyy hh:mm', 'Time': 'dd/mm/yyyy hh:mm' };
   mHeaders_(sh).forEach(function (h, i) {
     if (f[h]) sh.getRange(2, i + 1, Math.max(sh.getMaxRows() - 1, 1), 1).setNumberFormat(f[h]);
   });
@@ -249,6 +259,13 @@ function mRenameHeaders_(sh) {
     return h;
   });
   if (changed) rng.setValues([row]);
+}
+
+// "Trial Ends" may be a real date cell or text like 20/01/2027.
+function mParseDate_(v) {
+  if (v instanceof Date && !isNaN(v)) return v;
+  var m = String(v || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
 }
 
 function mHeaders_(sh) {

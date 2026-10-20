@@ -20,4 +20,16 @@ Question: an advisor tries PULSE for 3 months; if they stop, how do we take it b
 
 **Recommendation: A + D.** Build the trial switch on the Master "Active" column and sign a short trial agreement (3 months, PULSE code/design stays Su's, must stop using after trial unless paid/renewed; client data stays with advisor).
 
-Status: proposal – waiting for Su's go-ahead to build A.
+## Built (20 Oct 2026) – option A + D
+- **Master ADVISORS tab** has a new column **Trial Ends** (dd/mm/yyyy). "Add Advisor" asks for it (blank = no end).
+- Advisor PULSE stops when **Active = No** *or* today is after **Trial Ends** → app shows **"PULSE IS PAUSED"**, saved data on the phone is cleared, all saves/loads are refused.
+- The advisor's script checks the Master at most every **6 hours** (so a change can take up to 6 h). Advisor menu **A-N-T → Check PULSE On / Off** re-checks at once.
+- Only works when the advisor's sheet is **connected to the Master** (Su does this during setup). Master down / no internet → PULSE keeps working (never locks out by accident).
+- The Google Sheet itself still opens for the advisor (it is their file) – only the PULSE app and its tools stop.
+- Agreement draft: [[PULSE Trial Agreement (draft)]].
+
+### How to run a trial
+1. Master → **A-N-T Master → Add Advisor** → ID, name, **Trial Ends** (3 months ahead) → give link + key.
+2. Set up the advisor's PULSE and **A-N-T → Connect to Master** with that link + key.
+3. Both sign the trial agreement.
+4. End: nothing to do – it stops by itself after Trial Ends. To stop early: set **Active = No**. To extend: change **Trial Ends**.

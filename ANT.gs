@@ -84,6 +84,7 @@ function antAddMenu_() {
     .addItem('Connect to Master (from your manager)', 'antConnectMaster')
     .addItem('Re-send Waiting Items to Master Now', 'antFlushOutbox')
     .addItem('Send Everything to Master (one-time)', 'antSendAllToMaster')
+    .addItem('Check PULSE On / Off', 'antRecheckLicence')
     .addToUi();
 }
 
@@ -697,10 +698,33 @@ function antPostMaster_(payload) {
       muteHttpExceptions: true, followRedirects: true
     });
     var out = JSON.parse(resp.getContentText());
-    return out.ok ? out : { ok: false, error: out.error || 'Master said no' };
+    return out.ok ? out : { ok: false, off: !!out.off, error: out.error || 'Master said no' };
   } catch (e) {
     return { ok: false, error: 'Master not reachable: ' + e.message };
   }
+}
+
+
+// Trial switch: when connected to a Master, ask it (at most every 6 hours)
+// whether this advisor is still on. Not connected, or Master unreachable
+// → PULSE keeps working (an outage never locks anyone out).
+function antLicence_() {
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty(ANT_PROP_MASTER_URL)) return { ok: true };
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('ANT_LICENCE');
+  if (hit) return JSON.parse(hit);
+  var res = antPostMaster_({ ping: true });
+  var out = res.off ? { ok: false, error: res.error } : { ok: true };
+  cache.put('ANT_LICENCE', JSON.stringify(out), res.ok || res.off ? 6 * 3600 : 1800);
+  return out;
+}
+
+// Manager turned the advisor back on? Run this to re-check now instead of waiting.
+function antRecheckLicence() {
+  CacheService.getScriptCache().remove('ANT_LICENCE');
+  var l = antLicence_();
+  SpreadsheetApp.getUi().alert(l.ok ? 'PULSE is on ✓' : l.error);
 }
 
 

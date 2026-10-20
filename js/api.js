@@ -146,6 +146,12 @@ const API = {
 
             const data = await response.json();
 
+            // Trial ended: wipe saved data so nothing shows from the cache
+            if (data.trialEnded) {
+                this.clearCache();
+                pulseShowTrialEnded(data.error);
+            }
+
             // Check for error from backend
             if (data.error) {
                 throw new Error(data.error);
@@ -204,6 +210,10 @@ const API = {
 
             const result = await response.json();
 
+            if (result.trialEnded) {
+                this.clearCache();
+                pulseShowTrialEnded(result.error);
+            }
             if (result.error) {
                 throw new Error(result.error);
             }
@@ -357,3 +367,18 @@ const API = {
         return this.post('sendBirthdayVouchers', {});
     }
 };
+
+// Trial ended / switched off by the manager: cover the app with a clear message.
+function pulseShowTrialEnded(msg) {
+    if (document.getElementById('pulse-trial-ended')) return;
+    const d = document.createElement('div');
+    d.id = 'pulse-trial-ended';
+    d.setAttribute('role', 'alertdialog');
+    d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0B2545;color:#F4F2EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;font-family:inherit';
+    d.innerHTML = '<div style="font-size:44px">⏸</div><h2 style="margin:0;color:#F3AF3D;letter-spacing:.06em">PULSE IS PAUSED</h2>';
+    const p = document.createElement('p');
+    p.style.cssText = 'max-width:420px;line-height:1.5;margin:0';
+    p.textContent = msg || 'Your PULSE trial has ended.';
+    d.appendChild(p);
+    document.body.appendChild(d);
+}
