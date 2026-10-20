@@ -1,5 +1,11 @@
 # Facebook Auto-Post through Google – Setup Guide (20 Oct 2026)
 
+> **Status 20 Oct 2026: PARKED – Facebook blocked the token step.**
+> - App 1 "PULSE Poster" (Business type, use case *Manage everything on your Page*, App ID 1116027154533655): Page permissions OK, but Graph API Explorer says *"No configuration available"*; "Facebook Login for Business" can't be added; the manual login link returns `blank.html#_=_` (no token).
+> - App 2 "PULSE Poster 2" (*Facebook Login* use case): Page permissions are not offered at all.
+> - Decision: post with **Buffer** (already connected) or **Meta Business Suite → Planner**. Social.gs stays in the Sheet (auto-post never switched on). Retry only if Meta changes its setup (e.g. once a Business portfolio is verified).
+
+
 Free. PULSE app → **SCHEDULE ON FACEBOOK** → row in the **SOCIAL QUEUE** tab of your PULSE Sheet → a Google timer (every 15 min) posts it to your **Facebook Page** with all slide pictures in one post.
 Links: [[Social Posting - Setup & Schedule]] · code: `Social.gs`, privacy page: `privacy.html`
 
