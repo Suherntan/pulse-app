@@ -21,7 +21,7 @@ Backup if Buffer gives trouble: Meta Business Suite (FB + IG, free) + LinkedIn's
    - If Buffer asks: choose **"Automatic publishing"** (posts by itself, not a phone reminder).
 5. **Connect channel → LinkedIn** → choose your **profile** → allow.
 6. Settings → **Timezone = Kuala Lumpur**.
-7. Posting schedule (each channel): **Wednesday 8:30 PM**.
+7. Posting schedule (Wednesday, Malaysia time): **LinkedIn 5:00 PM · Facebook 8:00 PM · Instagram 9:00 PM** (see Best times below).
 8. Install the **Buffer app** on the phone and log in (to add pictures from the phone).
 
 ## Each week / or all of November at once
@@ -30,11 +30,11 @@ Backup if Buffer gives trouble: Meta Business Suite (FB + IG, free) + LinkedIn's
 3. Buffer app → **New post** → tick FB + IG + LinkedIn.
 4. Click **"Customize for each network"** → paste the FB text / IG text / LinkedIn text from PULSE (COPY buttons).
 5. Add the slide pictures (IG + FB). LinkedIn: add the PDF if offered, else post it later in LinkedIn app.
-6. **Schedule** → pick the date below → 8:30 PM → Schedule.
+6. **Schedule** → pick the date below → time per platform (LinkedIn 5 PM, FB 8 PM, IG 9 PM) → Schedule. (Different times = schedule each channel separately, or use "Add to Queue" once the posting schedule is set.)
 7. 小红书: open 创作服务平台 (laptop) → 发布笔记 → upload 3:4 中文 slides + title + text → **定时发布** → same date.
 8. After it goes out → PULSE → tick **Posted**.
 
-## November plan (Wednesdays, 8:30 PM)
+## November plan (Wednesdays – LinkedIn 5 PM, FB 8 PM, IG 9 PM)
 | Date | Post |
 |---|---|
 | Wed 4 Nov | PRS tax relief RM3,000 |
@@ -54,3 +54,13 @@ Before scheduling each one: read the [NOTE] and re-check the facts (LHDN / PPA /
 - Price (their pricing page, as found in search): first **2 accounts free**, then about **US$6/month per extra account** → FB + IG + LinkedIn = ~US$6/month. (Older listings say free = 10 posts/month – check before signing up.)
 - 小红书: **not listed** – still manual 定时发布.
 - Decision: **stay on Buffer free** for now. Zernio only makes sense later if we want a "Post now" button inside PULSE (PULSE → Apps Script → Zernio API).
+
+## Best times to post (checked 13 Oct 2026)
+| Platform | Our time (Wed, MYT) | Why |
+|---|---|---|
+| LinkedIn | **5:00 PM** | Malaysia estimate 5–7 PM (peak 5 PM); Buffer global data: weekday afternoons, Wed 4 PM |
+| Facebook | **8:00 PM** | Malaysia estimate 6–8 PM (peak 7 PM); Wednesday is the best day for engagement (Buffer) |
+| Instagram | **9:00 PM** | Malaysia estimate 8–10 PM (peak 9 PM) |
+- Weekends are weakest on most platforms (Sprout, Buffer).
+- Malaysia figures come from timetopost.co (an estimate, not real Malaysian data). Global studies (Buffer, Sprout) point to daytime – our followers are working people, so evenings are the safer start.
+- **Check after 4 weeks:** Buffer → Insights and Meta Business Suite → Insights show when *your* followers are online. Move the times if they say otherwise.

@@ -62,7 +62,7 @@ function existingLeadPhoneKeys_(sheet) {
 }
 
 function leadsRateLimited_(count) {
-  var cache = CacheService.getScriptCache();
+  var cache = pulseCache_();
   var used = Number(cache.get('leads_hour_count') || 0);
   if (used + count > LEADS_MAX_PER_HOUR) return true;
   cache.put('leads_hour_count', String(used + count), 3600);
@@ -82,7 +82,7 @@ function addWebLead(data) {
   if (!name) return { success: false, error: 'Please enter your name.' };
   if (!leadPhoneKey_(phone)) return { success: false, error: 'Please enter a valid phone number.' };
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     if (leadsRateLimited_(1)) {
@@ -152,7 +152,7 @@ function leadAction(data) {
   if (!row || row < 2 || (action !== 'approach' && action !== 'dismiss' && action !== 'restore')) {
     return { success: false, error: 'Bad request.' };
   }
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LEADS_SHEET_NAME);
@@ -183,14 +183,14 @@ function leadAction(data) {
  * email, notes }] }. Public-business listings only.
  */
 function addFinderLeads(data) {
-  var secret = PropertiesService.getScriptProperties().getProperty('LEAD_FINDER_SECRET');
+  var secret = pulseProps_().getProperty('LEAD_FINDER_SECRET');
   if (!secret || data.secret !== secret) {
     return { success: false, error: 'Not allowed.' };
   }
   var leads = (data.leads || []).slice(0, LEADS_MAX_BATCH);
   if (!leads.length) return { success: true, added: 0, skipped: 0 };
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(30000);
   try {
     var sheet = getLeadsSheet_();

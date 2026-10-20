@@ -132,3 +132,7 @@ Recommend **A**.
 
 ## Later: agency master list (not now)
 When the agency manager sets up the master sheet, Stevern gets a **Master link + secret key**. Then: **A-N-T → Connect to Master**. His saved clients, analyses and offers are copied there as data only (no files), as `SP01-C-0001` and so on. Until then, nothing goes anywhere except his own Google account.
+
+## Done on Stevern's PULSE (19 Oct 2026) ✅
+- Pasted latest `Code.gs` + `ANT.gs`, gave Drive permission, deployed New version → **SAVE CLIENT works**.
+- Lessons: (1) new code that uses Drive needs a one-time **Run** in Apps Script to show the permission box; (2) the `antShowFolderLink` box opens in the **Sheet tab** – click OK there, otherwise the run ends with "Exceeded maximum execution time" (harmless); (3) first save after an update can take up to ~1 min.
