@@ -7,8 +7,9 @@ Links: [[Social Posting - Setup & Schedule]] · code: `Social.gs`, privacy page:
 1. PULSE Sheet → **Extensions → Apps Script**.
 2. Replace **Code.gs** with the latest Code.gs (GitHub → copy button → Ctrl+A, Ctrl+V → Save).
 3. **+ → Script** → name `Social` → paste **Social.gs** → Save.
-4. **Deploy → Manage deployments → ✏️ → New version → Deploy**.
-5. Refresh the Sheet → new menu **Social Posts** appears.
+4. With **Social.gs** open, choose function **socialStatus** → **▶ Run** → Review permissions → Advanced → Go to … (unsafe) → **Allow** (names ending in _ are hidden from this list).
+5. **Deploy → Manage deployments → ✏️ → New version → Deploy**.
+6. Refresh the Sheet → new menu **Social Posts** appears. ✅ Done 20 Oct 2026.
 
 ## Part 2 – Make a free Meta "app" (15 min, laptop, one time)
 > An "app" here just means a key that lets Google post to your Page. Log in with the Facebook account that **manages your Page**.
