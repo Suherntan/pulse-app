@@ -696,6 +696,10 @@ function doGet(e) {
         return jsonResponse(getFundPipelineData());
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
+      case 'socialStatus':
+        return jsonResponse(socialStatus());
+      case 'socialQueue':
+        return jsonResponse(socialQueue());
       case 'leads':
         return jsonResponse(getNewLeads(e.parameter.status));
       // A-N-T (see ANT.gs)
@@ -734,6 +738,9 @@ function doPost(e) {
         return jsonResponse(addPipelineClient(data));
       case 'importFundData':
         return jsonResponse(importFundData(data));
+      // Social auto-post (see Social.gs)
+      case 'socialQueuePost':
+        return jsonResponse(socialQueuePost(data));
       // Leads inbox (see Leads.gs)
       case 'addWebLead':
         return jsonResponse(addWebLead(data));
@@ -1341,6 +1348,7 @@ function onOpen() {
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
     .addToUi();
   antAddMenu_(); // A-N-T menu (ANT.gs)
+  if (typeof socialAddMenu_ === 'function') socialAddMenu_(); // Social Posts menu (Social.gs)
 }
 
 
