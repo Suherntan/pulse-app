@@ -1,9 +1,9 @@
 # Facebook Auto-Post through Google – Setup Guide (20 Oct 2026)
 
-> **Status 20 Oct 2026: PARKED – Facebook blocked the token step.**
+> **Status 20 Oct 2026: retrying with a System User token (Plan B below).** First try (Explorer token) was blocked:
 > - App 1 "PULSE Poster" (Business type, use case *Manage everything on your Page*, App ID 1116027154533655): Page permissions OK, but Graph API Explorer says *"No configuration available"*; "Facebook Login for Business" can't be added; the manual login link returns `blank.html#_=_` (no token).
 > - App 2 "PULSE Poster 2" (*Facebook Login* use case): Page permissions are not offered at all.
-> - Decision: post with **Buffer** (already connected) or **Meta Business Suite → Planner**. Social.gs stays in the Sheet (auto-post never switched on). Retry only if Meta changes its setup (e.g. once a Business portfolio is verified).
+> - Online guides (Oct 2026) recommend a **System User token** from a Meta *business portfolio*: made in Business Settings, never expires, no Explorer needed. Social.gs "Connect Facebook Page" now accepts it (leave the 2nd box empty).
 
 
 Free. PULSE app → **SCHEDULE ON FACEBOOK** → row in the **SOCIAL QUEUE** tab of your PULSE Sheet → a Google timer (every 15 min) posts it to your **Facebook Page** with all slide pictures in one post.
@@ -63,3 +63,17 @@ PULSE → post → MAKE SLIDES → **SCHEDULE ON FACEBOOK** → date + time (Wed
 - Instagram / LinkedIn: still Buffer (or later the same way). 小红书: manual 定时发布.
 - Advisors on the PULSE Library get this after the Library is updated with Social.gs and they move to the new version + new connector.
 - Not yet tested with a real Facebook Page – Part 4 is the real test.
+
+
+## Plan B – System User token (recommended, never expires)
+Free. Uses a Meta **business portfolio** (business.facebook.com). Laptop, ~15 min.
+1. **business.facebook.com** → log in. If you have no business portfolio yet: **Create a business portfolio** (name e.g. *Tan Su Hern Advisory*, your name + email). Free.
+2. ⚙️ **Settings** (Business settings) → **Accounts → Pages** → make sure **your Facebook Page** is in the portfolio (**Add → Add a Page you own**).
+3. **Accounts → Apps** → **Add → Connect an app ID** → paste **1116027154533655** (PULSE Poster). (If asked: you are the app admin, approve it.)
+4. **Users → System users** → **Add** → name `PULSE Bot` → role **Admin** → Create.
+5. With PULSE Bot selected → **Assign assets** → **Pages** → your Page → turn on **full control / Manage Page** (at least *Create content*) → Save. Also **Apps** → PULSE Poster → **Full control** → Save.
+6. **Generate token** → App: **PULSE Poster** → Token expiry: **Never** → permissions: `pages_manage_posts`, `pages_read_engagement`, `pages_show_list` → **Generate** → copy the token to Notepad (shown once).
+7. PULSE Sheet → **Social Posts → Connect Facebook Page** → box 1: paste the token → box 2: **leave empty** → OK → "Connected ✓ (Page name)".
+8. **Test Facebook Connection** → **Turn On Auto-Post** → do Part 4 (test post). Delete the Notepad file.
+- If the Page isn't found: step 5 (assign the Page to PULSE Bot) wasn't saved.
+- If posts are only visible to you: developers.facebook.com → PULSE Poster → App Mode → **Live** (privacy URL already set).

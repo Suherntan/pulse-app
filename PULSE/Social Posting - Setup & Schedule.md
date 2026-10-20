@@ -72,5 +72,5 @@ Before scheduling each one: read the [NOTE] and re-check the facts (LHDN / PPA /
 | Setup | Meta developer app + Page token | same Meta app | LinkedIn developer app | – |
 | Upkeep | token can be made long-lasting | same | **log in again every 60 days** | – |
 - Cost: free, but ~half a day of setup (developer accounts, tokens) and things break when Meta/LinkedIn change rules.
-- 20 Oct 2026: tried **Facebook through Google** → blocked by Meta at the token step (see [[Facebook Auto-Post - Setup Guide]]). **Back to Buffer for all 3.**
+- 20 Oct 2026: tried **Facebook through Google** → blocked by Meta at the token step; Su chose to keep going with a **System User token** (Plan B in [[Facebook Auto-Post - Setup Guide]]). Buffer stays the fallback.
 - Earlier recommendation: **stay with Buffer free** (already connected, does the same). Revisit Google auto-post only if Buffer stops being free or we want "Post" buttons inside PULSE.
