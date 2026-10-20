@@ -7,7 +7,7 @@ Links: [[Advisor Trial - Taking Back PULSE]] · [[PULSE Trial Agreement (draft)]
 ## Part A – Su, once (about 15 min, laptop)
 1. Go to **script.google.com** → **New project** → rename it **PULSE Library**.
 2. ⚙️ **Project Settings** → Time zone **(GMT+08:00) Kuala Lumpur**.
-3. Paste the latest **Code.gs** into `Code.gs`. Click **+ → Script** → name `ANT` → paste **ANT.gs**. **Save**.
+3. Paste the latest **Code.gs** into `Code.gs`. Click **+ → Script** → name `ANT` → paste **ANT.gs**. Again **+ → Script** → name `Leads` → paste **Leads.gs**. **Save**.
 4. **Deploy → New deployment** → ⚙️ → **Library** → description `v1` → **Deploy**.
 5. ⚙️ **Project Settings** → copy the **Script ID** (keep it in this note: `______________`).
 6. Top right **Share** (person icon) → add the advisor's Gmail as **Viewer** → Send.
@@ -16,7 +16,7 @@ Links: [[Advisor Trial - Taking Back PULSE]] · [[PULSE Trial Agreement (draft)]
 > First do a safety copy: in their Apps Script, copy Code.gs + ANT.gs into a Notepad file (just in case).
 1. Their PULSE Sheet → **Extensions → Apps Script**.
 2. **Libraries +** (left side) → paste the Script ID → **Look up** → Version: the highest number → Identifier: **PULSE** → **Add**.
-3. Click **ANT.gs** → ⋮ → **Delete**.
+3. Click **ANT.gs** → ⋮ → **Delete** (and **Leads.gs** too, if it is there).
 4. Click **Code.gs** → Ctrl+A → paste **PULSE-Connector.gs** → **Save**.
    (Settings like Advisor ID, client numbers, Master key and the daily timers are kept – they stay in this project.)
 5. Choose function **onOpen** → **▶ Run** → Review permissions → Allow. Switch to the Sheet tab: the PULSE Reminders + A-N-T menus are there.
