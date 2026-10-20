@@ -170,6 +170,7 @@
         <div class="sm-acts">
           <button class="btn gold" id="smSave">${f.pdf ? 'SAVE PDF' : 'SAVE PICTURES'}</button>
           <button class="btn ghost" id="smShare">SHARE TO APP</button>
+          ${typeof AntApi !== 'undefined' && AntApi.connected() ? '<button class="btn ghost" id="smFb">SCHEDULE ON FACEBOOK</button>' : ''}
           <button class="btn ghost" id="smEditBtn">EDIT TEXT</button>
         </div>
         <p class="hint" id="smMsg">${slides.length} slides · ${f.label}. Tap EDIT TEXT to change any slide.</p>
@@ -195,12 +196,14 @@
       };
       box.querySelector('#smSave').onclick = () => run(false);
       box.querySelector('#smShare').onclick = () => run(true);
+      const fbBtn = box.querySelector('#smFb');
+      if (fbBtn) fbBtn.onclick = () => scheduleFb();
       const shareBtn = box.querySelector('#smShare');
       if (!navigator.canShare) shareBtn.hidden = true;
     }
 
     // Draw every slide full size, off screen, then turn it into a picture.
-    async function makeFiles() {
+    async function makeFiles(asJpeg) {
       if (!window.html2canvas) await loadScript('vendor/html2canvas.min.js');
       const f = FORMATS[fmt], total = slides.length, opts = {lang, name: name(), theme, fbs};
       const stage = document.createElement('div'); stage.className = 'sm-stage'; document.body.appendChild(stage);
@@ -214,6 +217,7 @@
           canvases.push(await html2canvas(el, {width: W, height: f.h, scale: 1, backgroundColor: null, useCORS: true}));
           box.querySelector('#smMsg').textContent = 'Making slide ' + (i + 1) + ' of ' + total + '…';
         }
+        if (asJpeg) return canvases.map(c => c.toDataURL('image/jpeg', 0.88));
         const base = (post.title || 'post').replace(/[^\w一-鿿]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'post';
         if (f.pdf) {
           if (!window.jspdf) await loadScript('vendor/jspdf.umd.min.js');
@@ -224,6 +228,32 @@
         const blobs = await Promise.all(canvases.map(c => new Promise(r => c.toBlob(r, 'image/png'))));
         return blobs.map((b, i) => new File([b], `${base}-${fmt}-${i + 1}.png`, {type: 'image/png'}));
       } finally { stage.remove(); }
+    }
+
+    // Facebook auto-post: pictures (4:5) + the FB text go to the SOCIAL QUEUE tab in the Google Sheet.
+    async function scheduleFb() {
+      const msg = box.querySelector('#smMsg');
+      const m = String(post.date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const defDate = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
+      const date = prompt('Post on Facebook on which date? (yyyy-mm-dd)', defDate);
+      if (!date) return;
+      const time = prompt('What time? (24-hour, e.g. 20:00 = 8 PM)', '20:00');
+      if (!time) return;
+      if (!String(post.fb || '').trim()) { msg.textContent = 'This post has no Facebook text.'; return; }
+      const keepFmt = fmt;
+      try {
+        fmt = 'ig';
+        msg.textContent = 'Making pictures…';
+        const images = await makeFiles(true);
+        msg.textContent = 'Sending to your Google Sheet…';
+        const res = await AntApi.post('socialQueuePost', {platform: 'facebook', title: post.title || '', text: post.fb, date, time, images});
+        msg.textContent = 'Scheduled on Facebook ✓ ' + res.when + ' · ' + res.pictures + ' pictures.' +
+          (!res.connected ? ' Facebook is not connected yet – Sheet menu: Social Posts > Connect Facebook Page.' :
+           !res.autoPost ? ' Turn on: Sheet menu Social Posts > Turn On Auto-Post.' : '');
+        if (toast) toast('Scheduled on Facebook');
+      } catch (err) {
+        msg.textContent = 'Could not schedule: ' + (err && err.message || err);
+      } finally { fmt = keepFmt; }
     }
 
     async function run(share) {

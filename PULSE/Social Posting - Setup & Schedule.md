@@ -72,4 +72,5 @@ Before scheduling each one: read the [NOTE] and re-check the facts (LHDN / PPA /
 | Setup | Meta developer app + Page token | same Meta app | LinkedIn developer app | – |
 | Upkeep | token can be made long-lasting | same | **log in again every 60 days** | – |
 - Cost: free, but ~half a day of setup (developer accounts, tokens) and things break when Meta/LinkedIn change rules.
-- Recommendation: **stay with Buffer free** (already connected, does the same). Revisit Google auto-post only if Buffer stops being free or we want "Post" buttons inside PULSE.
+- 20 Oct 2026: Su chose to **start with Facebook through Google** → [[Facebook Auto-Post - Setup Guide]]. Instagram/LinkedIn stay on Buffer for now.
+- Earlier recommendation: **stay with Buffer free** (already connected, does the same). Revisit Google auto-post only if Buffer stops being free or we want "Post" buttons inside PULSE.

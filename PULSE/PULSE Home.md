@@ -16,6 +16,7 @@ BGL notes → BGL vault. Claude skills/tools for every project → Claude Toolki
 - [[Advisor Trial - Taking Back PULSE]] – 3-month trial, how to switch an advisor off
 - [[PULSE Library - Setup Guide]] – code stays in Su's account, advisors use a connector
 - [[7 Financial Blind Spots - Booklet Reference]] – booklet text, cover, 7FBS logo files
+- [[Facebook Auto-Post - Setup Guide]] – post to the FB Page from PULSE through Google
 - [[Social Posting - Setup & Schedule]] – link FB / IG / LinkedIn in Buffer, November schedule
 - [[PULSE_REMINDER_MENU_MARK_SENT_DEBUG]] – "PULSE Reminders" menu / Mark Sent issue (moved from BGL)
 - [[Client Tracker - Design Brief for Claude Code]] – fund tracker view
