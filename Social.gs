@@ -3,11 +3,12 @@
  *
  * How it works:
  *  1. In the PULSE app: Social Posts > open a post > MAKE SLIDES >
- *     SCHEDULE ON FACEBOOK. The text + slide pictures come here
+ *     SCHEDULE POST (Facebook, Instagram or both). The text + slide pictures come here
  *     (pictures are saved in Drive > "PULSE Social Posts").
  *  2. A row is added to the SOCIAL QUEUE tab with the date and time.
  *  3. A timer (every 15 min) posts every row that is due to the
- *     Facebook Page, then fills in Status and the post link.
+ *     Facebook Page and/or the Instagram Professional account linked
+ *     to it, then fills in Status and the post link.
  *
  * One-time setup: menu Social Posts > Connect Facebook Page
  * (see the "Facebook Auto-Post – Setup Guide" note), then
@@ -23,6 +24,8 @@ var SOCIAL_PROP_PAGE_ID = 'FB_PAGE_ID';
 var SOCIAL_PROP_PAGE_NAME = 'FB_PAGE_NAME';
 var SOCIAL_PROP_PAGE_TOKEN = 'FB_PAGE_TOKEN';
 var SOCIAL_PROP_FOLDER = 'SOCIAL_FOLDER_ID';
+var SOCIAL_PROP_IG_ID = 'IG_USER_ID';
+var SOCIAL_PROP_IG_NAME = 'IG_USERNAME';
 
 function socialAddMenu_() {
   SpreadsheetApp.getUi()
@@ -76,8 +79,10 @@ function socialConnectFacebook() {
     props.setProperty(SOCIAL_PROP_PAGE_ID, page.id);
     props.setProperty(SOCIAL_PROP_PAGE_NAME, page.name);
     props.setProperty(SOCIAL_PROP_PAGE_TOKEN, page.access_token);
+    var ig = socialFindInstagram_(page.id, page.access_token);
     socialSheet_();
     ui.alert('Connected ✓', 'Facebook Page: ' + page.name +
+      '\nInstagram: ' + (ig ? '@' + ig.username + ' ✓' : 'not found (link your Instagram Professional account to this Page, give the token instagram_basic + instagram_content_publish, then connect again)') +
       '\n\nNext: Social Posts > Turn On Auto-Post.\n(Only the Page key is saved – not your token or App secret.)', ui.ButtonSet.OK);
   } catch (e) {
     ui.alert('Could not connect', String(e.message || e), ui.ButtonSet.OK);
@@ -91,6 +96,7 @@ function socialTestFacebook() {
   try {
     var p = socialFbGet_(s.pageId, { fields: 'name,link', access_token: pulseProps_().getProperty(SOCIAL_PROP_PAGE_TOKEN) });
     ui.alert('Facebook OK ✓', 'Page: ' + p.name + '\n' + (p.link || '') +
+      '\nInstagram: ' + (s.instagram ? '@' + s.igName : 'not connected') +
       '\nAuto-post timer: ' + (s.autoPost ? 'ON' : 'OFF'), ui.ButtonSet.OK);
   } catch (e) {
     ui.alert('Facebook problem', String(e.message || e) + '\n\nRun Connect Facebook Page again.', ui.ButtonSet.OK);
@@ -104,26 +110,37 @@ function socialStatus() {
     facebook: !!props.getProperty(SOCIAL_PROP_PAGE_TOKEN),
     pageId: props.getProperty(SOCIAL_PROP_PAGE_ID) || '',
     pageName: props.getProperty(SOCIAL_PROP_PAGE_NAME) || '',
+    instagram: !!props.getProperty(SOCIAL_PROP_IG_ID),
+    igName: props.getProperty(SOCIAL_PROP_IG_NAME) || '',
     autoPost: pulseApp_().getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'socialRunQueue'; })
   };
 }
 
 // ---------------------------------------------------------------------
 // Queue (called by the app)
-// data = {platform:'facebook', title, text, date:'yyyy-mm-dd', time:'HH:mm', images:[base64 jpeg…]}
+// data = {title, date:'yyyy-mm-dd', time:'HH:mm', images:[base64 jpeg…],
+//         posts:[{platform:'facebook'|'instagram', text}]}
+// (older apps send {platform, text} for one post – still accepted)
 // ---------------------------------------------------------------------
 function socialQueuePost(data) {
-  if (!data || !data.text) return { error: 'No post text' };
-  var platform = String(data.platform || 'facebook').toLowerCase();
-  if (platform !== 'facebook') return { error: 'Only Facebook auto-post is set up so far' };
+  if (!data) return { error: 'Nothing sent' };
+  var posts = data.posts || [{ platform: data.platform || 'facebook', text: data.text }];
+  posts = posts.filter(function (p) { return p && String(p.text || '').trim(); });
+  if (!posts.length) return { error: 'No post text' };
+  for (var k = 0; k < posts.length; k++) {
+    var pl = String(posts[k].platform || '').toLowerCase();
+    if (pl !== 'facebook' && pl !== 'instagram') return { error: 'Unknown platform: ' + pl };
+    if (pl === 'instagram' && !(data.images || []).length) return { error: 'Instagram needs at least one picture' };
+  }
   var when = socialParseWhen_(data.date, data.time);
   if (!when) return { error: 'Date or time not understood' };
+  var tz = Session.getScriptTimeZone();
 
   var ids = [];
   var images = (data.images || []).slice(0, 10);
   if (images.length) {
     var folder = socialFolder_().createFolder(
-      Utilities.formatDate(when, Session.getScriptTimeZone(), 'yyyy-MM-dd') + ' ' + String(data.title || 'Post').slice(0, 60));
+      Utilities.formatDate(when, tz, 'yyyy-MM-dd') + ' ' + String(data.title || 'Post').slice(0, 60));
     images.forEach(function (b64, i) {
       var blob = Utilities.newBlob(Utilities.base64Decode(String(b64).replace(/^data:[^,]+,/, '')), 'image/jpeg', 'slide-' + (i + 1) + '.jpg');
       ids.push(folder.createFile(blob).getId());
@@ -131,11 +148,15 @@ function socialQueuePost(data) {
   }
 
   var sh = socialSheet_();
-  sh.appendRow([when, Utilities.formatDate(when, Session.getScriptTimeZone(), 'HH:mm'), 'Facebook',
-    String(data.title || ''), String(data.text), ids.join(','), 'Queued', '', '', '', new Date()]);
+  posts.forEach(function (p) {
+    var name = String(p.platform).toLowerCase() === 'instagram' ? 'Instagram' : 'Facebook';
+    sh.appendRow([when, Utilities.formatDate(when, tz, 'HH:mm'), name,
+      String(data.title || ''), String(p.text), ids.join(','), 'Queued', '', '', '', new Date()]);
+  });
   var s = socialStatus();
-  return { ok: true, when: Utilities.formatDate(when, Session.getScriptTimeZone(), 'EEE d MMM yyyy, h:mm a'),
-    pictures: ids.length, connected: s.facebook, autoPost: s.autoPost };
+  return { ok: true, when: Utilities.formatDate(when, tz, 'EEE d MMM yyyy, h:mm a'),
+    pictures: ids.length, platforms: posts.map(function (p) { return p.platform; }),
+    connected: s.facebook, instagram: s.instagram, autoPost: s.autoPost };
 }
 
 // List for the app (latest first)
@@ -179,7 +200,9 @@ function socialRunQueue() {
       if (String(r[6]) !== 'Queued' || !(r[0] instanceof Date) || r[0] > now) return;
       var rowNo = i + 2;
       try {
-        var link = socialPostFacebook_(String(r[4]), String(r[5] || '').split(',').filter(String));
+        var files = String(r[5] || '').split(',').filter(String);
+        var link = String(r[2]) === 'Instagram' ? socialPostInstagram_(String(r[4]), files)
+                                                : socialPostFacebook_(String(r[4]), files);
         sh.getRange(rowNo, 7, 1, 4).setValues([['Posted', new Date(), link, '']]);
         done++;
       } catch (e) {
@@ -191,7 +214,7 @@ function socialRunQueue() {
     lock.releaseLock();
   }
   try {
-    if (done || failed) SpreadsheetApp.getUi().alert('Facebook: ' + done + ' posted, ' + failed + ' failed (see SOCIAL QUEUE).');
+    if (done || failed) SpreadsheetApp.getUi().alert('Social posts: ' + done + ' posted, ' + failed + ' failed (see SOCIAL QUEUE).');
   } catch (e) { /* timer – no screen */ }
 }
 
@@ -218,6 +241,80 @@ function socialPostFacebook_(text, fileIds) {
   media.message = text;
   media.access_token = token;
   return socialFbLink_(socialFbPost_(pageId + '/feed', media).id);
+}
+
+// ---------------------------------------------------------------------
+// Instagram (Professional account linked to the Facebook Page).
+// Instagram fetches pictures from a public web link, so each slide is
+// shared "anyone with the link" just while posting, then made private again.
+// ---------------------------------------------------------------------
+function socialFindInstagram_(pageId, pageToken) {
+  var props = pulseProps_();
+  try {
+    var r = socialFbGet_(pageId, { fields: 'instagram_business_account{id,username}', access_token: pageToken });
+    var ig = r.instagram_business_account;
+    if (ig && ig.id) {
+      props.setProperty(SOCIAL_PROP_IG_ID, ig.id);
+      props.setProperty(SOCIAL_PROP_IG_NAME, ig.username || '');
+      return { id: ig.id, username: ig.username || '' };
+    }
+  } catch (e) { /* no Instagram permission yet */ }
+  props.deleteProperty(SOCIAL_PROP_IG_ID);
+  props.deleteProperty(SOCIAL_PROP_IG_NAME);
+  return null;
+}
+
+function socialPostInstagram_(text, fileIds) {
+  var props = pulseProps_();
+  var igId = props.getProperty(SOCIAL_PROP_IG_ID), token = props.getProperty(SOCIAL_PROP_PAGE_TOKEN);
+  if (!igId || !token) throw new Error('Instagram not connected (Social Posts > Connect Facebook Page)');
+  if (!fileIds.length) throw new Error('Instagram needs at least one picture');
+  var files = fileIds.map(function (id) { return DriveApp.getFileById(id); });
+  files.forEach(function (f) { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); });
+  try {
+    var creation;
+    if (files.length === 1) {
+      creation = socialIgContainer_(igId, token, files[0], { caption: text });
+    } else {
+      var children = files.map(function (f) { return socialIgContainer_(igId, token, f, { is_carousel_item: 'true' }); });
+      creation = socialFbPost_(igId + '/media', { media_type: 'CAROUSEL', children: children.join(','),
+        caption: text, access_token: token }).id;
+    }
+    socialIgWait_(creation, token);
+    var mediaId = socialFbPost_(igId + '/media_publish', { creation_id: creation, access_token: token }).id;
+    try { return socialFbGet_(mediaId, { fields: 'permalink', access_token: token }).permalink || ''; }
+    catch (e) { return 'https://www.instagram.com/'; }
+  } finally {
+    files.forEach(function (f) { try { f.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE); } catch (e) {} });
+  }
+}
+
+// One picture container; tries two public Drive link styles.
+function socialIgContainer_(igId, token, file, extra) {
+  var urls = ['https://lh3.googleusercontent.com/d/' + file.getId(),
+              'https://drive.google.com/uc?export=download&id=' + file.getId()];
+  var lastErr;
+  for (var i = 0; i < urls.length; i++) {
+    var payload = { image_url: urls[i], access_token: token };
+    Object.keys(extra).forEach(function (k) { payload[k] = extra[k]; });
+    try {
+      var id = socialFbPost_(igId + '/media', payload).id;
+      socialIgWait_(id, token);
+      return id;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+// Instagram prepares each picture before it can be published.
+function socialIgWait_(containerId, token) {
+  for (var i = 0; i < 12; i++) {
+    var st = socialFbGet_(containerId, { fields: 'status_code', access_token: token }).status_code;
+    if (st === 'FINISHED' || st === 'PUBLISHED') return;
+    if (st === 'ERROR' || st === 'EXPIRED') throw new Error('Instagram could not use the picture (' + st + ')');
+    Utilities.sleep(5000);
+  }
+  throw new Error('Instagram took too long to prepare the pictures');
 }
 
 // ---------------------------------------------------------------------
