@@ -37,8 +37,8 @@ function socialAddMenu_() {
 }
 
 // ---------------------------------------------------------------------
-// Connect: turns a short Graph API Explorer token into a Page token
-// that does not expire, and keeps only the Page token.
+// Connect: takes a System User token (or a short Graph API Explorer token,
+// made long-lived first) and keeps only the Page token, which does not expire.
 // ---------------------------------------------------------------------
 function socialConnectFacebook() {
   var ui = SpreadsheetApp.getUi();
@@ -46,19 +46,24 @@ function socialConnectFacebook() {
     var r = ui.prompt(title, text, ui.ButtonSet.OK_CANCEL);
     return r.getSelectedButton() === ui.Button.OK ? r.getResponseText().trim() : null;
   };
-  var appId = ask('Connect Facebook (1/3)', 'App ID (Meta for Developers > your app > App settings > Basic)');
-  if (!appId) return;
-  var secret = ask('Connect Facebook (2/3)', 'App secret (same page, click Show)');
-  if (!secret) return;
-  var shortToken = ask('Connect Facebook (3/3)', 'User access token from Graph API Explorer\n(with pages_manage_posts, pages_read_engagement, pages_show_list)');
-  if (!shortToken) return;
+  var token = ask('Connect Facebook (1/2)',
+    'Paste the access token.\n\nBest: a System User token from Meta Business Settings (does not expire).\nOr: a user token from Graph API Explorer.');
+  if (!token) return;
+  var secret = ask('Connect Facebook (2/2)',
+    'Only for a Graph API Explorer token: type the App ID and App secret like this:\n   APPID:SECRET\n\nSystem User token: leave EMPTY and press OK.');
+  if (secret === null) return;
 
   try {
-    var longUser = socialFbGet_('oauth/access_token', {
-      grant_type: 'fb_exchange_token', client_id: appId, client_secret: secret, fb_exchange_token: shortToken
-    }).access_token;
-    var pages = socialFbGet_('me/accounts', { fields: 'id,name,access_token', access_token: longUser }).data || [];
-    if (!pages.length) { ui.alert('No Facebook Page found for this login. Make sure you ticked your Page when giving permission.'); return; }
+    var userToken = token;
+    if (secret) {   // short Explorer token → long-lived, so the Page token never expires
+      var parts = secret.split(':');
+      if (parts.length !== 2) { ui.alert('Write it as APPID:SECRET (with a colon), or leave it empty.'); return; }
+      userToken = socialFbGet_('oauth/access_token', {
+        grant_type: 'fb_exchange_token', client_id: parts[0].trim(), client_secret: parts[1].trim(), fb_exchange_token: token
+      }).access_token;
+    }
+    var pages = socialFbGet_('me/accounts', { fields: 'id,name,access_token', access_token: userToken }).data || [];
+    if (!pages.length) { ui.alert('No Facebook Page found for this token. System User: assign your Page to it (Business Settings > System users > Assign assets). Explorer: tick your Page when giving permission.'); return; }
 
     var page = pages[0];
     if (pages.length > 1) {
@@ -73,7 +78,7 @@ function socialConnectFacebook() {
     props.setProperty(SOCIAL_PROP_PAGE_TOKEN, page.access_token);
     socialSheet_();
     ui.alert('Connected ✓', 'Facebook Page: ' + page.name +
-      '\n\nNext: Social Posts > Turn On Auto-Post.\n(The App secret was only used once and is not saved.)', ui.ButtonSet.OK);
+      '\n\nNext: Social Posts > Turn On Auto-Post.\n(Only the Page key is saved – not your token or App secret.)', ui.ButtonSet.OK);
   } catch (e) {
     ui.alert('Could not connect', String(e.message || e), ui.ButtonSet.OK);
   }
