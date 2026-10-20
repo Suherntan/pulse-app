@@ -33,3 +33,13 @@ Question: an advisor tries PULSE for 3 months; if they stop, how do we take it b
 2. Set up the advisor's PULSE and **A-N-T → Connect to Master** with that link + key.
 3. Both sign the trial agreement.
 4. End: nothing to do – it stops by itself after Trial Ends. To stop early: set **Active = No**. To extend: change **Trial Ends**.
+
+## Can the code stay ours while the advisor keeps the Sheet? (20 Oct 2026)
+| Option | Cost | Code in Su's account? | Cut off | Catch |
+|---|---|---|---|---|
+| Now: code copied into each advisor's Sheet (+ trial switch) | Free | No – they hold a copy | Trial switch | Copy-paste every update to every advisor |
+| **Library (recommended)** – all PULSE code lives in ONE Apps Script project in Su's account; advisor's Sheet keeps only a short "connector" script that calls it | Free | **Yes** – one master copy | Remove their access to the library → automation stops at once (plus trial switch) | They need "view" access to use a library, so a determined person could still read/copy it; library calls are a little slower |
+| Central script run by Su for everyone | Free | Yes, hidden | Instant | All emails/WhatsApp reminders would come from **Su's** Gmail; Su's daily Google limits shared by all advisors; Su can see all their clients – not suitable |
+| Google Workspace add-on | Paid / Google review | Yes, hidden | Uninstall | Heavy setup, Google verification |
+- Library bonus: **one update reaches every advisor** (no more pasting Code.gs/ANT.gs per person).
+- Status: proposal – waiting for Su's go-ahead.
