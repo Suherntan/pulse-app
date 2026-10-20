@@ -112,6 +112,7 @@ function switchTab(tabName) {
     else if (tabName === 'clients') renderClientsTab(lastFetchedData);
     else if (tabName === 'funds') renderFundsTab();
     else if (tabName === 'send') { loadWaTemplate(); loadEmailTemplate(); }
+    else if (tabName === 'leads') { window.scrollTo(0, 0); loadLeadsTab(); }
 }
 
 // --- Date Functions ---
@@ -219,6 +220,151 @@ function renderTodayTab(data) {
     setText('today-closings', closingsToday);
 
     loadAndRenderAppointments();
+    loadAndRenderLeads();
+}
+
+// --- New leads (LEADS INBOX tab, filled by lead/index.html and the weekly
+// finder). Loaded separately like appointments; nothing here touches the
+// APPROACH counts until you press "To Approach".
+var currentLeads = [];
+
+async function loadAndRenderLeads() {
+    var el = document.getElementById('leads-list');
+    if (!el || typeof API === 'undefined' || !API.getApiUrl()) return;
+    try {
+        var leads = await API.fetchLeads();
+        currentLeads = Array.isArray(leads) ? leads : [];
+        renderLeadsList();
+    } catch (e) {
+        console.error('loadAndRenderLeads:', e);
+    }
+}
+
+function renderLeadsList() {
+    var el = document.getElementById('leads-list');
+    if (!el) return;
+    if (!currentLeads.length) {
+        el.innerHTML = '<p class="placeholder">No new leads</p>';
+        return;
+    }
+    el.innerHTML = currentLeads.map(function (l, i) {
+        var title = l.name || l.company;
+        var sub = [l.name ? l.company : '', l.interest, l.source === 'FINDER' ? 'public listing' : 'web form']
+            .filter(Boolean).map(escapeHtml).join(' &middot; ');
+        var wa = normalizePhoneJS(l.phone);
+        var waBtn = wa
+            ? '<a class="reminder-action-btn wa" href="https://wa.me/' + wa + '" target="_blank" rel="noopener" title="WhatsApp">&#128172;</a>'
+            : '';
+        return '<div class="reminder-item"><div class="reminder-item-info">' +
+            '<span class="name">' + escapeHtml(title) + '</span>' +
+            '<span class="detail">' + escapeHtml(l.phone) + (sub ? ' &middot; ' + sub : '') + '</span>' +
+            '</div><div class="reminder-actions">' + waBtn +
+            '<button class="lead-btn" onclick="handleLeadAction(' + i + ',\'approach\')">To Approach</button>' +
+            '<button class="lead-btn lead-btn-dismiss" onclick="handleLeadAction(' + i + ',\'dismiss\')" title="Dismiss">&times;</button>' +
+            '</div></div>';
+    }).join('');
+}
+
+// --- All Leads page: every lead from the LEADS INBOX tab, with filters and
+// search. Opened from "View all leads" on the Today card.
+var allLeads = [];
+var visibleLeads = [];
+var leadFilter = 'NEW';
+
+async function loadLeadsTab() {
+    var el = document.getElementById('leads-all-list');
+    if (!el) return;
+    if (typeof API === 'undefined' || !API.getApiUrl()) {
+        el.innerHTML = '<p class="placeholder">Connect your Sheet in Settings first.</p>';
+        return;
+    }
+    try {
+        var leads = await API.fetchLeads('ALL');
+        allLeads = Array.isArray(leads) ? leads : [];
+        renderLeadsTab();
+    } catch (e) {
+        console.error('loadLeadsTab:', e);
+        el.innerHTML = '<p class="placeholder">Could not load leads. Redeploy Apps Script, then try again.</p>';
+    }
+}
+
+function setLeadFilter(filter) {
+    leadFilter = filter;
+    renderLeadsTab();
+}
+
+function renderLeadsTab() {
+    var el = document.getElementById('leads-all-list');
+    if (!el) return;
+    var counts = { NEW: 0, MOVED: 0, DISMISSED: 0, ALL: allLeads.length };
+    allLeads.forEach(function (l) { if (counts[l.status] !== undefined) counts[l.status]++; });
+    var labels = { NEW: 'New', MOVED: 'In Approach', DISMISSED: 'Dismissed', ALL: 'All' };
+    document.querySelectorAll('#leads-filters .lead-chip').forEach(function (b) {
+        var f = b.getAttribute('data-filter');
+        b.textContent = labels[f] + ' (' + counts[f] + ')';
+        b.classList.toggle('active', f === leadFilter);
+    });
+
+    var q = ((document.getElementById('leads-search') || {}).value || '').trim().toLowerCase();
+    visibleLeads = allLeads.filter(function (l) {
+        if (leadFilter !== 'ALL' && l.status !== leadFilter) return false;
+        if (!q) return true;
+        return [l.name, l.company, l.phone, l.email, l.interest, l.notes].join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+    if (!visibleLeads.length) {
+        el.innerHTML = '<p class="placeholder">No leads here</p>';
+        return;
+    }
+    el.innerHTML = visibleLeads.map(function (l, i) {
+        var title = l.name || l.company;
+        var sub = [l.name ? l.company : '', l.interest, l.source === 'FINDER' ? 'public listing' : 'web form', formatNiceDate(l.date)]
+            .filter(Boolean).map(escapeHtml).join(' &middot; ');
+        var wa = normalizePhoneJS(l.phone);
+        var waBtn = wa ? '<a class="reminder-action-btn wa" href="https://wa.me/' + wa + '" target="_blank" rel="noopener" title="WhatsApp">&#128172;</a>' : '';
+        var actions;
+        if (l.status === 'NEW') {
+            actions = waBtn +
+                '<button class="lead-btn" onclick="handleLeadTabAction(' + i + ',\'approach\')">To Approach</button>' +
+                '<button class="lead-btn lead-btn-dismiss" onclick="handleLeadTabAction(' + i + ',\'dismiss\')" title="Dismiss">&times;</button>';
+        } else if (l.status === 'DISMISSED') {
+            actions = '<button class="lead-btn" onclick="handleLeadTabAction(' + i + ',\'restore\')">Restore</button>';
+        } else {
+            actions = '<span class="lead-status">In Approach</span>';
+        }
+        return '<div class="reminder-item"><div class="reminder-item-info">' +
+            '<span class="name">' + escapeHtml(title) + '</span>' +
+            '<span class="detail">' + escapeHtml(l.phone) + (sub ? ' &middot; ' + sub : '') + '</span>' +
+            (l.notes ? '<span class="detail lead-notes">' + escapeHtml(l.notes) + '</span>' : '') +
+            '</div><div class="reminder-actions">' + actions + '</div></div>';
+    }).join('');
+}
+
+async function handleLeadTabAction(index, action) {
+    var lead = visibleLeads[index];
+    if (!lead) return;
+    try {
+        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, action: action });
+        showToast(action === 'approach' ? 'Added to APPROACH' : action === 'restore' ? 'Lead restored' : 'Lead dismissed');
+        if (action === 'approach') loadAllData();
+    } catch (e) {
+        showToast(e.message || 'Could not update the lead.');
+    }
+    loadLeadsTab();
+    loadAndRenderLeads();
+}
+
+async function handleLeadAction(index, action) {
+    var lead = currentLeads[index];
+    if (!lead) return;
+    try {
+        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, action: action });
+        showToast(action === 'approach' ? 'Added to APPROACH' : 'Lead dismissed');
+        await loadAndRenderLeads();
+        if (action === 'approach') loadAllData();
+    } catch (e) {
+        showToast(e.message || 'Could not update the lead.');
+        loadAndRenderLeads();
+    }
 }
 
 // Appointments come from Google Calendar via a separate API action, not
