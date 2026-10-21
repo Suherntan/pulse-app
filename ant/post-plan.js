@@ -16,7 +16,7 @@
   const set = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
   const pad = n => String(n).padStart(2, '0');
 
-  const perWeek = () => PLANS[get('posts-per-week')] ? Number(get('posts-per-week')) : 1;
+  const perWeek = () => PLANS[get('posts-per-week')] ? Number(get('posts-per-week')) : 3;   // default: Mon, Wed, Fri
   // Best times checked 13 Oct 2026 (Malaysia): LinkedIn 5 PM, Facebook 8 PM, Instagram 9 PM.
   const TIMES = {facebook: '20:00', instagram: '21:00', linkedin: '17:00'};
   const time = pl => { const t = get('posts-time-' + (pl || 'facebook')); return /^\d{2}:\d{2}$/.test(t) ? t : TIMES[pl || 'facebook']; };
