@@ -96,6 +96,11 @@
   .sm-wrap{display:grid;gap:12px}
   .sm-opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .sm-opts .chip{min-height:40px}
+  .sm-sched{border:1px solid var(--border,#d8dee8);border-radius:12px;padding:12px;margin-top:10px;display:grid;gap:8px}
+  .sm-sched b{font-size:13px;letter-spacing:.04em}
+  .sm-sched .chip:disabled{opacity:.4;cursor:not-allowed}
+  .sm-sched input[type=date],.sm-sched select{padding:10px;border:1px solid var(--border,#d8dee8);border-radius:10px;font-size:15px;min-height:44px}
+  .sm-sched .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .sm-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
   .sm-thumb{flex:none;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18);position:relative}
   .sm-thumb .sm-scale{transform-origin:0 0}
@@ -173,6 +178,7 @@
           ${typeof AntApi !== 'undefined' && AntApi.connected() ? '<button class="btn ghost" id="smFb">SCHEDULE POST (FB / IG / LinkedIn)</button>' : ''}
           <button class="btn ghost" id="smEditBtn">EDIT TEXT</button>
         </div>
+        <div class="sm-sched" id="smSched" hidden></div>
         <p class="hint" id="smMsg">${slides.length} slides · ${f.label}. Tap EDIT TEXT to change any slide.</p>
         <div class="sm-edit" id="smEdit" hidden>${slides.map((s, i) => `<div class="sm-row"><header>SLIDE ${i + 1}${s.kind === 'cover' ? ' · COVER' : s.kind === 'end' ? ' · LAST' : ''}<button data-del="${i}" aria-label="Remove slide ${i + 1}">×</button></header>
           <input data-i="${i}" data-f="title" value="${esc(s.title)}" aria-label="Slide ${i + 1} heading">
@@ -230,23 +236,50 @@
       } finally { stage.remove(); }
     }
 
-    // Auto-post: pictures (4:5) + the FB / IG text go to the SOCIAL QUEUE tab in the Google Sheet.
-    async function scheduleFb() {
-      const msg = box.querySelector('#smMsg');
+    // Auto-post: pictures (4:5) + the FB / IG / LinkedIn text go to the SOCIAL QUEUE tab in the Google Sheet.
+    // Picker: platforms, calendar date (with the posting plan's next days) and a time list.
+    function scheduleFb() {
+      const panel = box.querySelector('#smSched');
+      if (!panel.hidden) { panel.hidden = true; return; }
+      const plan = window.PostPlan;
+      const today = plan ? plan.iso(new Date()) : new Date().toISOString().slice(0, 10);
       const m = String(post.date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      const defDate = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
-      const where = prompt('Post where? Type the letters:\nF = Facebook\nI = Instagram\nL = LinkedIn\n(e.g. FIL = all three)', 'FIL');
-      if (!where) return;
-      const w = where.toUpperCase(), posts = [];
-      if (w.includes('F')) posts.push({platform: 'facebook', text: post.fb || ''});
-      if (w.includes('I')) posts.push({platform: 'instagram', text: post.ig || ''});
-      if (w.includes('L')) posts.push({platform: 'linkedin', text: post.li || ''});
-      const usable = posts.filter(p => String(p.text).trim());
-      if (!usable.length) { msg.textContent = 'This post has no text for that platform.'; return; }
-      const date = prompt('Post on which date? (yyyy-mm-dd)', defDate);
-      if (!date) return;
-      const time = prompt('What time? (24-hour, e.g. 20:00 = 8 PM)', '20:00');
-      if (!time) return;
+      const postDate = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
+      const planDays = plan ? plan.nextDays(4) : [];
+      const defDate = postDate >= today ? postDate : (planDays[0] || today);
+      const defTime = plan ? plan.time() : '20:00';
+      const times = plan ? plan.times() : ['20:00'];
+      const PL = [['facebook', 'Facebook', post.fb], ['instagram', 'Instagram', post.ig], ['linkedin', 'LinkedIn', post.li]];
+      panel.innerHTML = `<b>POST ON</b>
+        <div class="sm-opts">${PL.map(([k, n, t]) => `<button class="chip" data-pl="${k}" aria-pressed="${!!String(t || '').trim()}"${String(t || '').trim() ? '' : ' disabled title="No text for this platform"'}>${n}</button>`).join('')}</div>
+        <b>DATE</b>
+        <div class="row"><input type="date" id="smDate" min="${today}" value="${defDate}" aria-label="Post date"></div>
+        ${planDays.length ? `<div class="sm-opts">${planDays.map(d => `<button class="chip" data-day="${d}" aria-pressed="${d === defDate}">${plan.label(d)}</button>`).join('')}</div>` : ''}
+        <b>TIME</b>
+        <div class="row"><select id="smTime" aria-label="Post time">${(times.includes(defTime) ? times : [defTime, ...times]).map(t => `<option${t === defTime ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+        <div class="row"><button class="btn gold" id="smGo">SCHEDULE</button><button class="btn ghost" id="smCancel">CANCEL</button></div>`;
+      panel.hidden = false;
+      const dateIn = panel.querySelector('#smDate');
+      panel.onclick = e => {
+        const pl = e.target.closest('[data-pl]'), day = e.target.closest('[data-day]');
+        if (pl && !pl.disabled) pl.setAttribute('aria-pressed', pl.getAttribute('aria-pressed') !== 'true');
+        if (day) { dateIn.value = day.dataset.day; dateIn.onchange(); }
+        if (e.target.id === 'smCancel') panel.hidden = true;
+        if (e.target.id === 'smGo') {
+          const chosen = [...panel.querySelectorAll('[data-pl][aria-pressed=true]')].map(b => b.dataset.pl);
+          const usable = PL.filter(([k]) => chosen.includes(k)).map(([platform, , text]) => ({platform, text: text || ''}));
+          if (!usable.length) { box.querySelector('#smMsg').textContent = 'Pick at least one platform.'; return; }
+          if (!dateIn.value) { box.querySelector('#smMsg').textContent = 'Pick a date.'; return; }
+          panel.hidden = true;
+          sendSchedule(usable, dateIn.value, panel.querySelector('#smTime').value);
+        }
+      };
+      dateIn.onchange = () => panel.querySelectorAll('[data-day]').forEach(b => b.setAttribute('aria-pressed', b.dataset.day === dateIn.value));
+      panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }
+
+    async function sendSchedule(usable, date, time) {
+      const msg = box.querySelector('#smMsg');
       const keepFmt = fmt;
       try {
         fmt = 'ig';
