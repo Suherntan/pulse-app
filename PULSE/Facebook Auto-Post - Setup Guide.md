@@ -1,6 +1,6 @@
 # Facebook Auto-Post through Google – Setup Guide (20 Oct 2026)
 
-> **Status 20 Oct 2026: retrying with a System User token (Plan B below).** First try (Explorer token) was blocked:
+> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram added – see the Instagram section.** First try (Explorer token) was blocked:
 > - App 1 "PULSE Poster" (Business type, use case *Manage everything on your Page*, App ID 1116027154533655): Page permissions OK, but Graph API Explorer says *"No configuration available"*; "Facebook Login for Business" can't be added; the manual login link returns `blank.html#_=_` (no token).
 > - App 2 "PULSE Poster 2" (*Facebook Login* use case): Page permissions are not offered at all.
 > - Online guides (Oct 2026) recommend a **System User token** from a Meta *business portfolio*: made in Business Settings, never expires, no Explorer needed. Social.gs "Connect Facebook Page" now accepts it (leave the 2nd box empty).
@@ -77,3 +77,15 @@ Free. Uses a Meta **business portfolio** (business.facebook.com). Laptop, ~15 mi
 8. **Test Facebook Connection** → **Turn On Auto-Post** → do Part 4 (test post). Delete the Notepad file.
 - If the Page isn't found: step 5 (assign the Page to PULSE Bot) wasn't saved.
 - If posts are only visible to you: developers.facebook.com → PULSE Poster → App Mode → **Live** (privacy URL already set).
+
+
+## Instagram auto-post (added 20 Oct 2026)
+Same Google timer, same SOCIAL QUEUE. Posts the slides as a **carousel** (2–10 pictures) or a single picture to the **Instagram Professional account linked to your Facebook Page**. Instagram needs a public picture link, so each slide is shared "anyone with the link" only while it is being posted, then set back to private.
+1. **Link Instagram to the Page:** Facebook Page → Settings → **Linked accounts → Instagram** → connect (or Instagram app → Accounts Centre). Instagram must be **Professional** (Business or Creator).
+2. **Meta app PULSE Poster** (developers.facebook.com): Use cases → **Customize** → add `instagram_basic` and `instagram_content_publish`. If they are not offered there: **Add use cases → Manage messaging & content on Instagram** → choose the **Facebook Login** option → add those 2 permissions.
+3. **Business Settings:** Accounts → **Instagram accounts** → add your account. Users → System users → **PULSE Bot** → Assign assets → **Instagram account** → full control.
+4. **Generate a new token** for PULSE Bot: App PULSE Poster, Never, permissions `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`, `instagram_basic`, `instagram_content_publish`.
+5. Paste the latest **Social.gs** → Save → Deploy → New version. Sheet → **Social Posts → Connect Facebook Page** → new token, box 2 empty → the message should show **Instagram: @yourname ✓**.
+6. Test: PULSE app → post → MAKE SLIDES → **SCHEDULE POST (FB / IG)** → **2 = Instagram** → 20 min from now → SOCIAL QUEUE row "Instagram" → Posted + link.
+- Instagram caption = the post's **IG** text (hashtags included). Max 10 slides.
+- Error "Media download has failed" / "could not use the picture": tell Claude – the picture link style may need changing.

@@ -170,7 +170,7 @@
         <div class="sm-acts">
           <button class="btn gold" id="smSave">${f.pdf ? 'SAVE PDF' : 'SAVE PICTURES'}</button>
           <button class="btn ghost" id="smShare">SHARE TO APP</button>
-          ${typeof AntApi !== 'undefined' && AntApi.connected() ? '<button class="btn ghost" id="smFb">SCHEDULE ON FACEBOOK</button>' : ''}
+          ${typeof AntApi !== 'undefined' && AntApi.connected() ? '<button class="btn ghost" id="smFb">SCHEDULE POST (FB / IG)</button>' : ''}
           <button class="btn ghost" id="smEditBtn">EDIT TEXT</button>
         </div>
         <p class="hint" id="smMsg">${slides.length} slides · ${f.label}. Tap EDIT TEXT to change any slide.</p>
@@ -230,27 +230,35 @@
       } finally { stage.remove(); }
     }
 
-    // Facebook auto-post: pictures (4:5) + the FB text go to the SOCIAL QUEUE tab in the Google Sheet.
+    // Auto-post: pictures (4:5) + the FB / IG text go to the SOCIAL QUEUE tab in the Google Sheet.
     async function scheduleFb() {
       const msg = box.querySelector('#smMsg');
       const m = String(post.date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       const defDate = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
-      const date = prompt('Post on Facebook on which date? (yyyy-mm-dd)', defDate);
+      const where = prompt('Post where?\n1 = Facebook\n2 = Instagram\n3 = Both', '3');
+      if (!where) return;
+      const posts = [];
+      if (/[13]/.test(where)) posts.push({platform: 'facebook', text: post.fb || ''});
+      if (/[23]/.test(where)) posts.push({platform: 'instagram', text: post.ig || ''});
+      const usable = posts.filter(p => String(p.text).trim());
+      if (!usable.length) { msg.textContent = 'This post has no text for that platform.'; return; }
+      const date = prompt('Post on which date? (yyyy-mm-dd)', defDate);
       if (!date) return;
       const time = prompt('What time? (24-hour, e.g. 20:00 = 8 PM)', '20:00');
       if (!time) return;
-      if (!String(post.fb || '').trim()) { msg.textContent = 'This post has no Facebook text.'; return; }
       const keepFmt = fmt;
       try {
         fmt = 'ig';
         msg.textContent = 'Making pictures…';
         const images = await makeFiles(true);
         msg.textContent = 'Sending to your Google Sheet…';
-        const res = await AntApi.post('socialQueuePost', {platform: 'facebook', title: post.title || '', text: post.fb, date, time, images});
-        msg.textContent = 'Scheduled on Facebook ✓ ' + res.when + ' · ' + res.pictures + ' pictures.' +
+        const res = await AntApi.post('socialQueuePost', {title: post.title || '', posts: usable, date, time, images});
+        const names = usable.map(p => p.platform === 'instagram' ? 'Instagram' : 'Facebook').join(' + ');
+        msg.textContent = 'Scheduled on ' + names + ' ✓ ' + res.when + ' · ' + res.pictures + ' pictures.' +
           (!res.connected ? ' Facebook is not connected yet – Sheet menu: Social Posts > Connect Facebook Page.' :
+           usable.some(p => p.platform === 'instagram') && res.instagram === false ? ' Instagram is not connected yet – see the setup guide.' :
            !res.autoPost ? ' Turn on: Sheet menu Social Posts > Turn On Auto-Post.' : '');
-        if (toast) toast('Scheduled on Facebook');
+        if (toast) toast('Scheduled on ' + names);
       } catch (err) {
         msg.textContent = 'Could not schedule: ' + (err && err.message || err);
       } finally { fmt = keepFmt; }
