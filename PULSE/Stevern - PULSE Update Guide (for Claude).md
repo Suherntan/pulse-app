@@ -14,26 +14,18 @@
 - Log in to Google with the account that **owns Stevern's PULSE Sheet**.
 - Su must already have updated the **PULSE Library** (Su tells Stevern when it's ready).
 
-## Step 1 – Find out which PULSE version he has
+## Step 1 – Open his PULSE code (Stevern uses the **Library version**)
 1. Open his **PULSE Google Sheet** → menu **Extensions → Apps Script**.
-2. Look at the left side:
-   - **Libraries → PULSE** is listed and there is **no `ANT.gs`** file → **Library version** → go to **Step 2A**.
-   - There **is** an `ANT.gs` file → **normal version** → go to **Step 2B**.
+2. On the left he should see **Libraries → PULSE** (and no `ANT.gs` file). That's normal – the main code lives in Su's PULSE Library; his Sheet only has a short connector.
+   - If he sees an `ANT.gs` file instead, stop and message Su with a screenshot.
 
-## Step 2A – Library version (2 min)
+## Step 2 – Move to the newest PULSE Library version (2 min)
 1. Left side, under **Libraries**, click **PULSE**.
 2. **Version** → choose the **highest number** → **Save**.
 3. Top right **Deploy → Manage deployments**.
 4. Click the **✏️ pencil** (Edit) → **Version: New version** → **Deploy**.
    - ⚠️ Do **not** use "New deployment" – that makes a new link and the app would disconnect.
 5. Go to **Step 3**.
-
-## Step 2B – Normal version (5 min)
-1. Open https://github.com/Suherntan/pulse-app/blob/master/ANT.gs → click the **copy** button (two squares, top right of the code).
-2. Back in Apps Script → click **ANT.gs** → **Ctrl+A** → **Ctrl+V** → **Save** 💾.
-3. **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**.
-   - ⚠️ Not "New deployment".
-4. Go to **Step 3**.
 
 ## Step 3 – Test
 1. On his phone, open PULSE → **A-N-T** → **Offer** for a test client → **SAVE TO DRIVE**.
@@ -48,7 +40,7 @@ Offers replaced in the last **30 days** are in **Google Drive → Bin** (left me
 | Message / problem | What to do |
 |---|---|
 | **"Library … is missing"** or **"You do not have access"** | Su must share the PULSE Library with Stevern's Gmail (Viewer). Message Su. |
-| **"Unknown action: antSaveOffer"** or app says old behaviour | Step 2A.4 / 2B.3 (Deploy → New version) was skipped – do it again. |
+| Still replaces the old offer / **"Unknown action"** | Step 2.2 (newest version) or Step 2.4 (Deploy → New version) was skipped – do both again. |
 | A **permission / Authorize** pop-up | Click **Review permissions → choose his account → Advanced → Go to … (unsafe) → Allow**. This is normal for his own script. |
 | The app shows **"PULSE IS PAUSED"** | His trial switch is off – message Su. |
 | Anything else | Stop, take a screenshot, send to Su. |
