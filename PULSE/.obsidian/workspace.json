@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Client Tracker - Design Brief for Claude Code.md",
+                "file": "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Client Tracker - Design Brief for Claude Code"
+              "title": "PULSE_REMINDER_MENU_MARK_SENT_DEBUG"
             }
           }
         ]
@@ -31,10 +31,14 @@
             "id": "eb0ae9f81e8407a8",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "PULSE Home.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PULSE Home"
             }
           }
         ]
@@ -204,13 +208,13 @@
       "bases:Create new base": false
     }
   },
-  "active": "eb0ae9f81e8407a8",
+  "active": "d24f4dbc3ad5bac8",
   "lastOpenFiles": [
-    "Skills & Tools Log.md",
+    "Client Tracker - Design Brief for Claude Code.md",
     "PULSE Home.md",
+    "Skills & Tools Log.md",
     "ANT_CLIENT_REGISTRATION_FORM.md",
     "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
-    "Client Tracker - Design Brief for Claude Code.md",
     "Welcome.md",
     "Client Tracker - Design Brief for Claude Code 1.md",
     "manulife_fund_scraper.py"
