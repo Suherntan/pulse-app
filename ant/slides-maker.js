@@ -152,9 +152,36 @@
   .sm-bar i{display:block;height:100%;background:#F3AF3D}`;
 
   const THEMES = [['mix', 'Mix (best to read)'], ['dark', 'Navy'], ['light', 'Light']];
+  const ensureCss = () => { if (!document.getElementById('sm-css')) { const st = document.createElement('style'); st.id = 'sm-css'; st.textContent = CSS; document.head.appendChild(st); } };
 
-  function open(post, box, toast) {
-    if (!document.getElementById('sm-css')) { const st = document.createElement('style'); st.id = 'sm-css'; st.textContent = CSS; document.head.appendChild(st); }
+  // Draw every slide full size, off screen, and return one canvas per slide.
+  async function renderCanvases(slides, h, opts, onSlide) {
+    ensureCss();
+    if (!window.html2canvas) await loadScript('vendor/html2canvas.min.js');
+    const stage = document.createElement('div'); stage.className = 'sm-stage'; document.body.appendChild(stage);
+    try {
+      await document.fonts?.ready;
+      const canvases = [];
+      for (let i = 0; i < slides.length; i++) {
+        stage.innerHTML = slideHTML(slides[i], i, slides.length, h, opts);
+        const el = stage.firstElementChild;
+        await Promise.all([...el.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+        canvases.push(await html2canvas(el, {width: W, height: h, scale: 1, backgroundColor: null, useCORS: true}));
+        if (onSlide) onSlide(i + 1, slides.length);
+      }
+      return canvases;
+    } finally { stage.remove(); }
+  }
+
+  // 4:5 JPEG slides for auto-posting, with the saved look (used by SCHEDULE WHOLE MONTH).
+  async function jpegs(post) {
+    const opts = {lang: 'en', name: store.get('posts-agent-name'), theme: store.get('posts-slide-theme') || 'mix', fbs: store.get('posts-slide-fbs') !== 'off'};
+    const canvases = await renderCanvases(build(post, 'en'), FORMATS.ig.h, opts);
+    return canvases.map(c => c.toDataURL('image/jpeg', 0.88));
+  }
+
+  function open(post, box, toast, onScheduled) {
+    ensureCss();
     let lang = 'en', fmt = 'ig', slides = build(post, lang), theme = store.get('posts-slide-theme') || 'mix', fbs = store.get('posts-slide-fbs') !== 'off';
     const name = () => store.get('posts-agent-name');
 
@@ -211,30 +238,18 @@
 
     // Draw every slide full size, off screen, then turn it into a picture.
     async function makeFiles(asJpeg) {
-      if (!window.html2canvas) await loadScript('vendor/html2canvas.min.js');
-      const f = FORMATS[fmt], total = slides.length, opts = {lang, name: name(), theme, fbs};
-      const stage = document.createElement('div'); stage.className = 'sm-stage'; document.body.appendChild(stage);
-      try {
-        await document.fonts?.ready;
-        const canvases = [];
-        for (let i = 0; i < total; i++) {
-          stage.innerHTML = slideHTML(slides[i], i, total, f.h, opts);
-          const el = stage.firstElementChild;
-          await Promise.all([...el.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
-          canvases.push(await html2canvas(el, {width: W, height: f.h, scale: 1, backgroundColor: null, useCORS: true}));
-          box.querySelector('#smMsg').textContent = 'Making slide ' + (i + 1) + ' of ' + total + '…';
-        }
-        if (asJpeg) return canvases.map(c => c.toDataURL('image/jpeg', 0.88));
-        const base = (post.title || 'post').replace(/[^\w一-鿿]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'post';
-        if (f.pdf) {
-          if (!window.jspdf) await loadScript('vendor/jspdf.umd.min.js');
-          const pdf = new jspdf.jsPDF({orientation: 'portrait', unit: 'px', format: [W, f.h], hotfixes: ['px_scaling']});
-          canvases.forEach((c, i) => { if (i) pdf.addPage([W, f.h], 'portrait'); pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, f.h); });
-          return [new File([pdf.output('blob')], base + '-linkedin.pdf', {type: 'application/pdf'})];
-        }
-        const blobs = await Promise.all(canvases.map(c => new Promise(r => c.toBlob(r, 'image/png'))));
-        return blobs.map((b, i) => new File([b], `${base}-${fmt}-${i + 1}.png`, {type: 'image/png'}));
-      } finally { stage.remove(); }
+      const f = FORMATS[fmt], opts = {lang, name: name(), theme, fbs};
+      const canvases = await renderCanvases(slides, f.h, opts, (i, n) => { box.querySelector('#smMsg').textContent = 'Making slide ' + i + ' of ' + n + '…'; });
+      if (asJpeg) return canvases.map(c => c.toDataURL('image/jpeg', 0.88));
+      const base = (post.title || 'post').replace(/[^\w一-鿿]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'post';
+      if (f.pdf) {
+        if (!window.jspdf) await loadScript('vendor/jspdf.umd.min.js');
+        const pdf = new jspdf.jsPDF({orientation: 'portrait', unit: 'px', format: [W, f.h], hotfixes: ['px_scaling']});
+        canvases.forEach((c, i) => { if (i) pdf.addPage([W, f.h], 'portrait'); pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, f.h); });
+        return [new File([pdf.output('blob')], base + '-linkedin.pdf', {type: 'application/pdf'})];
+      }
+      const blobs = await Promise.all(canvases.map(c => new Promise(r => c.toBlob(r, 'image/png'))));
+      return blobs.map((b, i) => new File([b], `${base}-${fmt}-${i + 1}.png`, {type: 'image/png'}));
     }
 
     // Auto-post: pictures (4:5) + the FB / IG / LinkedIn text go to the SOCIAL QUEUE tab in the Google Sheet.
@@ -299,6 +314,7 @@
            usable.some(p => p.platform === 'linkedin') && res.liDaysLeft != null && res.liDaysLeft < 10 ? ' ⚠ LinkedIn login ends in ' + res.liDaysLeft + ' days – Sheet menu: Social Posts > Connect LinkedIn.' :
            !res.autoPost ? ' Turn on: Sheet menu Social Posts > Turn On Auto-Post.' : '');
         if (toast) toast('Scheduled on ' + names);
+        if (onScheduled) onScheduled();
       } catch (err) {
         msg.textContent = 'Could not schedule: ' + (err && err.message || err);
       } finally { fmt = keepFmt; }
@@ -329,5 +345,5 @@
     box.scrollIntoView({behavior: 'smooth', block: 'start'});
   }
 
-  window.SlideMaker = {open, build};
+  window.SlideMaker = {open, build, jpegs};
 })();
