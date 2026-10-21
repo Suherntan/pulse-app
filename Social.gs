@@ -32,6 +32,7 @@ function socialAddMenu_() {
     .createMenu('Social Posts')
     .addItem('Connect Facebook Page (one-time)', 'socialConnectFacebook')
     .addItem('Test Facebook Connection', 'socialTestFacebook')
+    .addItem('Connect LinkedIn (every 2 months)', 'socialConnectLinkedIn')
     .addSeparator()
     .addItem('Turn On Auto-Post (every 15 min)', 'socialAutoPostOn')
     .addItem('Turn Off Auto-Post', 'socialAutoPostOff')
@@ -98,6 +99,7 @@ function socialTestFacebook() {
     var p = socialFbGet_(s.pageId, { fields: 'name,link', access_token: pulseProps_().getProperty(SOCIAL_PROP_PAGE_TOKEN) });
     ui.alert('Facebook OK ✓', 'Page: ' + p.name + '\n' + (p.link || '') +
       '\nInstagram: ' + (s.instagram ? '@' + s.igName : 'not connected') +
+      '\nLinkedIn: ' + (s.linkedin ? s.liName + ' (login ends in ' + s.liDaysLeft + ' days)' : 'not connected') +
       '\nAuto-post timer: ' + (s.autoPost ? 'ON' : 'OFF'), ui.ButtonSet.OK);
   } catch (e) {
     ui.alert('Facebook problem', String(e.message || e) + '\n\nRun Connect Facebook Page again.', ui.ButtonSet.OK);
@@ -113,6 +115,10 @@ function socialStatus() {
     pageName: props.getProperty(SOCIAL_PROP_PAGE_NAME) || '',
     instagram: !!props.getProperty(SOCIAL_PROP_IG_ID),
     igName: props.getProperty(SOCIAL_PROP_IG_NAME) || '',
+    linkedin: !!props.getProperty(LI_PROP_TOKEN),
+    liName: props.getProperty(LI_PROP_NAME) || '',
+    liDaysLeft: props.getProperty(LI_PROP_EXPIRES)
+      ? Math.floor((Number(props.getProperty(LI_PROP_EXPIRES)) - Date.now()) / 86400000) : null,
     autoPost: pulseApp_().getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'socialRunQueue'; })
   };
 }
@@ -130,7 +136,7 @@ function socialQueuePost(data) {
   if (!posts.length) return { error: 'No post text' };
   for (var k = 0; k < posts.length; k++) {
     var pl = String(posts[k].platform || '').toLowerCase();
-    if (pl !== 'facebook' && pl !== 'instagram') return { error: 'Unknown platform: ' + pl };
+    if (pl !== 'facebook' && pl !== 'instagram' && pl !== 'linkedin') return { error: 'Unknown platform: ' + pl };
     if (pl === 'instagram' && !(data.images || []).length) return { error: 'Instagram needs at least one picture' };
   }
   var when = socialParseWhen_(data.date, data.time);
@@ -150,14 +156,14 @@ function socialQueuePost(data) {
 
   var sh = socialSheet_();
   posts.forEach(function (p) {
-    var name = String(p.platform).toLowerCase() === 'instagram' ? 'Instagram' : 'Facebook';
+    var name = { instagram: 'Instagram', linkedin: 'LinkedIn' }[String(p.platform).toLowerCase()] || 'Facebook';
     sh.appendRow([when, Utilities.formatDate(when, tz, 'HH:mm'), name,
       String(data.title || ''), String(p.text), ids.join(','), 'Queued', '', '', '', new Date()]);
   });
   var s = socialStatus();
   return { ok: true, when: Utilities.formatDate(when, tz, 'EEE d MMM yyyy, h:mm a'),
     pictures: ids.length, platforms: posts.map(function (p) { return p.platform; }),
-    connected: s.facebook, instagram: s.instagram, autoPost: s.autoPost };
+    connected: s.facebook, instagram: s.instagram, linkedin: s.linkedin, liDaysLeft: s.liDaysLeft, autoPost: s.autoPost };
 }
 
 // List for the app (latest first)
@@ -203,7 +209,8 @@ function socialRunQueue() {
       try {
         var files = String(r[5] || '').split(',').filter(String);
         var link = String(r[2]) === 'Instagram' ? socialPostInstagram_(String(r[4]), files)
-                                                : socialPostFacebook_(String(r[4]), files);
+                 : String(r[2]) === 'LinkedIn' ? socialPostLinkedIn_(String(r[4]), files)
+                 : socialPostFacebook_(String(r[4]), files);
         sh.getRange(rowNo, 7, 1, 4).setValues([['Posted', new Date(), link, '']]);
         done++;
       } catch (e) {
@@ -321,6 +328,112 @@ function socialIgWait_(containerId, token) {
     Utilities.sleep(5000);
   }
   throw new Error('Instagram took too long to prepare the pictures');
+}
+
+// ---------------------------------------------------------------------
+// LinkedIn (personal profile). LinkedIn logins last 60 days, so this is
+// re-run about every 2 months (the app and the Test show days left).
+// ---------------------------------------------------------------------
+var LI_PROP_CLIENT = 'LI_CLIENT_ID';
+var LI_PROP_SECRET = 'LI_CLIENT_SECRET';
+var LI_PROP_TOKEN = 'LI_TOKEN';
+var LI_PROP_URN = 'LI_PERSON_URN';
+var LI_PROP_NAME = 'LI_NAME';
+var LI_PROP_EXPIRES = 'LI_EXPIRES';
+var LI_REDIRECT = 'https://pulse-app-seven-wine.vercel.app/linkedin.html';
+
+function socialConnectLinkedIn() {
+  var ui = SpreadsheetApp.getUi();
+  var props = pulseProps_();
+  var ask = function (title, text, def) {
+    var r = ui.prompt(title, text + (def ? '\n\n(Leave empty to keep the saved one.)' : ''), ui.ButtonSet.OK_CANCEL);
+    if (r.getSelectedButton() !== ui.Button.OK) return null;
+    return r.getResponseText().trim() || def || '';
+  };
+  var id = ask('Connect LinkedIn (1/3)', 'Client ID (linkedin.com/developers > your app > Auth)', props.getProperty(LI_PROP_CLIENT));
+  if (!id) return;
+  var secret = ask('Connect LinkedIn (2/3)', 'Primary Client Secret (same page)', props.getProperty(LI_PROP_SECRET));
+  if (!secret) return;
+  props.setProperty(LI_PROP_CLIENT, id);
+  props.setProperty(LI_PROP_SECRET, secret);
+
+  var url = 'https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=' + encodeURIComponent(id) +
+    '&redirect_uri=' + encodeURIComponent(LI_REDIRECT) + '&scope=' + encodeURIComponent('openid profile w_member_social') +
+    '&state=pulse' + Date.now();
+  ui.showModalDialog(HtmlService.createHtmlOutput(
+    '<div style="font:15px Arial;line-height:1.5">1. Click the link and press <b>Allow</b> in LinkedIn.<br>' +
+    '2. A PULSE page shows a <b>code</b> – copy it.<br>3. Close this box and paste the code in the next box.<br><br>' +
+    '<a href="' + url + '" target="_blank" style="font-size:17px">👉 Open LinkedIn to allow PULSE</a></div>')
+    .setWidth(420).setHeight(200), 'Connect LinkedIn (3/3)');
+  var code = ask('Connect LinkedIn (3/3)', 'Paste the code from the PULSE page');
+  if (!code) return;
+
+  try {
+    var tok = JSON.parse(UrlFetchApp.fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'post', muteHttpExceptions: true,
+      payload: { grant_type: 'authorization_code', code: code, redirect_uri: LI_REDIRECT, client_id: id, client_secret: secret }
+    }).getContentText());
+    if (!tok.access_token) throw new Error(tok.error_description || tok.error || 'no access token');
+    var me = JSON.parse(UrlFetchApp.fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: 'Bearer ' + tok.access_token }, muteHttpExceptions: true }).getContentText());
+    if (!me.sub) throw new Error(me.message || 'could not read your LinkedIn profile');
+    props.setProperty(LI_PROP_TOKEN, tok.access_token);
+    props.setProperty(LI_PROP_URN, 'urn:li:person:' + me.sub);
+    props.setProperty(LI_PROP_NAME, me.name || '');
+    props.setProperty(LI_PROP_EXPIRES, String(Date.now() + (Number(tok.expires_in) || 5184000) * 1000));
+    socialSheet_();
+    ui.alert('LinkedIn connected ✓', (me.name || 'Your profile') + '\nLogin lasts about 60 days – run Connect LinkedIn again when PULSE reminds you.', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Could not connect LinkedIn', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+// Text, one picture, or several pictures (multi-image post).
+function socialPostLinkedIn_(text, fileIds) {
+  var props = pulseProps_();
+  var token = props.getProperty(LI_PROP_TOKEN), urn = props.getProperty(LI_PROP_URN);
+  if (!token || !urn) throw new Error('LinkedIn not connected (Social Posts > Connect LinkedIn)');
+  if (Number(props.getProperty(LI_PROP_EXPIRES) || 0) < Date.now()) throw new Error('LinkedIn login expired – Social Posts > Connect LinkedIn');
+
+  var images = fileIds.slice(0, 20).map(function (id) {
+    var init = socialLiApi_('POST', 'images?action=initializeUpload', token, { initializeUploadRequest: { owner: urn } });
+    var up = UrlFetchApp.fetch(init.json.value.uploadUrl, { method: 'put', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + token }, contentType: 'image/jpeg',
+      payload: DriveApp.getFileById(id).getBlob().getBytes() });
+    if (up.getResponseCode() >= 300) throw new Error('LinkedIn picture upload failed (' + up.getResponseCode() + ')');
+    return init.json.value.image;
+  });
+
+  var post = {
+    author: urn, commentary: socialLiEscape_(text), visibility: 'PUBLIC',
+    distribution: { feedDistribution: 'MAIN_FEED', targetEntities: [], thirdPartyDistributionChannels: [] },
+    lifecycleState: 'PUBLISHED', isReshareDisabledByAuthor: false
+  };
+  if (images.length === 1) post.content = { media: { id: images[0] } };
+  if (images.length > 1) post.content = { multiImage: { images: images.map(function (u) { return { id: u, altText: '' }; }) } };
+  var res = socialLiApi_('POST', 'posts', token, post);
+  var postUrn = res.headers['x-restli-id'] || res.headers['X-RestLi-Id'] || '';
+  return postUrn ? 'https://www.linkedin.com/feed/update/' + postUrn : 'https://www.linkedin.com/feed/';
+}
+
+// LinkedIn's versioned API; uses the version from 2 months ago (always still supported).
+function socialLiApi_(method, path, token, body) {
+  var d = new Date(); d.setMonth(d.getMonth() - 2);
+  var resp = UrlFetchApp.fetch('https://api.linkedin.com/rest/' + path, {
+    method: method.toLowerCase(), muteHttpExceptions: true, contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + token, 'LinkedIn-Version': Utilities.formatDate(d, 'GMT', 'yyyyMM'),
+      'X-Restli-Protocol-Version': '2.0.0' },
+    payload: body ? JSON.stringify(body) : undefined
+  });
+  var txt = resp.getContentText(), json = {};
+  try { json = txt ? JSON.parse(txt) : {}; } catch (e) { /* empty body */ }
+  if (resp.getResponseCode() >= 300) throw new Error('LinkedIn: ' + (json.message || txt || resp.getResponseCode()));
+  return { json: json, headers: resp.getHeaders() };
+}
+
+// LinkedIn treats some characters as formatting – a backslash keeps them as plain text.
+function socialLiEscape_(text) {
+  return String(text).replace(/[\\|{}@\[\]()<>#*_~]/g, function (c) { return '\\' + c; });
 }
 
 // ---------------------------------------------------------------------

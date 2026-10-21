@@ -1,6 +1,6 @@
 # Facebook Auto-Post through Google – Setup Guide (20 Oct 2026)
 
-> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram added – see the Instagram section.** First try (Explorer token) was blocked:
+> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram connected 21 Oct 2026. LinkedIn added – see the LinkedIn section.** First try (Explorer token) was blocked:
 > - App 1 "PULSE Poster" (Business type, use case *Manage everything on your Page*, App ID 1116027154533655): Page permissions OK, but Graph API Explorer says *"No configuration available"*; "Facebook Login for Business" can't be added; the manual login link returns `blank.html#_=_` (no token).
 > - App 2 "PULSE Poster 2" (*Facebook Login* use case): Page permissions are not offered at all.
 > - Online guides (Oct 2026) recommend a **System User token** from a Meta *business portfolio*: made in Business Settings, never expires, no Explorer needed. Social.gs "Connect Facebook Page" now accepts it (leave the 2nd box empty).
@@ -89,3 +89,18 @@ Same Google timer, same SOCIAL QUEUE. Posts the slides as a **carousel** (2–10
 6. Test: PULSE app → post → MAKE SLIDES → **SCHEDULE POST (FB / IG)** → **2 = Instagram** → 20 min from now → SOCIAL QUEUE row "Instagram" → Posted + link.
 - Instagram caption = the post's **IG** text (hashtags included). Max 10 slides.
 - Error "Media download has failed" / "could not use the picture": tell Claude – the picture link style may need changing.
+
+
+## LinkedIn auto-post (added 21 Oct 2026)
+Same timer and SOCIAL QUEUE. Posts to your **personal LinkedIn profile** with the slides as a multi-picture post. ⚠ LinkedIn logins last **60 days** – PULSE warns when <10 days are left; then run **Social Posts → Connect LinkedIn** again (2 min, Client ID/secret are remembered).
+1. **LinkedIn Page needed (free):** LinkedIn apps must belong to a Company Page. If you have none: linkedin.com → **For Business → Create a Company Page** (e.g. *Tan Su Hern Advisory*).
+   - **No converting needed.** Your personal LinkedIn stays as it is. The Company Page is a separate free page you create *from* your personal account (you become its admin). Posts from PULSE still go to your **personal** profile.
+   - ✅ **Page created 21 Oct 2026.** Earlier draft details: Name *7 Financial Blind Spots with Su Hern* · URL `7fbs-suhern` · Tagline *Spot the money gaps before they cost you. Simple talks on protection, savings & retirement.* · Industry Financial Services · Size 0–1 · Type Self-employed. Do not use the insurer's name.
+2. **linkedin.com/developers/apps → Create app**: name `PULSE Poster`, LinkedIn Page = your Page, privacy policy `https://pulse-app-seven-wine.vercel.app/privacy.html`, upload a logo (any square image, e.g. the ANT logo) → Create. If asked, **Verify** the app for the Page (you are the Page admin).
+3. **Products** tab → request **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect** (both approved straight away).
+4. **Auth** tab → **Authorized redirect URLs** → add `https://pulse-app-seven-wine.vercel.app/linkedin.html` → Update. Copy **Client ID** and **Primary Client Secret** to Notepad.
+5. Paste the latest **Social.gs** → Save → Deploy → New version → refresh the Sheet.
+6. **Social Posts → Connect LinkedIn** → Client ID → Client Secret → a box opens: click **Open LinkedIn to allow PULSE** → Allow → the PULSE page shows a **code** → COPY CODE → paste in the Sheet box → "LinkedIn connected ✓".
+7. Test: PULSE → post → MAKE SLIDES → **SCHEDULE POST** → type **L** → 20 min from now → SOCIAL QUEUE "LinkedIn" → Posted + link.
+- Uses the post's **LinkedIn** text. Pictures 4:5, up to 20. (PDF carousel = later, if wanted.)
+- Every ~2 months: Social Posts → Connect LinkedIn (leave ID/secret empty to keep them) → Allow → paste code.
