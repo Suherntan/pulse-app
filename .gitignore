@@ -5,3 +5,12 @@ clients_export*.xlsx
 
 # Obsidian settings when C:\PULSE-app itself was opened as a vault by mistake
 /.obsidian/
+
+# Backup housekeeping (kept on the laptop only)
+backup-log.txt
+.backup-status
+.backup-fails
+PULSE/BACKUP PROBLEM - read me.md
+# Obsidian window layout changes every few seconds
+PULSE/.obsidian/workspace.json
+PULSE/.obsidian/workspace-mobile.json
