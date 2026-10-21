@@ -9,11 +9,12 @@
  * What it keeps in the agent's own Google account:
  *   - ANT_CLIENTS tab   one row per client (Fact-Find answers)
  *   - ANT_ANALYSIS tab  one row per A-N-T Analysis (L.I.F.E numbers)
+ *   - ANT_OFFERS tab    one row per Offer Document (plans + premiums)
  *   - ANT_LOG tab       what was done, when
  *   - Drive folder "PULSE A-N-T Clients" with one sub-folder per client,
- *     holding that client's A-N-T Analysis PDFs.
+ *     holding that client's A-N-T Analysis and Offer Document PDFs.
  *
- * One-time setup: menu A-N-T > Set Up A-N-T. It asks for the Agent ID,
+ * One-time setup: menu A-N-T > Set Up A-N-T. It asks for the Advisor ID,
  * creates the tabs and the Drive folder. Agent name and phone come from
  * the existing SETTINGS tab (PULSE Reminders > My Settings).
  * =====================================================================
@@ -21,6 +22,7 @@
 
 var ANT_CLIENTS_SHEET = 'ANT_CLIENTS';
 var ANT_ANALYSIS_SHEET = 'ANT_ANALYSIS';
+var ANT_OFFERS_SHEET = 'ANT_OFFERS';
 var ANT_LOG_SHEET = 'ANT_LOG';
 var ANT_ROOT_FOLDER_NAME = 'PULSE A-N-T Clients';
 var ANT_PROP_ROOT_FOLDER = 'ANT_ROOT_FOLDER_ID';
@@ -43,14 +45,14 @@ var ANT_AREA_LABELS = {
 };
 
 var ANT_CLIENT_HEADERS = [
-  'Client ID', 'Agent ID', 'Name', 'DOB', 'Age', 'Phone', 'Email',
+  'Client ID', 'Advisor ID', 'Name', 'DOB', 'Age', 'Phone', 'Email',
   'Motivation', 'Goals', 'Retire Age', 'Retire Cash / Month', 'Other Goals',
   'Important People', 'Spouse Job', 'Children Ages', 'Parents Depending', 'Other People',
   'Consent', 'Pipeline Stage', 'Folder Link', 'Created', 'Updated'
 ];
 
 var ANT_ANALYSIS_HEADERS = (function () {
-  var h = ['Analysis ID', 'Client ID', 'Agent ID', 'Client Name', 'Date'];
+  var h = ['Analysis ID', 'Client ID', 'Advisor ID', 'Client Name', 'Date'];
   ANT_AREAS.forEach(function (k) {
     var l = ANT_AREA_LABELS[k];
     h.push(l + ' Current', l + ' Goal', l + ' Gap');
@@ -58,7 +60,15 @@ var ANT_ANALYSIS_HEADERS = (function () {
   return h.concat(['Total Gap', 'Notes', 'PDF Link']);
 })();
 
-var ANT_LOG_HEADERS = ['Time', 'Agent ID', 'Client ID', 'Action', 'Detail'];
+// Offer Document columns, same as the page: EXISTING / OFFER 1 / OFFER 2 / VALUE UP.
+var ANT_OFFER_SLOTS = [['existing', 'Existing'], ['offer1', 'Offer 1'], ['offer2', 'Offer 2'], ['valueup', 'Value Up']];
+var ANT_OFFER_HEADERS = (function () {
+  var h = ['Offer ID', 'Client ID', 'Advisor ID', 'Client Name', 'Date'];
+  ANT_OFFER_SLOTS.forEach(function (s) { h.push(s[1] + ' Plan', s[1] + ' Basic Life', s[1] + ' Annual Premium'); });
+  return h.concat(['Offer Table', 'PDF Link']);
+})();
+
+var ANT_LOG_HEADERS = ['Time', 'Advisor ID', 'Client ID', 'Action', 'Detail'];
 
 
 // ---------------------------------------------------------------------
@@ -74,26 +84,31 @@ function antAddMenu_() {
     .addItem('Connect to Master (from your manager)', 'antConnectMaster')
     .addItem('Re-send Waiting Items to Master Now', 'antFlushOutbox')
     .addItem('Send Everything to Master (one-time)', 'antSendAllToMaster')
+    .addItem('Check PULSE On / Off', 'antRecheckLicence')
     .addToUi();
 }
 
 function antSetup() {
   var ui = SpreadsheetApp.getUi();
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   var current = props.getProperty(ANT_PROP_AGENT_ID) || '';
 
   var res = ui.prompt('A-N-T Setup',
-    'Agent ID given by your agency manager (e.g. AG-001)' + (current ? '\nCurrent: ' + current : ''),
+    'Advisor ID = your initials + a number, same as your agency manager has for you (e.g. SH01)' +
+    (current ? '\nCurrent: ' + current + ' (leave empty to keep it)' : ''),
     ui.ButtonSet.OK_CANCEL);
   if (res.getSelectedButton() !== ui.Button.OK) return;
-  var agentId = res.getResponseText().trim().toUpperCase() || current;
-  if (!agentId) { ui.alert('Agent ID is needed. Please run Set Up again.'); return; }
+  var agentId = res.getResponseText().replace(/\s+/g, '').toUpperCase() || current;
+  if (!agentId) { ui.alert('Advisor ID is needed. Please run Set Up again.'); return; }
+  if (!/^[A-Z0-9]{2,10}$/.test(agentId)) { ui.alert('Advisor ID: letters and numbers only, e.g. SH01. Please run Set Up again.'); return; }
   props.setProperty(ANT_PROP_AGENT_ID, agentId);
+  if (current && current !== agentId) antRenameAgent_(current, agentId);
 
   antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
   antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
+  antSheet_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS);
   antSheet_(ANT_LOG_SHEET, ANT_LOG_HEADERS);
-  [ANT_CLIENTS_SHEET, ANT_ANALYSIS_SHEET, ANT_LOG_SHEET].forEach(function (n) {
+  [ANT_CLIENTS_SHEET, ANT_ANALYSIS_SHEET, ANT_OFFERS_SHEET, ANT_LOG_SHEET].forEach(function (n) {
     antApplyDateFormats_(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(n));
   });
   antEnsurePipelineIdColumn_();
@@ -101,11 +116,23 @@ function antSetup() {
   var s = getAgentSettings_();
 
   ui.alert('A-N-T is ready',
-    'Agent ID: ' + agentId + '\nAgent name: ' + s.agentName + '\nPhone: ' + (s.agentWhatsApp || '(not set)') +
+    'Advisor ID: ' + agentId + '\nAdvisor name: ' + s.agentName + '\nPhone: ' + (s.agentWhatsApp || '(not set)') +
     '\n\nClient folders: ' + folder.getUrl() +
     '\n\nName or phone wrong? Fix them in PULSE Reminders > My Settings.' +
     '\nRemember: Deploy > Manage deployments > Edit > New version, so the app sees this code.',
     ui.ButtonSet.OK);
+}
+
+// Advisor ID changed in Set Up (e.g. AG-001 → SH01): update the rows already saved.
+function antRenameAgent_(oldId, newId) {
+  [[ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], [ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS], [ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(t[0]);
+    if (!sh || sh.getLastRow() < 2) return;
+    var col = antHeaderOrder_(sh, t[1]).indexOf('Advisor ID');
+    if (col === -1) return;
+    var rng = sh.getRange(2, col + 1, sh.getLastRow() - 1, 1);
+    rng.setValues(rng.getValues().map(function (r) { return [String(r[0]) === oldId ? newId : r[0]]; }));
+  });
 }
 
 function antShowFolderLink() {
@@ -122,7 +149,7 @@ function antProfile() {
   var s = getAgentSettings_();
   return {
     ok: true,
-    agentId: PropertiesService.getScriptProperties().getProperty(ANT_PROP_AGENT_ID) || '',
+    agentId: pulseProps_().getProperty(ANT_PROP_AGENT_ID) || '',
     agentName: s.agentName,
     agentPhone: s.agentWhatsApp
   };
@@ -133,18 +160,67 @@ function antSearchClients(q) {
   q = String(q || '').trim().toLowerCase();
   if (!q) return { ok: true, clients: [] };
   var digits = q.replace(/\D/g, '');
-  var rows = antRows_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
-  var hits = rows.filter(function (r) {
-    return String(r['Name']).toLowerCase().indexOf(q) > -1 ||
-      (digits.length >= 3 && String(r['Phone']).replace(/\D/g, '').indexOf(digits) > -1) ||
-      String(r['Client ID']).toLowerCase() === q;
-  }).slice(0, 20);
-  return {
-    ok: true,
-    clients: hits.map(function (r) {
-      return { clientId: r['Client ID'], name: r['Name'], phone: String(r['Phone']).replace(/^'/, '') };
-    })
+  var matches = function (name, phone, id) {
+    return String(name).toLowerCase().indexOf(q) > -1 ||
+      (digits.length >= 3 && String(phone).replace(/\D/g, '').indexOf(digits) > -1) ||
+      (id && String(id).toLowerCase() === q);
   };
+  var rows = antRows_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
+  var hits = rows.filter(function (r) { return matches(r['Name'], r['Phone'], r['Client ID']); }).slice(0, 20);
+  var out = hits.map(function (r) {
+    return { clientId: r['Client ID'], name: r['Name'], phone: String(r['Phone']).replace(/^'/, ''), stage: r['Pipeline Stage'] || '' };
+  });
+  // Existing PULSE clients (APPROACH / PRESENTATION / CLOSING / SR) with no A-N-T yet.
+  var pipelineError = '';
+  try { out = out.concat(antSearchPipeline_(q, matches, rows).slice(0, Math.max(0, 25 - out.length))); }
+  catch (e) { pipelineError = e.message; }   // still show the A-N-T clients
+  return { ok: true, clients: out, pipelineSearch: true, pipelineError: pipelineError };
+}
+
+// The client's email from a pipeline row: the EMAIL column if it holds a real
+// address, otherwise the first cell in that row that looks like one.
+function antEmailFromRow_(r, cols) {
+  var rx = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/;
+  var m = cols.email > -1 ? String(r[cols.email] || '').match(rx) : null;
+  if (m) return m[0];
+  for (var i = 0; i < r.length; i++) {
+    m = typeof r[i] === 'string' ? r[i].match(rx) : null;
+    if (m) return m[0];
+  }
+  return '';
+}
+
+function antSearchPipeline_(q, matches, antRows) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), out = [], seen = {};
+  var antIds = {}, antKeys = {};
+  antRows.forEach(function (r) {
+    antIds[String(r['Client ID'])] = true;
+    antKeys[antPhoneKey_(r['Phone']) + '|' + String(r['Name']).trim().toLowerCase()] = true;
+  });
+  var tz = Session.getScriptTimeZone();
+  ANT_PIPELINE_TABS.forEach(function (tab) {
+    var sh = ss.getSheetByName(tab);
+    if (!sh) return;
+    var cols = getColumnMap_(sh), last = sh.getLastRow();
+    if (cols.name === -1 || last < cols._dataStartRow) return;
+    var idCol = antPipelineIdCol_(sh, cols);
+    sh.getRange(cols._dataStartRow, 1, last - cols._dataStartRow + 1, sh.getLastColumn()).getValues().forEach(function (r) {
+      var name = String(r[cols.name] || '').trim();
+      if (!name) return;
+      var phone = cols.contact > -1 ? String(r[cols.contact] || '').replace(/^'/, '').trim() : '';
+      if (idCol > -1 && antIds[String(r[idCol]).trim()]) return;                      // already an A-N-T client
+      var key = antPhoneKey_(phone) + '|' + name.toLowerCase();
+      if (antKeys[key] || seen[key] || !matches(name, phone)) return;
+      seen[key] = true;
+      var bday = cols.birthday > -1 ? r[cols.birthday] : '';
+      out.push({
+        clientId: '', pipeline: true, tab: tab, name: name, phone: phone,
+        email: antEmailFromRow_(r, cols),
+        dob: bday instanceof Date ? Utilities.formatDate(bday, tz, 'yyyy-MM-dd') : ''
+      });
+    });
+  });
+  return out;
 }
 
 /** GET ?action=antGetClient&id=C-0001 — full Fact-Find record. */
@@ -159,7 +235,7 @@ function antSaveClient(data) {
   if (!data || !String(data.name || '').trim()) return { ok: false, error: 'Client name is required' };
   if (!data.consent) return { ok: false, error: 'Client consent is required' };
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     var sheet = antSheet_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS);
@@ -176,7 +252,7 @@ function antSaveClient(data) {
 
     var values = {
       'Client ID': clientId,
-      'Agent ID': agentId,
+      'Advisor ID': agentId,
       'Name': String(data.name).trim(),
       'DOB': antDateFromIso_(data.dob),
       'Age': data.age != null ? data.age : '',
@@ -221,7 +297,7 @@ function antSaveAnalysis(data) {
   var client = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', data.clientId);
   if (!client) return { ok: false, error: 'Client not found: ' + data.clientId };
 
-  var lock = LockService.getScriptLock();
+  var lock = pulseLock_();
   lock.waitLock(20000);
   try {
     var sheet = antSheet_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS);
@@ -246,7 +322,7 @@ function antSaveAnalysis(data) {
     }
 
     var values = {
-      'Analysis ID': analysisId, 'Client ID': data.clientId, 'Agent ID': agentId,
+      'Analysis ID': analysisId, 'Client ID': data.clientId, 'Advisor ID': agentId,
       'Client Name': client.row['Name'], 'Date': now, 'Notes': data.notes || '', 'PDF Link': pdfLink
     };
     var totalGap = 0;
@@ -269,6 +345,83 @@ function antSaveAnalysis(data) {
     antLog_(agentId, data.clientId, same ? 'A-N-T Analysis replaced (same day)' : 'A-N-T Analysis saved', pdfLink || '(no PDF)');
     var master = antSendToMaster_('analysis', values);
     return { ok: true, analysisId: analysisId, pdfUrl: pdfLink, replaced: !!same, master: master, pipeline: pipeline.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+/**
+ * Offer Document saved from the web app (ant/offer.html).
+ * data: { clientId, offer: { clientLabel, rows:[{label, existing, offer1, offer2, valueup}],
+ *         premium:{annual:{…}, semiAnnual:{…}, monthly:{…}}, plans:{offer1:'…'} }, pdfBase64, fileName }
+ * Every save is kept as its own offer (history) – nothing is replaced.
+ */
+function antSaveOffer(data) {
+  if (!data || !data.clientId) return { ok: false, error: 'Save the client in the Fact-Find form first' };
+  var client = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', data.clientId);
+  if (!client) return { ok: false, error: 'Client not found: ' + data.clientId };
+  var offer = data.offer || {};
+
+  var lock = pulseLock_();
+  lock.waitLock(20000);
+  try {
+    var sheet = antSheet_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS);
+    var agentId = antProfile().agentId;
+    var now = new Date(), today = antDay_(now);
+    // Earlier offer for this client today? Keep it; the new PDF name gets the time so both are easy to tell apart.
+    var earlierToday = antRows_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS).some(function (r) {
+      return String(r['Client ID']) === String(data.clientId) && r['Date'] && antDay_(r['Date']) === today;
+    });
+    var same = null;
+    var offerId = antNextId_(sheet, 'O-');
+
+    var pdfLink = '';
+    if (data.pdfBase64) {
+      var name = String(data.fileName || ('Offer Document - ' + client.row['Name'])).replace(/[\\/:*?"<>|]/g, '-');
+      name = name.replace(/\.pdf$/i, '');
+      if (earlierToday) name += ' ' + Utilities.formatDate(now, Session.getScriptTimeZone(), 'HH.mm');
+      name += '.pdf';
+      var blob = Utilities.newBlob(Utilities.base64Decode(data.pdfBase64), 'application/pdf', name);
+      pdfLink = antClientFolder_(data.clientId, client.row['Name']).createFile(blob).getUrl();
+    } else if (same) {
+      pdfLink = same.row['PDF Link'];
+    }
+
+    var rows = offer.rows || [], premium = offer.premium || {}, plans = offer.plans || {};
+    var cell = function (v) { v = String(v == null ? '' : v).trim(); return v === '-' ? '' : v; };
+    var basic = rows.filter(function (r) { return r.label === 'Basic Life Coverage'; })[0] || {};
+    var values = {
+      'Offer ID': offerId, 'Client ID': data.clientId, 'Advisor ID': agentId,
+      'Client Name': client.row['Name'], 'Date': now,
+      'Offer Table': JSON.stringify({ clientLabel: offer.clientLabel || '', rows: rows, premium: premium, plans: plans }),
+      'PDF Link': pdfLink
+    };
+    var offered = [];
+    ANT_OFFER_SLOTS.forEach(function (s) {
+      var annual = cell((premium.annual || {})[s[0]]);
+      values[s[1] + ' Plan'] = cell(plans[s[0]]);
+      values[s[1] + ' Basic Life'] = cell(basic[s[0]]);
+      values[s[1] + ' Annual Premium'] = annual;
+      if (s[0] !== 'existing' && (annual || cell(basic[s[0]]))) offered.push(s[1] + (annual ? ' ' + annual : ''));
+    });
+
+    // PULSE pipeline: note in REMARKS; PRODUCT PROPOSED filled if still empty.
+    var product = cell(plans.offer1) || cell(plans.offer2) || cell(plans.valueup);
+    var note = 'A-N-T Offer ' + offerId + (offered.length ? ' · ' + offered.join(' / ') : '');
+    var pipeline = antPipelinePresented_(data.clientId, client.row, note, !!same, function (hit) {
+      if (product && hit.cols.productProposed > -1) {
+        var c = hit.sheet.getRange(hit.row, hit.cols.productProposed + 1);
+        if (!String(c.getValue() || '').trim()) c.setValue(product);
+      }
+    });
+
+    var rowArr = antHeaderOrder_(sheet, ANT_OFFER_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; });
+    if (same) sheet.getRange(same.index, 1, 1, rowArr.length).setValues([rowArr]);
+    else sheet.appendRow(rowArr);
+    antLog_(agentId, data.clientId, same ? 'Offer Document replaced (same day)' : 'Offer Document saved', pdfLink || '(no PDF)');
+    var master = antSendToMaster_('offer', values);
+    return { ok: true, offerId: offerId, pdfUrl: pdfLink, replaced: !!same, master: master, pipeline: pipeline.message };
   } finally {
     lock.releaseLock();
   }
@@ -414,6 +567,18 @@ function antLinkPipeline_(clientId, data) {
  * A note goes into REMARKS – once per day, so a same-day correction doesn't repeat it.
  */
 function antPipelineAfterAnalysis_(clientId, clientRow, analysisId, totalGap, isReplace) {
+  var note = 'A-N-T Analysis ' + analysisId + ' · total gap ' + Number(totalGap || 0).toLocaleString('en-US');
+  return antPipelinePresented_(clientId, clientRow, note, isReplace);
+}
+
+/**
+ * Shared by Analysis and Offer: the client has been presented to.
+ * APPROACH → moves to PRESENTATION (same as changing the status by hand).
+ * PRESENTATION / CLOSING / SR → stays where it is (existing or servicing client).
+ * The note goes into REMARKS unless this is a same-day correction.
+ * onHit(hit) runs on the row (after any move) for extra updates.
+ */
+function antPipelinePresented_(clientId, clientRow, note, isReplace, onHit) {
   try {
     var hit = antPipelineFind_(clientId, clientRow['Phone'], clientRow['Name']);
     if (!hit) {
@@ -421,17 +586,17 @@ function antPipelineAfterAnalysis_(clientId, clientRow, analysisId, totalGap, is
       hit = antPipelineFind_(clientId, clientRow['Phone'], clientRow['Name']);
       if (!hit) return { message: linked.message };
     }
-    var note = 'A-N-T Analysis ' + analysisId + ' · total gap ' + Number(totalGap || 0).toLocaleString('en-US');
     var stage = hit.tab, message = 'Stays in ' + hit.tab;
-
+    if (!isReplace) antAddRemark_(hit, note);
     if (hit.tab === 'APPROACH') {
-      if (!isReplace) antAddRemark_(hit, note);
       if (hit.cols.status > -1) hit.sheet.getRange(hit.row, hit.cols.status + 1).setValue('PRESENTATION');
       var moved = moveRowToStatus_(hit.sheet, hit.cols, hit.row, 'PRESENTATION', 'APPROACH');
-      if (moved) { stage = 'PRESENTATION'; message = 'Moved to PRESENTATION'; }
-    } else if (!isReplace) {
-      antAddRemark_(hit, note);
+      if (moved) {
+        stage = 'PRESENTATION'; message = 'Moved to PRESENTATION';
+        hit = antPipelineFind_(clientId, clientRow['Phone'], clientRow['Name']) || hit;
+      }
     }
+    if (onHit) onHit(hit);
     antSetClientStage_(clientId, stage);
     return { message: message };
   } catch (e) {
@@ -453,7 +618,7 @@ function antSetClientStage_(clientId, stage) {
 
 function antConnectMaster() {
   var ui = SpreadsheetApp.getUi();
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   if (!props.getProperty(ANT_PROP_AGENT_ID)) { ui.alert('Run A-N-T > Set Up A-N-T first.'); return; }
 
   var u = ui.prompt('Connect to Master', 'Master link from your manager (starts with https://script.google.com/)', ui.ButtonSet.OK_CANCEL);
@@ -467,8 +632,8 @@ function antConnectMaster() {
   if (!res.ok) { ui.alert('Not connected', res.error + '\n\nCheck the link and key with your manager, then try again.', ui.ButtonSet.OK); return; }
 
   // Re-send anything that failed, every night.
-  var has = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'antFlushOutbox'; });
-  if (!has) ScriptApp.newTrigger('antFlushOutbox').timeBased().everyDays(1).atHour(1).create();
+  var has = pulseApp_().getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'antFlushOutbox'; });
+  if (!has) pulseApp_().newTrigger('antFlushOutbox').timeBased().everyDays(1).atHour(1).create();
 
   ui.alert('Connected to Master ✓',
     'From now on every saved client and analysis is also copied to your manager (data only, no files).' +
@@ -477,7 +642,7 @@ function antConnectMaster() {
 
 // Returns 'sent', 'queued' (will retry) or 'off' (not connected).
 function antSendToMaster_(type, values) {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   if (!props.getProperty(ANT_PROP_MASTER_URL)) return 'off';
   var record = antMasterRecord_(values);
   var res = antPostMaster_({ type: type, record: record });
@@ -502,9 +667,10 @@ function antFlushOutbox() {
 
 function antSendAllToMaster() {
   var ui = SpreadsheetApp.getUi();
-  if (!PropertiesService.getScriptProperties().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
+  if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
   var counts = { sent: 0, queued: 0 };
-  [['client', ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], ['analysis', ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS]].forEach(function (t) {
+  [['client', ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], ['analysis', ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS],
+   ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
     antRows_(t[1], t[2]).forEach(function (row) { counts[antSendToMaster_(t[0], row)]++; });
   });
   ui.alert('Sent ' + counts.sent + ' to Master.' + (counts.queued ? ' ' + counts.queued + ' waiting (see ANT_OUTBOX, retried tonight).' : ''));
@@ -526,7 +692,7 @@ function antMasterRecord_(values) {
 }
 
 function antPostMaster_(payload) {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   payload.agentId = props.getProperty(ANT_PROP_AGENT_ID);
   payload.key = props.getProperty(ANT_PROP_MASTER_KEY);
   try {
@@ -535,10 +701,33 @@ function antPostMaster_(payload) {
       muteHttpExceptions: true, followRedirects: true
     });
     var out = JSON.parse(resp.getContentText());
-    return out.ok ? out : { ok: false, error: out.error || 'Master said no' };
+    return out.ok ? out : { ok: false, off: !!out.off, error: out.error || 'Master said no' };
   } catch (e) {
     return { ok: false, error: 'Master not reachable: ' + e.message };
   }
+}
+
+
+// Trial switch: when connected to a Master, ask it (at most every 6 hours)
+// whether this advisor is still on. Not connected, or Master unreachable
+// → PULSE keeps working (an outage never locks anyone out).
+function antLicence_() {
+  var props = pulseProps_();
+  if (!props.getProperty(ANT_PROP_MASTER_URL)) return { ok: true };
+  var cache = pulseCache_();
+  var hit = cache.get('ANT_LICENCE');
+  if (hit) return JSON.parse(hit);
+  var res = antPostMaster_({ ping: true });
+  var out = res.off ? { ok: false, error: res.error } : { ok: true };
+  cache.put('ANT_LICENCE', JSON.stringify(out), res.ok || res.off ? 6 * 3600 : 1800);
+  return out;
+}
+
+// Manager turned the advisor back on? Run this to re-check now instead of waiting.
+function antRecheckLicence() {
+  pulseCache_().remove('ANT_LICENCE');
+  var l = antLicence_();
+  SpreadsheetApp.getUi().alert(l.ok ? 'PULSE is on ✓' : l.error);
 }
 
 
@@ -576,6 +765,7 @@ function antSheet_(name, headers) {
     antApplyDateFormats_(sh);
     return sh;
   }
+  antRenameHeaders_(sh);
   // Add any header that is missing (e.g. after an update), never remove.
   var have = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0].map(String);
   var missing = headers.filter(function (h) { return have.indexOf(h) === -1; });
@@ -587,8 +777,22 @@ function antSheet_(name, headers) {
   return sh;
 }
 
+// Old column names renamed in place (the data under them stays): "agent" is now "advisor".
+var ANT_HEADER_RENAMES = { 'Agent ID': 'Advisor ID', 'Agent Name': 'Advisor Name' };
+function antRenameHeaders_(sh) {
+  if (!sh.getLastColumn()) return;
+  var rng = sh.getRange(1, 1, 1, sh.getLastColumn()), row = rng.getValues()[0], changed = false;
+  row = row.map(function (h) {
+    var to = ANT_HEADER_RENAMES[String(h)];
+    if (to && row.indexOf(to) === -1) { changed = true; return to; }
+    return h;
+  });
+  if (changed) rng.setValues([row]);
+}
+
 // Header names in the order they sit on the sheet (columns can be moved).
 function antHeaderOrder_(sheet, headers) {
+  antRenameHeaders_(sheet);
   return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
 }
 
@@ -614,19 +818,40 @@ function antFindRow_(name, headers, key, value) {
 }
 
 // Next ID like C-0001, based on the highest number already used.
+// Next ID like C-0001. Never reused: a deleted client's number stays used, so a
+// new client can't land in the old Drive folder or pipeline link. The highest
+// number ever given is kept in Script Properties (ANT_LAST_C- / A- / O-).
 function antNextId_(sheet, prefix) {
-  var max = 0;
+  var props = pulseProps_();
+  var key = 'ANT_LAST_' + prefix;
+  var max = Number(props.getProperty(key)) || 0;
   if (sheet.getLastRow() > 1) {
     sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().forEach(function (r) {
       var m = String(r[0]).match(/(\d+)$/);
       if (m) max = Math.max(max, Number(m[1]));
     });
   }
+  if (prefix === 'C-') max = Math.max(max, antHighestFolderNumber_());
+  props.setProperty(key, String(max + 1));
   return prefix + ('0000' + (max + 1)).slice(-4);
 }
 
+// Highest C-number among the client folders in Drive (covers clients deleted
+// from the sheet before this rule existed).
+function antHighestFolderNumber_() {
+  var max = 0;
+  try {
+    var it = antRootFolder_().getFolders();
+    while (it.hasNext()) {
+      var m = it.next().getName().match(/^C-(\d+)/);
+      if (m) max = Math.max(max, Number(m[1]));
+    }
+  } catch (e) { /* no folder yet */ }
+  return max;
+}
+
 function antRootFolder_() {
-  var props = PropertiesService.getScriptProperties();
+  var props = pulseProps_();
   var id = props.getProperty(ANT_PROP_ROOT_FOLDER);
   if (id) {
     try { return DriveApp.getFolderById(id); } catch (e) { /* deleted – make a new one */ }

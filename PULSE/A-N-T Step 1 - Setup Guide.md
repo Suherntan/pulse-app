@@ -1,8 +1,8 @@
-# A-N-T Step 1 – Setup Guide (agent's own Google account)
+# A-N-T Step 1 – Setup Guide (advisor's own Google account)
 
 - **Created:** 6 Oct 2026
 - **Cost:** $0 (Google Sheets, Drive, Apps Script – all free)
-- **Time:** about 10 minutes, once per agent
+- **Time:** about 10 minutes, once per advisor
 
 ## What Step 1 does
 - **Fact-Find form** saves each client into your PULSE Google Sheet → new tab **ANT_CLIENTS** (Client ID C-0001, C-0002 …).
@@ -71,7 +71,7 @@ Click 💾 **Save**.
 1. Go back to the Sheet and **reload the page**. A new menu **A-N-T** appears.
 2. **A-N-T → Set Up A-N-T (one-time)**.
 3. Google asks for permission (first time only) → choose your account → **Advanced → Go to project → Allow**. (Needed so it can make folders in your Drive.)
-4. Type your **Agent ID** (e.g. `AG-001`) → OK.
+4. Type your **Advisor ID** = your initials + a number (e.g. `SH01`) → OK.
 5. It shows your name, phone and the new Drive folder link. Name or phone wrong? Fix in **PULSE Reminders → My Settings**.
 
 ### 4. Publish the new version (important!)
@@ -83,7 +83,7 @@ Click 💾 **Save**.
 ### 5. Connect the form
 1. Open the Fact-Find form on your phone.
 2. Top right shows **DEMO** → tap it → paste your **web-app link** (same one the PULSE app uses) → OK.
-3. It should now say **CONNECTED · AG-001**.
+3. It should now say **CONNECTED · SH01**.
    (If you already use the PULSE app on the same website, it may connect by itself.)
 
 ## Quick test
@@ -107,6 +107,26 @@ Click 💾 **Save**.
 - ANT_CLIENTS shows the current **Pipeline Stage**.
 - After updating: paste the new **Code.gs** (row moves by title) and **ANT.gs**, run **A-N-T → Set Up A-N-T** once more (adds the ANT CLIENT ID column), then Deploy → New version.
 
+## Offer Document – Save to Drive (added 9 Oct 2026)
+- Page: A-N-T tab → **4 Offer** (or OFFER → on the Analysis page). Upload proposal PDFs, then **SAVE TO DRIVE**.
+- The button only shows when the app is connected **and** the client was saved in the Fact-Find form.
+- Saves: PDF in the client's folder, a row in the new **ANT_OFFERS** tab (made by itself), a note in the pipeline REMARKS, PRODUCT PROPOSED (if empty). APPROACH clients move to PRESENTATION.
+- Saving again the same day replaces that day's offer (old PDF goes to Drive Bin).
+- After updating: paste the new **Code.gs** and **ANT.gs**, then **Deploy → Manage deployments → Edit → Version: New version → Deploy**.
+
+## Search finds existing PULSE clients (added 9 Oct 2026)
+- The Fact-Find search also shows clients from APPROACH / PRESENTATION / CLOSING / SR that have no A-N-T yet, marked e.g. "CLOSING · no A-N-T yet".
+- Tap one → the form fills in name, phone, email, birthday. Add the background and save → they get a C-number, linked to that same pipeline row (no new row).
+
+## Deleting a client (e.g. a test) – added 9 Oct 2026
+Numbers are **never reused** (C-, A-, O-): after deleting C-0003, the next new client is still C-0004. This stops a new client landing in the old Drive folder or old pipeline link.
+To remove a client completely:
+1. **ANT_CLIENTS** tab → right-click the client's row number → **Delete row**.
+2. **ANT_ANALYSIS** and **ANT_OFFERS** → delete the rows with that Client ID (if any).
+3. Pipeline tab (APPROACH / PRESENTATION / CLOSING / SR) → test client: delete the row; real client you keep: just clear the **ANT CLIENT ID** cell.
+4. Google Drive → *PULSE A-N-T Clients* → delete the folder **C-000X - Name**.
+5. (Optional) ANT_LOG keeps a history line – fine to leave.
+
 ## Correcting an analysis
 - Same client, **same day**: go back to the slides, fix the numbers → **Save to Drive** again. The old PDF is **replaced** (moved to Drive Bin, restorable for 30 days) and the same row in ANT_ANALYSIS is updated (same Analysis ID).
 - **Another day**: saves as a new analysis, so you keep the history of each meeting.
@@ -116,10 +136,22 @@ Click 💾 **Save**.
 |---|---|
 | Form says **NOT CONNECTED** | Link wrong, or step 4 (New version) not done. |
 | "Unknown action: antSaveClient" | Step 2 pieces not pasted, or step 4 not done. |
-| "CONNECTED – RUN A-N-T SETUP" | Do step 3 (Agent ID missing). |
+| "You do not have permission to call DriveApp.createFolder" | New code needs Google Drive permission. Apps Script → pick function **antShowFolderLink** → **Run** → Review permissions → your account → Advanced → Go to … (unsafe) → **Allow**. A box then opens **in the Google Sheet tab** (not in Apps Script) – switch to the Sheet and click **OK**, or the run waits and ends with "Exceeded maximum execution time" (harmless, permission is already saved). Then Deploy → Manage deployments → ✏️ → **New version**. |
+| "CONNECTED – RUN A-N-T SETUP" | Do step 3 (Advisor ID missing). |
 | "Save the client in the Fact-Find form first" | The analysis needs a saved client (with a C-number). |
 
 ## Files (GitHub)
 - `ANT.gs` – new backend file
 - `Code.gs` – 3 small additions (routing + menu)
 - `ant/form.html`, `ant/slides.html`, `ant/analysis.html`, `ant/ant-api.js`, `ant/vendor/` (free PDF tools, MIT licence)
+
+## Update 13 Oct 2026 – "Agent" is now "Advisor"
+- Columns **Agent ID → Advisor ID**, **Agent Name → Advisor Name**; Master tab **AGENTS → ADVISORS**; SETTINGS labels → "Advisor Name" / "Advisor WhatsApp Number"; menu "My Settings (Advisor Name & WhatsApp Number)".
+- **Nothing to do by hand.** After pasting the new `Code.gs` + `ANT.gs` (and `ANT-Master.gs` on the manager sheet) and deploying a **New version**, the old column/tab names are renamed automatically the first time the sheet is used. Data stays in place.
+- An advisor still on the old script can keep sending to an updated Master (it maps "Agent ID" to "Advisor ID").
+- Message templates: `{agent}` still works; `{advisor}` works too.
+
+
+## Changes 21 Oct 2026
+- **Offer Document history:** every SAVE TO DRIVE now keeps a new offer (new Offer ID + new PDF). Before, a 2nd save for the same client on the same day replaced the first one. A 2nd PDF on the same day gets the time in its name (e.g. "… 15.40.pdf"). Needs the new **ANT.gs** (Stevern too, or the Library project for library users).
+- **A-N-T Analysis page:** TOTAL row removed; the red dots on the pyramid removed. In **PRIORITY** the advisor taps the areas the client wants first (numbered in tap order, gold highlight, also highlighted in the table and pyramid). In the saved PDF only the picked areas show; if none is picked, all areas show.

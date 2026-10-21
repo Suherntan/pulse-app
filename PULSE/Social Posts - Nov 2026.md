@@ -1,0 +1,323 @@
+How to use: copy everything from "### POST 1" to the end → PULSE app → A-N-T → Social Posts → FROM CLAUDE → paste → READ POSTS.
+Facts checked 10 Oct 2026 from news and finance sites. Each [NOTE] says what to confirm with LHDN / PPA / BNM before posting.
+
+### POST 1 | 04/11/2026 | Did you know? | PRS tax relief RM3,000
+[FB]
+Did you know? You can get up to RM3,000 tax relief a year just by saving for your own retirement 💡
+
+It's called PRS (Private Retirement Scheme), and with only 8 weeks left in the year, now is the time to know about it.
+
+💡 What is it?
+A voluntary, long-term retirement savings scheme approved by the Securities Commission and run through the Private Pension Administrator (PPA). Think of it as a top-up to your EPF.
+
+👤 Who can get it?
+Anyone aged 18 and above can open a PRS account. The tax relief is for individual taxpayers. It's especially useful if you're self-employed, a freelancer or a gig worker without EPF.
+
+✅ What's in it for you?
+• Up to RM3,000 tax relief a year, separate from your EPF and life insurance relief
+• Example: at an 11% tax rate, RM3,000 in PRS can mean about RM330 less tax
+• Extra savings for your future self
+
+📌 Good to know
+It's meant for retirement (full withdrawal from 55). Early withdrawal comes with an 8% tax penalty, and returns are not guaranteed.
+
+Know someone who's self-employed? Share this with them 🙏 And if you have questions, feel free to message me.
+
+General info only, not financial advice. Check the latest rules with LHDN / PPA.
+[IG]
+RM3,000 tax relief most people forget to claim 👀
+
+PRS = Private Retirement Scheme, a top-up to your EPF for retirement.
+✅ Up to RM3,000 tax relief a year
+✅ Anyone 18+ can open one
+✅ Great for self-employed & freelancers without EPF
+📌 For retirement: withdraw from 55; early withdrawal has an 8% tax penalty
+
+Only 8 weeks left this year. Save this 📌 and send it to a friend who pays too much tax.
+
+General info only – check the latest rules with LHDN / PPA.
+
+#PRSMalaysia #TaxRelief #LHDN #RetirementPlanning #MalaysiaFinance #Freelancer #PersonalFinance #TaxSaving
+[LINKEDIN]
+Self-employed in Malaysia? You may be missing up to RM3,000 in tax relief every year.
+
+Many professionals, freelancers and business owners don't contribute to EPF — and many also don't know about the Private Retirement Scheme (PRS).
+
+What it is: a voluntary, long-term retirement savings scheme approved by the Securities Commission and run through the Private Pension Administrator (PPA). For employees, it works as a top-up to EPF.
+
+Who is eligible: anyone aged 18 and above can open a PRS account. The tax relief applies to individual taxpayers.
+
+The benefit:
+• Up to RM3,000 tax relief a year, separate from EPF and life insurance relief
+• At an 11% tax rate, that's roughly RM330 less tax each year
+• A dedicated pot for retirement, in funds matched to your age and risk level
+
+Good to know: the money is meant for retirement — full withdrawal from 55; early withdrawal carries an 8% tax penalty; the RM3,000 limit is shared with deferred annuity; returns are not guaranteed.
+
+With the year closing in 8 weeks, it's worth a quick check.
+
+Did you already know about this relief?
+
+General info only, not financial advice. Check the latest rules with LHDN / PPA.
+
+#PersonalFinance #Malaysia #RetirementPlanning #TaxPlanning #Entrepreneurs
+[XHS-TITLE]
+自雇人士必看！每年省税RM3000💡
+[XHS]
+很多自由职业、自雇的朋友都不知道这个 👇
+
+💡 PRS 是什么？
+私人退休计划，由证券委员会批准、PPA 管理的长期退休储蓄，可以当作 EPF 以外的补充。
+
+👤 谁可以开？
+年满18岁就可以。扣税适用于个人纳税人，没有 EPF 的自雇人士特别适合！
+
+✅ 好处
+① 每年最高 RM3,000 扣税
+② 和 EPF、人寿保险扣税分开计算
+③ 例子：税率11%，存 RM3,000 大约少缴 RM330 税
+
+⚠️ 避坑
+这是退休金：55岁才可以全额提取，提早拿要扣8%税；回报不保证。
+
+今年只剩8个星期，先收藏📌 转给需要的朋友～
+
+以上为一般资讯，不构成理财建议，请以官方最新规定为准。
+
+#马来西亚报税 #PRS #自由职业 #省税 #退休规划 #理财干货
+[IMAGE]
+Carousel 7 slides (IG 4:5 / LinkedIn PDF / 小红书 3:4), navy #0B2545 + gold #F3AF3D, Oswald: 1) "RM3,000 tax relief most people forget" (EN/中文) 2) What is PRS? 3) Who can open one 4) RM3,000 → about RM330 less tax (11% example) 5) Good to know: 55 / 8% penalty / not guaranteed 6) "8 weeks left this year" 7) Save 📌 + Send to a friend · DM me
+[NOTE]
+Confirm on LHDN / PPA: RM3,000 PRS relief (until YA 2030, shared with deferred annuity), 8% penalty. PRS advice needs a PRS consultant licence – keep it educational, no fund names.
+
+### POST 2 | 11/11/2026 | Did you know? | Life insurance tax relief now covers your children
+[FB]
+Parents, did you know? 👨‍👩‍👧 Budget 2026 extends the life insurance / takaful tax relief to cover premiums you pay for your children too.
+
+💡 What is it?
+Up to RM3,000 a year of tax relief for life insurance or family takaful premiums. Until now it covered yourself and your spouse. Under Budget 2026 it is extended to include your children's policies.
+
+👤 Who can get it?
+Individual taxpayers who pay life insurance or family takaful premiums for themselves, their spouse and, under the new rule, their children.
+
+✅ What's in it for you?
+• The protection you already pay for your kids may also lower your tax
+• Keep your yearly premium statements – you'll need them when you file
+
+📌 Good to know
+The RM3,000 limit is shared, not RM3,000 for each child. Check which year of assessment the new rule starts from before you claim.
+
+Tag a parent who should know this 🙏 Questions? Feel free to message me.
+
+General info only, not financial advice. Check the latest rules with LHDN.
+[IG]
+Parents 👀 your kids' insurance may now lower YOUR tax
+
+Budget 2026: the life insurance / takaful tax relief (up to RM3,000) is extended to premiums you pay for your children.
+✅ Covers self + spouse + now children
+✅ Keep your premium statements
+📌 RM3,000 is a shared limit, not per child
+
+Send this to a parent friend 📩 Save 📌 for tax time.
+
+General info only – check the latest rules with LHDN.
+
+#Budget2026 #TaxRelief #LHDN #ParentingMalaysia #MalaysiaFinance #InsuranceTips #FamilyFirst #TaxSaving
+[LINKEDIN]
+A Budget 2026 change many working parents haven't noticed yet.
+
+The personal income tax relief of up to RM3,000 for life insurance or family takaful premiums — previously for yourself and your spouse — is extended to include premiums paid for your children.
+
+Why it matters: many parents already pay for their children's protection plans. Under this change, those premiums may also count towards the relief.
+
+Points to note:
+• It's one shared RM3,000 limit, not per child
+• Keep yearly premium statements for filing
+• Confirm with LHDN which year of assessment the change applies from
+
+Small details like this are easy to miss during a busy year — and they add up.
+
+Have you reviewed your tax reliefs for this year yet?
+
+General info only, not financial advice. Check the latest rules with LHDN.
+
+#Budget2026 #PersonalFinance #Malaysia #WorkingParents #TaxPlanning
+[XHS-TITLE]
+家长注意！孩子的保险也能扣税了👀
+[XHS]
+2026财政预算案的新改变，很多家长还不知道 👇
+
+💡 是什么？
+人寿保险 / 家庭伊斯兰保险的扣税额度最高 RM3,000。以前只限自己和配偶，现在扩展到为孩子缴付的保费！
+
+✅ 对你的好处
+① 你本来就在为孩子买保障
+② 现在这笔保费也可能帮你少缴税
+③ 记得保存每年的保费单据
+
+⚠️ 避坑
+RM3,000 是共享额度，不是每个孩子 RM3,000！具体从哪一个评税年开始，请以 LHDN 公布为准。
+
+转给身边的爸爸妈妈吧～记得收藏📌
+
+以上为一般资讯，不构成理财建议，请以官方最新规定为准。
+
+#2026财政预算 #马来西亚报税 #家长必看 #保险扣税 #理财干货
+[IMAGE]
+Carousel 6 slides: 1) "Your kids' insurance may lower YOUR tax" (EN/中文) 2) Budget 2026: what changed 3) Before: self + spouse → Now: + children 4) RM3,000 = shared limit (not per child) 5) Keep your premium statements 6) Send to a parent friend 📩 · DM me
+[NOTE]
+Confirm with LHDN which YA the children extension starts from (announced in Budget 2026, Oct 2025) before posting.
+
+### POST 3 | 18/11/2026 | Awareness | Medical card premium went up – what to do
+[FB]
+Got a letter saying your medical card premium is going up? You're not alone 😟
+
+Many Malaysians saw medical insurance premiums rise by around 40–70% after insurers repriced their plans, and some people cancelled their cover in a panic.
+
+It hit close to home for me. [Su: add your own experience here]
+
+Before you cancel, here's what I'd want my own family to know:
+
+1️⃣ Don't cancel before you have new cover in place. Starting again later can mean waiting periods, and new illnesses may not be covered.
+2️⃣ Ask about options like a deductible or co-payment plan – these can lower the premium while keeping the main protection.
+3️⃣ Check if you're paying for extras you don't need.
+4️⃣ Know what's coming: Bank Negara is working on a more affordable base medical plan for lower- and middle-income groups, planned to launch in 2027.
+
+Medical cost keeps rising, so the goal isn't the cheapest card – it's one you can keep for life.
+
+Please share this with your parents 🙏 If you'd like someone to look through your medical card with you, feel free to message me.
+
+General info only, not financial advice.
+[IG]
+Medical card premium went up? Read this before you cancel ⚠️
+
+Many Malaysians saw increases of around 40–70%.
+1️⃣ Don't cancel before new cover is in place
+2️⃣ Ask about deductible / co-pay options
+3️⃣ Remove extras you don't need
+4️⃣ A lower-cost base medical plan is planned for 2027 (BNM)
+
+Send this to your parents 📩 Save 📌
+
+#MedicalCard #InsuranceMalaysia #MedicalInsurance #HealthIsWealth #MalaysiaFinance #FamilyFirst #InsuranceTips #KLlife
+[LINKEDIN]
+Medical insurance repricing has been one of the most-discussed money topics in Malaysia, with many policyholders seeing increases of around 40–70%.
+
+The most common reaction I see is to cancel immediately. That can be the most expensive decision of all.
+
+What I suggest families do instead:
+• Don't cancel before replacement cover is in place – waiting periods and new exclusions can leave real gaps
+• Ask about deductible or co-payment options that lower the premium while keeping core protection
+• Remove riders or extras that no longer fit
+• Watch for the affordable base medical plan Bank Negara is preparing for launch in 2027
+
+Medical inflation isn't going away. The goal is a plan you can sustain for life, not the lowest premium this year.
+
+How has your family handled the premium increases?
+
+General info only, not financial advice.
+
+#HealthInsurance #Malaysia #PersonalFinance #MedicalInflation #FinancialPlanning
+[XHS-TITLE]
+医药卡涨价？先别急着退保⚠️
+[XHS]
+最近很多人收到医药卡保费调涨通知，涨幅约40%～70%，有人一气之下就退保了 😟
+
+我想对家人说的 👇
+① 先别退！新保障还没生效前退保，之后重新投保可能有等待期，新病也可能不赔
+② 问问有没有自付额（deductible）或共付（co-pay）方案，保费可以降低
+③ 检查有没有不需要的附加保障
+④ 国家银行正在推出更便宜的基础医疗保险，预计2027年推出
+
+医疗费只会越来越贵，重点不是最便宜，而是一张能用一辈子的医药卡。
+
+转给爸妈看看吧～需要帮忙看保单可以私信我🤍
+
+以上为一般资讯，不构成理财建议。
+
+#医药卡 #马来西亚保险 #保费上涨 #避坑指南 #医疗保险 #家庭保障
+[IMAGE]
+Carousel 6 slides: 1) "Medical card went up? Don't cancel yet" (EN/中文) 2) Around 40–70% increases 3) Mistake: cancelling before new cover 4) Option: deductible / co-pay 5) 2027: base medical plan (BNM) 6) Send to your parents 📩 · DM me for a check
+[NOTE]
+Add your own experience in the FB post. "40–70%" is as reported in news; the base medical plan launch (2027) is a BNM plan – re-check before posting. Mention deductible / co-pay only as general options (don't promise a specific saving).
+
+### POST 4 | 25/11/2026 | Money habits | Year-end tax relief checklist
+[FB]
+36 days left to make this year's tax reliefs count 📅
+
+Every April I hear "I wish I knew earlier". So here's a simple year-end checklist – go through it with a cup of coffee ☕
+
+✅ Life insurance / family takaful premiums (up to RM3,000 – now also for children's policies)
+✅ Medical & education insurance premiums
+✅ EPF contributions
+✅ PRS – private retirement scheme (up to RM3,000)
+✅ SSPN – saving for your child's education
+✅ Lifestyle: books, gadgets, internet, gym, sports
+✅ Keep every receipt and statement in one folder
+
+You don't need to spend money just to claim relief – but if something was already on your list, doing it before 31 December can help.
+
+Share this with someone who always files last minute 😄 And if you'd like a quick check on your protection and reliefs, feel free to message me.
+
+General info only, not financial advice. Check the latest limits with LHDN.
+[IG]
+Year-end tax checklist ✅ (save this!)
+
+☐ Life insurance / takaful
+☐ Medical & education insurance
+☐ EPF
+☐ PRS (up to RM3,000)
+☐ SSPN
+☐ Lifestyle: books, gadgets, internet, gym
+☐ Receipts in one folder
+
+Deadline: 31 December 📅
+Save 📌 and send to your last-minute friend 📩
+
+General info only – check the latest limits with LHDN.
+
+#TaxRelief #LHDN #YearEnd #MalaysiaTax #PersonalFinance #MalaysiaFinance #TaxSaving #Checklist
+[LINKEDIN]
+A year-end habit I recommend to every working professional: a 15-minute tax relief review before 31 December.
+
+The common reliefs worth checking:
+• Life insurance / family takaful premiums (now extended to children under Budget 2026)
+• Medical and education insurance
+• EPF contributions
+• Private Retirement Scheme (PRS), up to RM3,000
+• SSPN for children's education
+• Lifestyle purchases such as books, devices and internet
+• All receipts and statements filed in one place
+
+The point isn't to spend money for relief – it's to make sure decisions you were already planning are timed well and documented.
+
+What's on your year-end money checklist?
+
+General info only, not financial advice. Check the latest limits with LHDN.
+
+#TaxPlanning #Malaysia #PersonalFinance #YearEnd #FinancialLiteracy
+[XHS-TITLE]
+年底前必做！7个扣税清单✅
+[XHS]
+离12月31日只剩36天 📅 每年四月都有人说"早知道就好了"……
+
+年底扣税清单（建议收藏）👇
+✅ 人寿保险 / 家庭伊斯兰保险（现在孩子的保单也算）
+✅ 医疗及教育保险
+✅ EPF 公积金
+✅ PRS 私人退休计划（最高 RM3,000）
+✅ SSPN 孩子教育储蓄
+✅ 生活方式：书本、电子产品、网络、健身
+✅ 所有收据和单据放在同一个文件夹
+
+⚠️ 避坑：不需要为了扣税而乱花钱！只是原本就要做的事，记得在年底前完成。
+
+收藏📌 转给每年都最后一刻报税的朋友😂
+
+以上为一般资讯，不构成理财建议，请以 LHDN 最新规定为准。
+
+#马来西亚报税 #年底扣税 #LHDN #省税清单 #理财干货 #收藏备用
+[IMAGE]
+Carousel 9 slides (checklist style, tick boxes): 1) "Year-end tax checklist – 36 days left" (EN/中文) 2–8) one relief per slide 9) Save 📌 + Send to your last-minute friend · DM me
+[NOTE]
+Check every limit on the LHDN site for the current YA before posting (especially medical & education insurance, EPF, SSPN and lifestyle). The children extension for life insurance relief: confirm the start YA.

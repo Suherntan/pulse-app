@@ -37,38 +37,40 @@ async function testConnection() {
 }
 
 async function connectDashboard(url) {
+    // Fast start: show the data saved from last time straight away, then
+    // fetch fresh data from the Sheet in the background and redraw.
+    var stale = API.getStaleData('fetchAll');
+    if (stale && !stale.error) {
+        showScreen('dashboard');
+        updateDateDisplay();
+        updateWeekRange();
+        renderAll(API.normalizeAll(stale));
+        showLoading(false);
+        loadAllData(true, true);
+        return;
+    }
     try {
         showLoading(true);
-        var response = await fetch(url + (url.indexOf('?') === -1 ? '?' : '&') + 'action=fetchAll', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            var data = await response.json();
-            if (data.error) {
-                showLoading(false);
-                showScreen('setup');
-                var errorBox = document.getElementById('setup-error');
-                if (errorBox) errorBox.textContent = 'Backend error: ' + data.error;
-            } else {
-                showScreen('dashboard');
-                updateDateDisplay();
-                updateWeekRange();
-                await loadAllData();
-                showLoading(false);
-            }
-        } else {
-            showLoading(false);
-            showScreen('setup');
-            var errorBox2 = document.getElementById('setup-error');
-            if (errorBox2) errorBox2.textContent = 'Cannot connect. Check your URL and try again.';
-        }
+        // One fetch tests the link AND loads the data; templates load at the same time.
+        var both = await Promise.all([
+            API.fetchAllData(true),
+            typeof loadSheetMessageTemplates === 'function' ? loadSheetMessageTemplates() : null
+        ]);
+        var data = both[0];
+        showScreen('dashboard');
+        updateDateDisplay();
+        updateWeekRange();
+        await loadAllData(false, false, data);
+        showLoading(false);
     } catch (error) {
         console.error('Connection failed:', error);
         showLoading(false);
         showScreen('setup');
-        var errorBox3 = document.getElementById('setup-error');
-        if (errorBox3) errorBox3.textContent = 'Network error. Make sure you are online.';
+        var errorBox = document.getElementById('setup-error');
+        var msg = String(error && error.message || '');
+        if (errorBox) errorBox.textContent = /HTTP error|Failed to fetch|NetworkError|Load failed/i.test(msg)
+            ? 'Cannot connect. Check your URL and that you are online, then try again.'
+            : 'Backend error: ' + msg;
     }
 }
 
@@ -110,6 +112,7 @@ function switchTab(tabName) {
     else if (tabName === 'clients') renderClientsTab(lastFetchedData);
     else if (tabName === 'funds') renderFundsTab();
     else if (tabName === 'send') { loadWaTemplate(); loadEmailTemplate(); }
+    else if (tabName === 'leads') { window.scrollTo(0, 0); loadLeadsTab(); }
 }
 
 // --- Date Functions ---
@@ -152,18 +155,28 @@ function formatNiceDate(dateStr) {
 }
 
 // --- Data Loading ---
-async function loadAllData() {
+// force = skip the 5-minute cache; quiet = background refresh (no error toast
+// if the dashboard is already showing data); prefetched = data already in hand.
+async function loadAllData(force, quiet, prefetched) {
+    // Message templates load alongside the data, not after it.
+    var templates = typeof loadSheetMessageTemplates === 'function' ? loadSheetMessageTemplates() : null;
     try {
-        lastFetchedData = await API.fetchAllData();
+        lastFetchedData = prefetched || await API.fetchAllData(!!force);
     } catch (error) {
         console.error('Load all data error:', error);
+        if (quiet && lastFetchedData) { showToast('Could not refresh – showing your last saved data.'); return; }
         showToast('Failed to load data from your Sheet.');
         lastFetchedData = { approach: [], presentation: [], closing: [], sr: [] };
     }
-    if (typeof loadSheetMessageTemplates === 'function') await loadSheetMessageTemplates();
-    renderTodayTab(lastFetchedData);
-    renderTrackerTab(lastFetchedData);
-    renderClientsTab(lastFetchedData);
+    if (templates) await templates;   // usually done by now – it ran in parallel
+    renderAll(lastFetchedData);
+}
+
+function renderAll(data) {
+    lastFetchedData = data;
+    renderTodayTab(data);
+    renderTrackerTab(data);
+    renderClientsTab(data);
 }
 
 function allRows(data) {
@@ -250,6 +263,94 @@ function renderLeadsList() {
             '<button class="lead-btn lead-btn-dismiss" onclick="handleLeadAction(' + i + ',\'dismiss\')" title="Dismiss">&times;</button>' +
             '</div></div>';
     }).join('');
+}
+
+// --- All Leads page: every lead from the LEADS INBOX tab, with filters and
+// search. Opened from "View all leads" on the Today card.
+var allLeads = [];
+var visibleLeads = [];
+var leadFilter = 'NEW';
+
+async function loadLeadsTab() {
+    var el = document.getElementById('leads-all-list');
+    if (!el) return;
+    if (typeof API === 'undefined' || !API.getApiUrl()) {
+        el.innerHTML = '<p class="placeholder">Connect your Sheet in Settings first.</p>';
+        return;
+    }
+    try {
+        var leads = await API.fetchLeads('ALL');
+        allLeads = Array.isArray(leads) ? leads : [];
+        renderLeadsTab();
+    } catch (e) {
+        console.error('loadLeadsTab:', e);
+        el.innerHTML = '<p class="placeholder">Could not load leads. Redeploy Apps Script, then try again.</p>';
+    }
+}
+
+function setLeadFilter(filter) {
+    leadFilter = filter;
+    renderLeadsTab();
+}
+
+function renderLeadsTab() {
+    var el = document.getElementById('leads-all-list');
+    if (!el) return;
+    var counts = { NEW: 0, MOVED: 0, DISMISSED: 0, ALL: allLeads.length };
+    allLeads.forEach(function (l) { if (counts[l.status] !== undefined) counts[l.status]++; });
+    var labels = { NEW: 'New', MOVED: 'In Approach', DISMISSED: 'Dismissed', ALL: 'All' };
+    document.querySelectorAll('#leads-filters .lead-chip').forEach(function (b) {
+        var f = b.getAttribute('data-filter');
+        b.textContent = labels[f] + ' (' + counts[f] + ')';
+        b.classList.toggle('active', f === leadFilter);
+    });
+
+    var q = ((document.getElementById('leads-search') || {}).value || '').trim().toLowerCase();
+    visibleLeads = allLeads.filter(function (l) {
+        if (leadFilter !== 'ALL' && l.status !== leadFilter) return false;
+        if (!q) return true;
+        return [l.name, l.company, l.phone, l.email, l.interest, l.notes].join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+    if (!visibleLeads.length) {
+        el.innerHTML = '<p class="placeholder">No leads here</p>';
+        return;
+    }
+    el.innerHTML = visibleLeads.map(function (l, i) {
+        var title = l.name || l.company;
+        var sub = [l.name ? l.company : '', l.interest, l.source === 'FINDER' ? 'public listing' : 'web form', formatNiceDate(l.date)]
+            .filter(Boolean).map(escapeHtml).join(' &middot; ');
+        var wa = normalizePhoneJS(l.phone);
+        var waBtn = wa ? '<a class="reminder-action-btn wa" href="https://wa.me/' + wa + '" target="_blank" rel="noopener" title="WhatsApp">&#128172;</a>' : '';
+        var actions;
+        if (l.status === 'NEW') {
+            actions = waBtn +
+                '<button class="lead-btn" onclick="handleLeadTabAction(' + i + ',\'approach\')">To Approach</button>' +
+                '<button class="lead-btn lead-btn-dismiss" onclick="handleLeadTabAction(' + i + ',\'dismiss\')" title="Dismiss">&times;</button>';
+        } else if (l.status === 'DISMISSED') {
+            actions = '<button class="lead-btn" onclick="handleLeadTabAction(' + i + ',\'restore\')">Restore</button>';
+        } else {
+            actions = '<span class="lead-status">In Approach</span>';
+        }
+        return '<div class="reminder-item"><div class="reminder-item-info">' +
+            '<span class="name">' + escapeHtml(title) + '</span>' +
+            '<span class="detail">' + escapeHtml(l.phone) + (sub ? ' &middot; ' + sub : '') + '</span>' +
+            (l.notes ? '<span class="detail lead-notes">' + escapeHtml(l.notes) + '</span>' : '') +
+            '</div><div class="reminder-actions">' + actions + '</div></div>';
+    }).join('');
+}
+
+async function handleLeadTabAction(index, action) {
+    var lead = visibleLeads[index];
+    if (!lead) return;
+    try {
+        await API.leadAction({ rowNumber: lead.rowNumber, expectedPhone: lead.phone, action: action });
+        showToast(action === 'approach' ? 'Added to APPROACH' : action === 'restore' ? 'Lead restored' : 'Lead dismissed');
+        if (action === 'approach') loadAllData();
+    } catch (e) {
+        showToast(e.message || 'Could not update the lead.');
+    }
+    loadLeadsTab();
+    loadAndRenderLeads();
 }
 
 async function handleLeadAction(index, action) {

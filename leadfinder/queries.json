@@ -1,10 +1,77 @@
 {
   "max_per_query": 10,
   "queries": [
-    "restaurant in Petaling Jaya",
-    "dental clinic in Kuala Lumpur",
-    "tuition centre in Subang Jaya",
-    "renovation contractor in Klang",
-    "car workshop in Shah Alam"
+    {
+      "q": "specialist clinic in Petaling Jaya",
+      "angle": "Gap 01 income protection + Gap 07 estate (doctor, own-occupation disability)"
+    },
+    {
+      "q": "specialist clinic in Kuala Lumpur",
+      "angle": "Gap 01 income protection + Gap 07 estate (doctor, own-occupation disability)"
+    },
+    {
+      "q": "specialist clinic in Subang Jaya",
+      "angle": "Gap 01 income protection + Gap 07 estate (doctor, own-occupation disability)"
+    },
+    {
+      "q": "dental clinic in Petaling Jaya",
+      "angle": "Gap 01 income protection + Gap 06 practice protection"
+    },
+    {
+      "q": "dental clinic in Kuala Lumpur",
+      "angle": "Gap 01 income protection + Gap 06 practice protection"
+    },
+    {
+      "q": "dental clinic in Subang Jaya",
+      "angle": "Gap 01 income protection + Gap 06 practice protection"
+    },
+    {
+      "q": "accounting firm in Petaling Jaya",
+      "angle": "Gap 06 business protection + Gap 01 income protection"
+    },
+    {
+      "q": "accounting firm in Kuala Lumpur",
+      "angle": "Gap 06 business protection + Gap 01 income protection"
+    },
+    {
+      "q": "accounting firm in Subang Jaya",
+      "angle": "Gap 06 business protection + Gap 01 income protection"
+    },
+    {
+      "q": "law firm in Petaling Jaya",
+      "angle": "Gap 06 partner buy-out + Gap 07 wealth transfer"
+    },
+    {
+      "q": "law firm in Kuala Lumpur",
+      "angle": "Gap 06 partner buy-out + Gap 07 wealth transfer"
+    },
+    {
+      "q": "law firm in Subang Jaya",
+      "angle": "Gap 06 partner buy-out + Gap 07 wealth transfer"
+    },
+    {
+      "q": "engineering consultancy in Petaling Jaya",
+      "angle": "Gap 01 income protection + Gap 05 retirement funding"
+    },
+    {
+      "q": "engineering consultancy in Kuala Lumpur",
+      "angle": "Gap 01 income protection + Gap 05 retirement funding"
+    },
+    {
+      "q": "engineering consultancy in Subang Jaya",
+      "angle": "Gap 01 income protection + Gap 05 retirement funding"
+    },
+    {
+      "q": "manufacturing company in Petaling Jaya",
+      "angle": "Gap 06 key-man + Gap 07 succession"
+    },
+    {
+      "q": "manufacturing company in Kuala Lumpur",
+      "angle": "Gap 06 key-man + Gap 07 succession"
+    },
+    {
+      "q": "manufacturing company in Subang Jaya",
+      "angle": "Gap 06 key-man + Gap 07 succession"
+    }
   ]
 }

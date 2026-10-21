@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-N-T Offer Document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout follows the "Import Proposal" artifact (Offer Document). */
+:root{
+  --gold:#ffc000; --gold-soft:#fff4d1; --navy:#022858; --navy-700:#0a3a73;
+  --green:#00b050; --orange:#ff9900; --navy-050:#eef2f8; --navy-100:#e3e9f2;
+  --ink:#141821; --muted:#68707c; --line:#d5d9e0; --paper:#fff; --desk:#eef0f3;
+  --danger:#c62828; --danger-bg:#fdecea; --ok:#2e7d32;
+  --head:"Poppins","Segoe UI",Arial,sans-serif; --body:Arial,"Helvetica Neue",Helvetica,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--desk);color:var(--ink);font:14px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+.tools{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:12px 16px;background:var(--desk)}
+.tools a,.tools button{border:0;border-radius:999px;padding:11px 20px;min-height:44px;font:700 13px var(--head);letter-spacing:.04em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.tools .ghost{background:#fff;color:var(--navy)}
+.tools .primary{background:var(--navy);color:#fff}
+.tools button:disabled{opacity:.6;cursor:wait}
+.status{max-width:1040px;margin:0 auto 8px;padding:0 16px;text-align:center;font-size:14px;color:var(--navy)}
+.status:empty{display:none}
+.status a{color:var(--navy);font-weight:700}
+.status.err{color:var(--danger)}
+.wrap{max-width:1040px;margin:8px auto 48px;background:var(--paper);padding:32px 36px 40px;border-radius:16px;box-shadow:0 1px 2px rgba(2,40,88,.06),0 18px 48px rgba(2,40,88,.10)}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:3px solid var(--gold);margin-bottom:18px}
+header img{height:64px;width:auto;display:block}
+.doc-title{font:800 24px var(--head);color:var(--navy);text-align:right}
+.lead{font-size:13px;color:var(--muted);margin:0 0 18px;max-width:64ch}
+
+/* import */
+.drop{display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed #c1c9d4;border-radius:14px;padding:28px 20px;background:#f8f9fb;text-align:center}
+.drop.drag{border-color:var(--navy);background:var(--gold-soft)}
+.drop-title{font:700 16px var(--head);color:var(--navy)}
+.drop-sub{font-size:12.5px;color:var(--muted)}
+.btn-primary,.btn-ghost,.btn-mini,.btn-clear,.addrow{font:700 13px var(--head);border-radius:999px;cursor:pointer;min-height:42px;padding:10px 22px}
+.btn-primary{color:#fff;background:var(--navy);border:0}
+.btn-ghost{color:var(--navy);background:#fff;border:1px solid var(--navy)}
+.btn-mini{color:var(--navy);background:#fff;border:1px solid var(--line);font-size:12px;padding:9px 16px;min-height:40px}
+.btn-clear{color:var(--danger);background:#fff;border:1px solid var(--danger);font-size:12px;padding:9px 16px;min-height:40px}
+.btn-clear.armed{background:var(--danger);color:#fff}
+.file{position:relative;display:inline-flex;align-items:center}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file:focus-within{outline:3px solid var(--gold);border-radius:999px}
+.msg{font-size:13px;margin-top:4px}
+.msg.err{color:var(--danger)}
+.panel{border:1px solid #e4e6ea;border-radius:14px;padding:20px}
+.panel h2{font:700 16px var(--head);color:var(--navy);margin:0 0 14px}
+.fieldlabel{display:block;font-size:12px;font-weight:700;color:#3a4454;margin-bottom:5px}
+.fieldnote{font-size:11.5px;color:var(--muted);margin-top:5px}
+.map-top{display:grid;grid-template-columns:1fr 260px;gap:16px 20px;margin-bottom:18px}
+input,select{font:14px var(--body);color:var(--ink);padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--navy-700);outline-offset:1px}
+.maprow-head,.maprow{display:grid;grid-template-columns:1.3fr 1.3fr .8fr 44px;gap:10px;align-items:center}
+.maprow-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-bottom:6px}
+.maprow{padding:7px 0;border-bottom:1px solid #ececec}
+.maprow input[data-k=value]{text-align:center}
+.rm{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:8px;height:40px;cursor:pointer;font-size:18px}
+.addrow{margin-top:10px;color:var(--navy);background:none;border:1px dashed var(--line);font-size:12.5px}
+.subhead{font-size:13px;font-weight:700;margin:18px 0 8px}
+.premedit{display:grid;grid-template-columns:1.6fr 1fr;gap:8px 12px;align-items:center;max-width:420px}
+.premedit>div{font-weight:600}
+.premedit input{text-align:center}
+.actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+
+/* offer document */
+#offerdoc{margin-top:28px}
+.od-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px 12px;margin-bottom:12px}
+.od-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;min-height:44px}
+.od-check input{width:auto}
+.od-actions{display:flex;flex-wrap:wrap;gap:8px}
+.tablescroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e5e5e5;border-radius:10px;box-shadow:-10px 14px 24px rgba(80,80,80,.20)}
+.grid5{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;min-width:820px}
+.cellhdr{font:800 16px var(--head);letter-spacing:.04em;text-align:center;padding:16px 8px;border-bottom:1px solid #ececec;border-right:1px solid #ececec}
+.cellhdr.client{text-align:left;padding:12px 16px;background:var(--gold);display:flex;align-items:center}
+.cellhdr.existing{background:#f7f7f7;color:#111}
+.cellhdr.offer1{background:var(--green);color:#fff}
+.cellhdr.offer2{background:var(--navy);color:#fff}
+.cellhdr.valueup{background:var(--orange);color:#fff}
+.clientname{border:0;background:transparent;font:800 15px var(--head);color:#111;padding:0}
+.clientname::placeholder{color:#6b5b1e}
+.rowlabel,.premlabel{font-weight:700;color:#111;padding:12px 16px;border-bottom:1px solid #ececec;border-right:1px solid #ececec}
+.r-odd{background:#f2f2f2} .r-even{background:#fff}
+.vcell,.pcell{border-bottom:1px solid #ececec;border-right:1px solid #ececec}
+.vcell input,.pcell input{border:0;border-radius:0;background:transparent;text-align:center;padding:12px 8px;font-variant-numeric:tabular-nums}
+.pcell input{font-weight:700}
+.vcell.flash,.pcell.flash{animation:flash 900ms ease-out backwards;animation-delay:var(--d,0ms)}
+@keyframes flash{0%{background:rgba(255,192,0,0)}18%{background:rgba(255,192,0,.45)}100%{background:rgba(255,192,0,0)}}
+.premwrap{margin-top:18px}
+.premband{grid-column:1/-1;background:var(--navy);color:var(--gold);font:700 12px var(--head);letter-spacing:.08em;text-transform:uppercase;padding:10px 16px}
+.p-a{background:var(--navy-050)} .p-b{background:var(--navy-100)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,10px);opacity:0;visibility:hidden;background:var(--navy);color:#fff;font:700 13px var(--head);padding:12px 22px;border-radius:999px;z-index:40;max-width:92vw;text-align:center;transition:opacity .2s,transform .2s,visibility 0s .2s}
+#toast.show{opacity:1;transform:translate(-50%,0);visibility:visible;transition:opacity .2s,transform .2s}
+@media (max-width:720px){
+  .wrap{padding:22px 16px 32px;margin:0 0 24px;border-radius:0}
+  header{flex-direction:column;align-items:flex-start;gap:10px}
+  .doc-title{text-align:left}
+  .map-top{grid-template-columns:1fr}
+  .maprow-head,.maprow{grid-template-columns:1fr 1fr .8fr 40px;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){.vcell.flash,.pcell.flash{animation:none}}
+</style>
+</head>
+<body>
+<div class="tools">
+  <a class="ghost" href="../index.html">PULSE</a>
+  <a class="ghost" href="analysis.html">← ANALYSIS</a>
+  <button class="ghost" id="pdfBtn">DOWNLOAD PDF</button>
+  <button class="primary" id="driveBtn" hidden>SAVE TO DRIVE</button>
+</div>
+<div class="status" id="status" role="status"></div>
+
+<div class="wrap">
+  <header>
+    <img src="ant-assets/logo-dark.png" alt="ANT Wealth System" width="116" height="64">
+    <div class="doc-title">Offer Document</div>
+  </header>
+  <p class="lead">Upload one illustration at a time &mdash; each illustration is a single policy (Existing, Offer 1, Offer 2 or Value Up). Choose the column and confirm the amounts, then they merge into the Offer Document below. Every cell can still be changed by hand.</p>
+  <section id="stage"></section>
+  <section id="offerdoc"></section>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="ant-api.js"></script>
+<script>
+(function () {
+  'use strict';
+  const STANDARD_ROWS = ['Basic Life Coverage','Critical Illness','CI Passive Income','Hospital Room Rate','Annual Hospitalization Fund','Family Plan','Deductible','Accident Coverage','Premium Waiver','LHDN Tax Relieve','LHDN Investment Fund','Coverage Term'];
+  const LHDN_ROW = 'LHDN Tax Relieve', LHDN_LIMIT = 3000;
+  const SLOTS = [{key:'existing',label:'EXISTING'},{key:'offer1',label:'OFFER 1'},{key:'offer2',label:'OFFER 2'},{key:'valueup',label:'VALUE UP'}];
+  const PREM_ROWS = [{key:'annual',label:'Annual Premium',cls:'p-a'},{key:'semiAnnual',label:'Semi-Annual Premium',cls:'p-b'},{key:'monthly',label:'Monthly Premium',cls:'p-a'}];
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  const emptyCell = () => ({existing:'-', offer1:'-', offer2:'-', valueup:'-'});
+  const freshRows = () => STANDARD_ROWS.map(label => Object.assign({label}, emptyCell()));
+  const freshPremium = () => ({annual:emptyCell(), semiAnnual:emptyCell(), monthly:emptyCell()});
+  const slotLabel = k => (SLOTS.find(s => s.key === k) || {}).label || k;
+
+  // Client from the Fact-Find form, if one is open on this phone.
+  const client = read('ant-factfind-current');
+  const defaultLabel = client && client.name ? client.name.toUpperCase() + (client.age != null && client.age !== '' ? ' (' + client.age + 'Y)' : '') : '';
+
+  // The offer table is kept on this phone per client, so it survives a reload.
+  // (Own key, and a shape check, so a draft saved by an older version of this page can't break it.)
+  const KEY = 'ant-offerdoc-current';
+  let doc = read(KEY);
+  const valid = d => d && Array.isArray(d.rows) && STANDARD_ROWS.every(l => d.rows.some(r => r.label === l)) &&
+    d.premium && PREM_ROWS.every(p => d.premium[p.key] && typeof d.premium[p.key] === 'object');
+  try { localStorage.removeItem('ant-offer-current'); } catch (_) {}
+  if (!valid(doc) || doc.clientId !== (client && client.clientId)) {
+    doc = {clientId: client && client.clientId, clientLabel: defaultLabel, rows: freshRows(), premium: freshPremium(), includePremium: true};
+  }
+  doc.plans = doc.plans || {};   // plan name per column (e.g. MANULINK ESSENTIAL), for the PULSE pipeline
+  const save = () => write(KEY, doc);
+
+  const ui = {status:'idle', msg:'', targetSlot:'offer1', slotNote:'', mapClient:'', editRows:[], premiumEdit:{annual:'-',semiAnnual:'-',monthly:'-'}, last:null, flashSlot:null};
+
+  /* ---------- matching an illustration line to a table row ---------- */
+  const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const ALIASES = {
+    'Basic Life Coverage': ['basic life','life coverage','death benefit','basic sum assured','basic plan','sum assured','life insured amount','base plan'],
+    'Critical Illness': ['critical illness','crisis cover','dread disease','critical protect','critical care','major illness'],
+    'CI Passive Income': ['ci passive income','passive income','critical illness income','ci income','illness income benefit'],
+    'Hospital Room Rate': ['health saver','room rate','room and board','room & board','daily room','hospital room','room board','room charges'],
+    'Annual Hospitalization Fund': ['overall individual annual limit','individual annual limit','annual limit','annual hospitalization','annual hospitalisation','overall annual limit','yearly limit','annual coverage limit','annual medical limit','per year limit','annual claim limit'],
+    'Family Plan': ['family plan','family cover','spouse and child','family package','family protection'],
+    'Deductible': ['deductible','co-insurance','coinsurance','co insurance','excess'],
+    'Accident Coverage': ['accident coverage','personal accident','accidental death','accident benefit'],
+    'Premium Waiver': ['premium waiver','waiver of premium','payor benefit','payer benefit','contribution waiver','waiver benefit'],
+    'LHDN Tax Relieve': ['tax relief','tax relieve','lhdn relief','income tax relief','tax deduction','lhdn tax'],
+    'LHDN Investment Fund': ['investment fund','lhdn investment','deferred annuity','investment portion','regular investment','investment contribution'],
+    'Coverage Term': ['coverage term','policy term','benefit term','coverage period','protection term','coverage until age','cover up to age','cover to age','expiry age','maturity age','coverage up to','benefit period','protection period']
+  };
+  const ALIAS_INDEX = Object.entries(ALIASES).flatMap(([std, arr]) => arr.map(a => [norm(a), std])).filter(([a]) => a.length >= 4).sort((a, b) => b[0].length - a[0].length);
+  function guessMatch(label) {
+    const t = norm(label);
+    if (!t) return '';
+    for (const r of STANDARD_ROWS) if (norm(r) === t) return r;
+    for (const r of STANDARD_ROWS) { const n = norm(r); if (n.length > 3 && (n.includes(t) || t.includes(n))) return r; }
+    if (/\bci\b/i.test(label) && !/income/i.test(label)) return 'Critical Illness';
+    if (/accident/i.test(label)) return 'Accident Coverage';
+    for (const [a, std] of ALIAS_INDEX) if (t.includes(a)) return std;
+    if (t.includes('manulifeessential') || t.includes('manulinkessential')) return 'Basic Life Coverage';
+    return '';
+  }
+  const parseAmount = v => { const s = String(v ?? '').replace(/[^0-9.,]/g, '').replace(/,/g, ''); const n = parseFloat(s); return s && isFinite(n) ? n : null; };
+  function annualEquivalent(pe) {
+    const a = parseAmount(pe.annual); if (a > 0) return a;
+    const s = parseAmount(pe.semiAnnual); if (s > 0) return s * 2;
+    const m = parseAmount(pe.monthly); if (m > 0) return m * 12;
+    return null;
+  }
+
+  /* ---------- reading the PDF (on this phone, free – pdf.js) ---------- */
+  function loadScript(src) {
+    return new Promise((ok, fail) => { const t = document.createElement('script'); t.src = src; t.onload = ok; t.onerror = () => fail(new Error('Could not load ' + src)); document.head.appendChild(t); });
+  }
+  async function pdfText(file) {
+    if (!window.pdfjsLib) await loadScript('vendor/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+    const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer(), isEvalSupported: false}).promise;
+    const lines = [];
+    for (let n = 1; n <= Math.min(pdf.numPages, 3); n++) {
+      const items = (await (await pdf.getPage(n)).getTextContent()).items.filter(it => it.str && it.str.trim());
+      const rows = [];
+      items.forEach(it => {
+        const y = it.transform[5];
+        let row = rows.find(r => Math.abs(r.y - y) < 3);
+        if (!row) rows.push(row = {y, parts: []});
+        row.parts.push({x: it.transform[4], s: it.str.trim()});
+      });
+      rows.sort((a, b) => b.y - a.y).forEach(r => lines.push(r.parts.sort((a, b) => a.x - b.x).map(p => p.s).join(' ').replace(/\s+/g, ' ').trim()));
+    }
+    return lines.join('\n');
+  }
+
+  // Manulife "Plan Details": name · policy term · (code) face amount · (modal premium)
+  function planRows(text) {
+    const out = []; let inTable = false;
+    for (const ln of text.split('\n')) {
+      if (/face\s+amount/i.test(ln) && /policy\s+term/i.test(ln)) { inTable = true; continue; }
+      if (!inTable) continue;
+      if (/^(overall|lifetime|deductible|total)\b/i.test(ln)) break;
+      const m = ln.match(/^([A-Z][A-Za-z0-9 &'\-./]*?)\s+(\d{1,3})\s+(?:\d+\.\d+\s+)?(?:([A-Z]{2,8})\s+)?(\d[\d,]*(?:\.\d+)?)(?:\s+\d[\d,]*\.\d{2})?\s*\*?$/);
+      if (!m) continue;
+      const name = m[1].trim();
+      out.push({label: name, value: 'RM ' + m[4], matchTo: guessMatch(name)});
+    }
+    return out;
+  }
+  function extras(text) {
+    const out = {premium: {}, client: ''};
+    const pm = text.match(/payment\s+mode\s*:?\s*(annual|yearly|semi[\s-]?annual|half[\s-]?yearly|quarterly|monthly)/i);
+    const tp = text.match(/total[^\n]*?premium[^\n]*?(\d[\d,]*\.\d{2})\s*$/im);
+    if (tp) {
+      const mode = pm ? pm[1].toLowerCase().replace(/[\s-]/g, '') : 'annual';
+      const key = mode === 'monthly' ? 'monthly' : /semi|half/.test(mode) ? 'semiAnnual' : mode === 'quarterly' ? '' : 'annual';
+      if (key) out.premium[key] = 'RM ' + tp[1];
+    }
+    const nm = text.match(/name\s*:\s*(?:\((?:mr|ms|mrs|mdm|miss|dr|dato'?|datin)\.?\)\s*)?([A-Za-z][A-Za-z .'@\/\-]*?)\s+age\s+next\s*:\s*(\d{1,3})/i);
+    if (nm) out.client = nm[1].replace(/\s+/g, ' ').trim().toUpperCase() + ' (' + nm[2] + 'Y)';
+    return out;
+  }
+  function moreRows(rows, text) {
+    const have = {}; rows.forEach(r => { if (r.matchTo) have[r.matchTo] = true; });
+    const add = (label, value, std) => { if (have[std]) return; rows.push({label, value, matchTo: std}); have[std] = true; };
+    const title = s => s.replace(/\b\w/g, c => c.toUpperCase());
+    let m = text.match(/deductible\s*[:\-]?\s*(RM\s*[\d,]+(?:\.\d+)?)/i);
+    if (m) add('Deductible', m[1].replace(/\s+/g, ' '), 'Deductible');
+    m = text.match(/((?:overall\s+)?(?:individual\s+)?annual\s+limit)\s*[:\-]?\s*(RM\s*[\d,]+(?:\.\d+)?)/i);
+    if (m) add(title(m[1]), m[2].replace(/\s+/g, ' '), 'Annual Hospitalization Fund');
+    m = text.match(/((?:coverage|policy|benefit)\s+term)\s*[:\-]?\s*(?:(?:to|until|up\s+to)\s+)?(?:(age)\s*(\d{2,3})|(\d{1,3})\s*(?:years?|yrs?))/i);
+    if (m) add(title(m[1]), m[2] ? 'AGE ' + m[3] : m[4] + ' YEARS', 'Coverage Term');
+    return rows;
+  }
+  // "AISHAH_OFFER1.pdf" -> offer1 (column picked from the file name)
+  function slotFromName(name) {
+    const s = String(name || '').toLowerCase(); let best = '', at = 1e9;
+    [['valueup', /value[\s_\-]*up/], ['offer2', /offer[\s_\-]*2/], ['offer1', /offer[\s_\-]*1/], ['existing', /existing/]].forEach(([k, rx]) => {
+      const m = s.match(rx); if (m && m.index < at) { best = k; at = m.index; }
+    });
+    return best;
+  }
+  const nextFreeSlot = () => (SLOTS.find(s => s.key !== 'existing' && doc.rows.every(r => r[s.key] === '-' || !r[s.key])) || SLOTS[1]).key;
+
+  async function handleFile(file) {
+    if (!file) return;
+    if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { ui.msg = 'Please choose a PDF file. For a photo or screenshot, type the amounts into the table below.'; renderStage(); return; }
+    ui.status = 'loading'; ui.msg = ''; renderStage();
+    try {
+      const text = await pdfText(file);
+      if (text.replace(/\s/g, '').length < 20) throw new Error('This PDF is a scanned picture, so there is no text to read. Please type the amounts into the table below.');
+      let rows = planRows(text);
+      rows = moreRows(rows, text);
+      if (!rows.length) throw new Error('This layout was not recognised. You can add the rows by hand below, or send the PDF so the reader can learn it.');
+      const ex = extras(text);
+      const hint = slotFromName(file.name);
+      Object.assign(ui, {status:'mapping', editRows: rows, mapClient: doc.clientLabel || ex.client,
+        premiumEdit: {annual: ex.premium.annual || '-', semiAnnual: ex.premium.semiAnnual || '-', monthly: ex.premium.monthly || '-'},
+        targetSlot: hint || nextFreeSlot(), slotNote: hint ? 'Column chosen from the file name' : ''});
+    } catch (e) {
+      ui.status = 'idle'; ui.msg = e.message;
+      if (/layout/.test(e.message)) Object.assign(ui, {status:'mapping', editRows:[blank(), blank(), blank()], mapClient: doc.clientLabel, targetSlot: nextFreeSlot(), slotNote: ''});
+    }
+    renderStage();
+  }
+  const blank = () => ({label:'', value:'-', matchTo:''});
+
+  /* ---------- review → add to the Offer Doc ---------- */
+  function confirmMapping() {
+    const slot = ui.targetSlot;
+    ui.last = {slot, before: clone({rows: doc.rows, premium: doc.premium, clientLabel: doc.clientLabel, plans: doc.plans})};
+    const basicLine = ui.editRows.find(er => er.matchTo === 'Basic Life Coverage' && er.label.trim());
+    if (basicLine) doc.plans[slot] = basicLine.label.trim();
+    const mapped = {};
+    ui.editRows.forEach(er => {
+      if (!er.matchTo) return;
+      mapped[er.matchTo] = true;
+      const row = doc.rows.find(r => r.label === er.matchTo);
+      if (row) row[slot] = er.value === '' ? '-' : er.value;
+    });
+    // LHDN rule: yearly premium over RM 3,000 -> "YES" in this column's LHDN Tax Relieve row.
+    let lhdn = false;
+    const yearly = annualEquivalent(ui.premiumEdit);
+    if (yearly != null && yearly > LHDN_LIMIT && !mapped[LHDN_ROW]) { doc.rows.find(r => r.label === LHDN_ROW)[slot] = 'YES'; lhdn = true; }
+    PREM_ROWS.forEach(p => { doc.premium[p.key][slot] = ui.premiumEdit[p.key] || '-'; });
+    if (ui.mapClient.trim()) doc.clientLabel = ui.mapClient.trim();
+    save();
+    ui.flashSlot = slot;
+    Object.assign(ui, {status:'idle', msg:'', editRows:[], mapClient:''});
+    renderStage(); renderOfferDoc();
+    toast('Added to ' + slotLabel(slot) + (lhdn ? ' · LHDN Tax Relieve set to YES (premium over RM 3,000)' : ''));
+    $('offerdoc').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+  function undoLast() {
+    if (!ui.last) return;
+    Object.assign(doc, ui.last.before); save();
+    toast('Removed the last import (' + slotLabel(ui.last.slot) + ')');
+    ui.last = null; renderOfferDoc();
+  }
+
+  /* ---------- render: import stage ---------- */
+  function renderStage() {
+    const host = $('stage');
+    if (ui.status === 'loading') { host.innerHTML = '<div class="drop"><div class="drop-title">Reading the PDF…</div></div>'; return; }
+    if (ui.status !== 'mapping') {
+      host.innerHTML = `<div class="drop" id="drop">
+        <div class="drop-title">Upload a proposal illustration (PDF)</div>
+        <div class="drop-sub">Read on this phone &mdash; the file is not sent anywhere. Tip: name the file …_OFFER1.pdf to pick the column.</div>
+        <label class="file btn-primary">CHOOSE PDF<input type="file" id="pdfIn" accept="application/pdf,.pdf"></label>
+        ${ui.msg ? `<div class="msg err">${esc(ui.msg)}</div>` : ''}
+      </div>`;
+      $('pdfIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; handleFile(f); };
+      const drop = $('drop');
+      drop.ondragover = e => { e.preventDefault(); drop.classList.add('drag'); };
+      drop.ondragleave = () => drop.classList.remove('drag');
+      drop.ondrop = e => { e.preventDefault(); drop.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); };
+      return;
+    }
+    const slotOpts = SLOTS.map(s => `<option value="${s.key}"${s.key === ui.targetSlot ? ' selected' : ''}>${s.label}</option>`).join('');
+    const rowsHtml = ui.editRows.map((er, i) => `<div class="maprow">
+        <input data-k="label" data-i="${i}" value="${esc(er.label)}" placeholder="row label from illustration" aria-label="Illustration row label">
+        <select data-k="match" data-i="${i}" aria-label="Match to table row"><option value="">— skip —</option>${STANDARD_ROWS.map(r => `<option${r === er.matchTo ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select>
+        <input data-k="value" data-i="${i}" value="${esc(er.value)}" aria-label="Amount">
+        <button class="rm" data-rm="${i}" aria-label="Remove row">&times;</button></div>`).join('');
+    const prem = (doc.includePremium ? PREM_ROWS : [PREM_ROWS[0]]).map(p => `<div>${p.label}</div><input data-p="${p.key}" value="${esc(ui.premiumEdit[p.key])}" aria-label="${p.label}">`).join('');
+    host.innerHTML = `<div class="panel">
+      <h2>Review &amp; match</h2>
+      ${ui.msg ? `<p class="msg err">${esc(ui.msg)}</p>` : ''}
+      <div class="map-top">
+        <div><label class="fieldlabel" for="mapClient">Client (name &amp; age)</label><input id="mapClient" value="${esc(ui.mapClient)}" placeholder="e.g. AISHAH BINTI MOHAMED YUSOFF (43Y)"></div>
+        <div><label class="fieldlabel" for="slotSel">This illustration is for</label><select id="slotSel">${slotOpts}</select>${ui.slotNote ? `<div class="fieldnote">${esc(ui.slotNote)} — change it here if wrong</div>` : ''}</div>
+      </div>
+      <div class="subhead">Match each row from the illustration to a table row, then confirm the amount. Skip rows that don’t apply.</div>
+      <div class="maprow-head"><div>Illustration row</div><div>Table row</div><div>Amount</div><div></div></div>
+      ${rowsHtml}
+      <button class="addrow" id="addRow">+ Add row</button>
+      <div class="subhead">Premium</div><div class="premedit">${prem}</div>
+      <div class="actions"><button class="btn-primary" id="doConfirm">Add to Offer Doc</button><button class="btn-ghost" id="doCancel">← Back</button></div>
+    </div>`;
+    $('mapClient').oninput = e => { ui.mapClient = e.target.value; };
+    $('slotSel').onchange = e => { ui.targetSlot = e.target.value; };
+    $('addRow').onclick = () => { ui.editRows.push(blank()); renderStage(); };
+    $('doConfirm').onclick = () => { try { confirmMapping(); } catch (e) { toast('Could not add: ' + e.message); } };
+    $('doCancel').onclick = () => { Object.assign(ui, {status:'idle', msg:'', editRows:[]}); renderStage(); };
+    host.querySelectorAll('.maprow [data-k]').forEach(el => el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', e => {
+      const r = ui.editRows[+e.target.dataset.i], k = e.target.dataset.k;
+      if (k === 'match') r.matchTo = e.target.value; else r[k] = e.target.value;
+    }));
+    host.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { ui.editRows.splice(+b.dataset.rm, 1); if (!ui.editRows.length) ui.editRows.push(blank()); renderStage(); });
+    host.querySelectorAll('.premedit input').forEach(el => el.oninput = e => { ui.premiumEdit[e.target.dataset.p] = e.target.value; });
+  }
+
+  /* ---------- render: Offer Document ---------- */
+  function renderOfferDoc() {
+    const flash = ui.flashSlot; ui.flashSlot = null;
+    const fl = (s, i) => flash === s ? ` flash" style="--d:${i * 32}ms` : '';
+    const header = `<div class="cellhdr client"><input class="clientname" id="odClient" value="${esc(doc.clientLabel)}" placeholder="CLIENT NAME (AGE Y)" aria-label="Client name and age"></div>` +
+      SLOTS.map(s => `<div class="cellhdr ${s.key}">${s.label}</div>`).join('');
+    const body = doc.rows.map((r, i) => {
+      const par = i % 2 ? 'r-odd' : 'r-even';
+      return `<div class="rowlabel ${par}">${esc(r.label)}</div>` + SLOTS.map(s =>
+        `<div class="vcell ${par}${fl(s.key, i)}"><input data-i="${i}" data-slot="${s.key}" value="${esc(r[s.key])}" aria-label="${esc(r.label + ' ' + s.label)}"></div>`).join('');
+    }).join('');
+    const premRows = doc.includePremium ? PREM_ROWS : [PREM_ROWS[0]];
+    const premium = `<div class="premwrap"><div class="tablescroll"><div class="grid5">` +
+      (doc.includePremium ? '<div class="premband">Premium Payment Options</div>' : '') +
+      premRows.map((p, pi) => `<div class="premlabel ${p.cls}">${p.label}</div>` + SLOTS.map(s =>
+        `<div class="pcell ${p.cls}${fl(s.key, 12 + pi)}"><input data-p="${p.key}" data-slot="${s.key}" value="${esc(doc.premium[p.key][s.key])}" aria-label="${esc(p.label + ' ' + s.label)}"></div>`).join('')).join('') +
+      `</div></div></div>`;
+    $('offerdoc').innerHTML = `<div class="od-bar">
+        <label class="od-check"><input type="checkbox" id="odPrem"${doc.includePremium ? ' checked' : ''}> Include Premium Payment Options</label>
+        <div class="od-actions">
+          <button class="btn-mini" id="odUndo"${ui.last ? '' : ' hidden'}>↩ Undo last import${ui.last ? ' (' + slotLabel(ui.last.slot) + ')' : ''}</button>
+          <button class="btn-clear" id="odClear">Clear all</button>
+        </div>
+      </div>
+      <div class="tablescroll"><div class="grid5">${header}${body}</div></div>${premium}`;
+    $('odClient').oninput = e => { doc.clientLabel = e.target.value; save(); };
+    $('odPrem').onchange = e => { doc.includePremium = e.target.checked; save(); renderOfferDoc(); if (ui.status === 'mapping') renderStage(); };
+    $('odUndo').onclick = undoLast;
+    const clr = $('odClear');
+    clr.onclick = () => {
+      if (!clr.classList.contains('armed')) { clr.classList.add('armed'); clr.textContent = 'Tap again to clear all'; setTimeout(() => { clr.classList.remove('armed'); clr.textContent = 'Clear all'; }, 3000); return; }
+      Object.assign(doc, {clientLabel: defaultLabel, rows: freshRows(), premium: freshPremium(), includePremium: true, plans: {}}); ui.last = null; save(); renderOfferDoc();
+    };
+    $('offerdoc').querySelectorAll('.vcell input').forEach(el => el.oninput = e => { doc.rows[+e.target.dataset.i][e.target.dataset.slot] = e.target.value; save(); });
+    $('offerdoc').querySelectorAll('.pcell input').forEach(el => el.oninput = e => { doc.premium[e.target.dataset.p][e.target.dataset.slot] = e.target.value; save(); });
+  }
+
+  let toastT;
+  function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+
+  /* ---------- PDF download (landscape A4, same look as the artifact) ---------- */
+  const hexRgb = h => [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16));
+  const safeText = s => String(s ?? '').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x20-\x7E]/g, '');
+  async function logoData() {
+    try { const b = await (await fetch('ant-assets/logo-dark.png')).blob(); return await new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); }); } catch (_) { return null; }
+  }
+  async function buildPdf() {
+    if (!window.jspdf) await loadScript('vendor/jspdf.umd.min.js');
+    const pdf = new jspdf.jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
+    const W = 297, M = 12, TW = W - M * 2, c0 = 62, cw = (TW - c0) / 4;
+    const xs = [M, M + c0, M + c0 + cw, M + c0 + cw * 2, M + c0 + cw * 3], ws = [c0, cw, cw, cw, cw];
+    function cell(x, y, w, h, fill, text, o = {}) {
+      const f = hexRgb(fill); pdf.setFillColor(...f); pdf.setDrawColor(226, 226, 226); pdf.setLineWidth(0.2); pdf.rect(x, y, w, h, 'FD');
+      let t = safeText(text), size = o.size || 10; const maxW = w - 5;
+      pdf.setFont('helvetica', o.bold ? 'bold' : 'normal'); pdf.setFontSize(size); pdf.setTextColor(...hexRgb(o.color || '111111'));
+      while (size > 6.5 && pdf.getTextWidth(t) > maxW) { size -= 0.5; pdf.setFontSize(size); }
+      if (pdf.getTextWidth(t) > maxW) { while (t.length > 1 && pdf.getTextWidth(t + '...') > maxW) t = t.slice(0, -1); t += '...'; }
+      if (o.align === 'left') pdf.text(t, x + 2.5, y + h / 2, {baseline: 'middle'});
+      else pdf.text(t, x + w / 2, y + h / 2, {align: 'center', baseline: 'middle'});
+    }
+    const logo = await logoData();
+    if (logo) pdf.addImage(logo, 'PNG', M, 7.5, 28.8, 15.95);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(19); pdf.setTextColor(2, 40, 88);
+    pdf.text('Offer Document', W - M, 15, {align: 'right', baseline: 'middle'});
+    pdf.setDrawColor(255, 192, 0); pdf.setLineWidth(0.9); pdf.line(M, 25.5, W - M, 25.5);
+    let y = 31;
+    cell(xs[0], y, ws[0], 11, 'FFC000', doc.clientLabel || 'CLIENT NAME (AGE Y)', {bold: true, align: 'left', size: 11});
+    [['EXISTING', 'F7F7F7', '111111'], ['OFFER 1', '00B050', 'FFFFFF'], ['OFFER 2', '022858', 'FFFFFF'], ['VALUE UP', 'FF9900', 'FFFFFF']]
+      .forEach(([t, f, c], i) => cell(xs[i + 1], y, ws[i + 1], 11, f, t, {bold: true, color: c, size: 11}));
+    y += 11;
+    doc.rows.forEach((r, i) => {
+      const fill = i % 2 ? 'F2F2F2' : 'FFFFFF';
+      cell(xs[0], y, ws[0], 9, fill, r.label, {bold: true, align: 'left', size: 9.5});
+      SLOTS.forEach((s, k) => cell(xs[k + 1], y, ws[k + 1], 9, fill, r[s.key], {size: 9.5}));
+      y += 9;
+    });
+    y += 5;
+    if (doc.includePremium) {
+      pdf.setFillColor(2, 40, 88); pdf.rect(M, y, TW, 7, 'F');
+      pdf.setTextColor(255, 192, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5);
+      pdf.text('PREMIUM PAYMENT OPTIONS', M + 3, y + 3.5, {baseline: 'middle'}); y += 7;
+    }
+    (doc.includePremium ? PREM_ROWS : [PREM_ROWS[0]]).forEach(p => {
+      const fill = p.cls === 'p-b' ? 'E3E9F2' : 'EEF2F8';
+      cell(xs[0], y, ws[0], 8, fill, p.label, {bold: true, align: 'left', size: 9.5});
+      SLOTS.forEach((s, k) => cell(xs[k + 1], y, ws[k + 1], 8, fill, doc.premium[p.key][s.key], {bold: true, size: 9.5}));
+      y += 8;
+    });
+    const d = new Date(), dmy = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(140, 146, 156);
+    const by = client && client.agentName ? '  -  Prepared by ' + client.agentName + (client.agentPhone ? ' (' + client.agentPhone + ')' : '') : '';
+    pdf.text(safeText('Generated ' + dmy + by + '  -  ANT Wealth System'), M, 203);
+    return {pdf, dmy};
+  }
+  const fileName = dmy => {
+    const who = (doc.clientLabel || 'Client').replace(/\s*\(.*$/, '').replace(/[^\w ]+/g, '').trim() || 'Client';
+    return `Offer Document - ${who} - ${dmy.replace(/\//g, '-')}.pdf`;
+  };
+  $('pdfBtn').onclick = async () => {
+    const b = $('pdfBtn'); b.disabled = true;
+    try { const {pdf, dmy} = await buildPdf(); pdf.save(fileName(dmy)); }
+    catch (e) { toast('PDF not made: ' + e.message); }
+    b.disabled = false;
+  };
+
+  // Save to Drive: PDF into the client's folder + ANT_OFFERS row + PULSE pipeline (+ Master copy).
+  const status = $('status'), driveBtn = $('driveBtn');
+  const canSave = AntApi.connected() && client && client.clientId && !/DEMO|0000/.test(client.clientId);
+  if (canSave) driveBtn.hidden = false;
+  else if (AntApi.connected()) status.textContent = 'Save the client in the Fact-Find form first to keep this in Google Drive.';
+  driveBtn.onclick = async () => {
+    const filled = doc.rows.some(r => SLOTS.some(s => String(r[s.key] || '').trim() && r[s.key] !== '-'));
+    if (!filled) { toast('Add at least one plan to the table first'); return; }
+    driveBtn.disabled = true; driveBtn.textContent = 'SAVING…'; status.className = 'status'; status.textContent = 'Making the PDF…';
+    try {
+      const {pdf, dmy} = await buildPdf();
+      status.textContent = 'Uploading to Google Drive…';
+      const r = await AntApi.post('antSaveOffer', {
+        clientId: client.clientId,
+        offer: {clientLabel: doc.clientLabel, rows: doc.rows, premium: doc.premium, plans: doc.plans},
+        pdfBase64: pdf.output('datauristring').split(',')[1],
+        fileName: fileName(dmy)
+      });
+      status.innerHTML = (r.replaced ? '✓ Updated today\'s offer (' : '✓ Saved (') + esc(r.offerId) + ')' + (r.pipeline ? ' · ' + esc(r.pipeline) : '') +
+        (r.master === 'sent' ? ' · copied to Master' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '. <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
+      status.querySelector('a').href = r.pdfUrl;
+      driveBtn.textContent = 'SAVED ✓';
+    } catch (e) {
+      status.className = 'status err'; status.textContent = 'Not saved: ' + e.message;
+      driveBtn.textContent = 'SAVE TO DRIVE';
+    }
+    driveBtn.disabled = false;
+  };
+
+  renderStage(); renderOfferDoc();
+})();
+</script>
+</body>
+</html>

@@ -29,6 +29,13 @@ const AntApi = {
   async _read(r) {
     if (!r.ok) throw new Error('Google Sheet not reachable (' + r.status + ')');
     const data = await r.json();
+    if (data.trialEnded) {
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0B2545;color:#F4F2EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center';
+      d.innerHTML = '<h2 style="margin:0;color:#F3AF3D;letter-spacing:.06em">PULSE IS PAUSED</h2><p style="max-width:420px;line-height:1.5;margin:0"></p>';
+      d.querySelector('p').textContent = data.error;
+      document.body.appendChild(d);
+    }
     if (data.error || data.ok === false) throw new Error(data.error || 'Something went wrong');
     return data;
   },

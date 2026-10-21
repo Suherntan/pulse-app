@@ -673,6 +673,8 @@ function doGet(e) {
   // widget calls the bare URL with no query string, so it relies on
   // this default rather than passing an action explicitly.
   var action = (e && e.parameter && e.parameter.action) || 'fetchAll';
+  var lic = pulseLicence_();
+  if (!lic.ok) return jsonResponse({ error: lic.error, trialEnded: true });
 
   try {
     switch (action) {
@@ -694,8 +696,12 @@ function doGet(e) {
         return jsonResponse(getFundPipelineData());
       case 'appointments':
         return jsonResponse(getUpcomingAppointments());
+      case 'socialStatus':
+        return jsonResponse(socialStatus());
+      case 'socialQueue':
+        return jsonResponse(socialQueue());
       case 'leads':
-        return jsonResponse(getNewLeads());
+        return jsonResponse(getNewLeads(e.parameter.status));
       // A-N-T (see ANT.gs)
       case 'antProfile':
         return jsonResponse(antProfile());
@@ -713,6 +719,8 @@ function doGet(e) {
 
 function doPost(e) {
   var action = e.parameter.action;
+  var lic = pulseLicence_();
+  if (!lic.ok) return jsonResponse({ error: lic.error, trialEnded: true });
 
   try {
     var data = JSON.parse(e.postData.contents);
@@ -730,6 +738,9 @@ function doPost(e) {
         return jsonResponse(addPipelineClient(data));
       case 'importFundData':
         return jsonResponse(importFundData(data));
+      // Social auto-post (see Social.gs)
+      case 'socialQueuePost':
+        return jsonResponse(socialQueuePost(data));
       // Leads inbox (see Leads.gs)
       case 'addWebLead':
         return jsonResponse(addWebLead(data));
@@ -742,6 +753,8 @@ function doPost(e) {
         return jsonResponse(antSaveClient(data));
       case 'antSaveAnalysis':
         return jsonResponse(antSaveAnalysis(data));
+      case 'antSaveOffer':
+        return jsonResponse(antSaveOffer(data));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
@@ -1127,6 +1140,27 @@ function searchClients(query) {
   });
 }
 
+// ---------------------------------------------------------------------
+// Library mode. When this code runs as the "PULSE" library, the advisor's
+// small connector script calls PULSE.pulseUse({...}) first and passes in its
+// OWN properties, cache, lock and ScriptApp. A library's own copies are shared
+// by every advisor, so settings (Advisor ID, counters, Master key) and
+// triggers must always come from the advisor's side. Pasted directly into a
+// sheet (no connector), the normal services are used.
+// ---------------------------------------------------------------------
+var PULSE_HOST_ = null;
+function pulseUse(host) { PULSE_HOST_ = host || null; }
+function pulseProps_() { return (PULSE_HOST_ && PULSE_HOST_.props) || PropertiesService.getScriptProperties(); }
+function pulseCache_() { return (PULSE_HOST_ && PULSE_HOST_.cache) || CacheService.getScriptCache(); }
+function pulseLock_() { return (PULSE_HOST_ && PULSE_HOST_.lock) || LockService.getScriptLock(); }
+function pulseApp_() { return (PULSE_HOST_ && PULSE_HOST_.app) || ScriptApp; }
+
+// Trial switch lives in ANT.gs; sheets without ANT.gs are always on.
+function pulseLicence_() {
+  try { return typeof antLicence_ === 'function' ? antLicence_() : { ok: true }; }
+  catch (err) { return { ok: true }; }
+}
+
 function jsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
@@ -1236,9 +1270,9 @@ function getAgentSettings_() {
 
   if (!sheet) {
     sheet = ss.insertSheet(AGENT_SETTINGS_SHEET_NAME);
-    sheet.getRange("A1").setValue("Agent Name").setFontWeight("bold");
+    sheet.getRange("A1").setValue("Advisor Name").setFontWeight("bold");
     sheet.getRange("B1").setValue("YOUR NAME HERE");
-    sheet.getRange("A2").setValue("Agent WhatsApp Number").setFontWeight("bold");
+    sheet.getRange("A2").setValue("Advisor WhatsApp Number").setFontWeight("bold");
     sheet.getRange("B2").setValue("PASTE_YOUR_OWN_WHATSAPP_NUMBER_HERE");
     sheet.getRange("A3").setValue("Country Code (for WhatsApp numbers)").setFontWeight("bold");
     sheet.getRange("B3").setValue(COUNTRY_CODE);
@@ -1246,6 +1280,10 @@ function getAgentSettings_() {
     sheet.setColumnWidth(1, 260);
     sheet.setColumnWidth(2, 260);
   }
+
+  // Old label "Agent ..." becomes "Advisor ..." (only the label; the values in B stay)
+  if (sheet.getRange("A1").getValue() === "Agent Name") sheet.getRange("A1").setValue("Advisor Name");
+  if (sheet.getRange("A2").getValue() === "Agent WhatsApp Number") sheet.getRange("A2").setValue("Advisor WhatsApp Number");
 
   var agentName = String(sheet.getRange("B1").getValue() || "").trim();
   var agentWhatsApp = String(sheet.getRange("B2").getValue() || "").trim();
@@ -1262,7 +1300,7 @@ function getAgentSettings_() {
 // from SETTINGS. Every function that builds a customer-facing message
 // should run its template through this before sending.
 function fillAgentName_(template, agentName) {
-  return String(template).split("{agent}").join(agentName);
+  return String(template).split("{agent}").join(agentName).split("{advisor}").join(agentName);
 }
 
 // Menu entry point: makes sure the SETTINGS tab exists (creating it with
@@ -1278,7 +1316,7 @@ function openAgentSettings() {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("PULSE Reminders")
-    .addItem("My Settings (Agent Name & WhatsApp Number)", "openAgentSettings")
+    .addItem("My Settings (Advisor Name & WhatsApp Number)", "openAgentSettings")
     .addSeparator()
     .addItem("Refresh Today's Reminders", "buildTodayReminders")
     .addItem("Debug: Why Does This Reminder Keep Coming Back?", "debugRemindersCheck")
@@ -1310,6 +1348,7 @@ function onOpen() {
     .addItem("Remove Duplicate Client Rows (by Policy Number)", "removeDuplicateClientRows")
     .addToUi();
   antAddMenu_(); // A-N-T menu (ANT.gs)
+  if (typeof socialAddMenu_ === 'function') socialAddMenu_(); // Social Posts menu (Social.gs)
 }
 
 
@@ -1671,7 +1710,7 @@ function runDailyAutomation() {
 
 function createDailyTrigger() {
   removeDailyTrigger();
-  ScriptApp.newTrigger("runDailyAutomation")
+  pulseApp_().newTrigger("runDailyAutomation")
     .timeBased()
     .everyDays(1)
     .atHour(7)
@@ -1680,11 +1719,11 @@ function createDailyTrigger() {
 }
 
 function removeDailyTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
+  var triggers = pulseApp_().getProjectTriggers();
   triggers.forEach(function (t) {
     var fn = t.getHandlerFunction();
     if (fn === "runDailyAutomation" || fn === "buildTodayReminders") {
-      ScriptApp.deleteTrigger(t);
+      pulseApp_().deleteTrigger(t);
     }
   });
   SpreadsheetApp.getActive().toast("Daily auto-refresh + auto-emails turned OFF.", "PULSE Reminders", 5);
@@ -1707,7 +1746,7 @@ function remindManulifeImport() {
   if (!email) return; // nothing we can do without an address
 
   var settings = getAgentSettings_();
-  var stamp = PropertiesService.getScriptProperties().getProperty(LAST_MANULIFE_IMPORT_KEY);
+  var stamp = pulseProps_().getProperty(LAST_MANULIFE_IMPORT_KEY);
   var sinceLine = "This is your first one — no Manulife import has been recorded yet.";
   if (stamp) {
     var last = new Date(stamp);
@@ -1734,7 +1773,7 @@ function remindManulifeImport() {
 
 function createMonthlyManulifeReminder() {
   removeMonthlyManulifeReminder();
-  ScriptApp.newTrigger("remindManulifeImport")
+  pulseApp_().newTrigger("remindManulifeImport")
     .timeBased()
     .onMonthDay(1)
     .atHour(8)
@@ -1746,10 +1785,10 @@ function createMonthlyManulifeReminder() {
 }
 
 function removeMonthlyManulifeReminder() {
-  var triggers = ScriptApp.getProjectTriggers();
+  var triggers = pulseApp_().getProjectTriggers();
   triggers.forEach(function (t) {
     if (t.getHandlerFunction() === "remindManulifeImport") {
-      ScriptApp.deleteTrigger(t);
+      pulseApp_().deleteTrigger(t);
     }
   });
   SpreadsheetApp.getActive().toast("Monthly Manulife import reminder is OFF.", "PULSE Reminders", 5);
@@ -3815,7 +3854,7 @@ function importPaymentModeAndAddress() {
 
   // Stamp when this ran, so the monthly reminder email can say how long
   // it's been since the last refresh.
-  PropertiesService.getScriptProperties().setProperty(LAST_MANULIFE_IMPORT_KEY, new Date().toISOString());
+  pulseProps_().setProperty(LAST_MANULIFE_IMPORT_KEY, new Date().toISOString());
 
   ui.alert(
     "Import complete.\n\n" +
@@ -4477,7 +4516,7 @@ function syncAppointmentStatusFromCalendar() {
 
 function createDailyAppointmentSyncTrigger() {
   removeDailyAppointmentSyncTrigger();
-  ScriptApp.newTrigger("syncAppointmentStatusFromCalendar")
+  pulseApp_().newTrigger("syncAppointmentStatusFromCalendar")
     .timeBased()
     .everyDays(1)
     .atHour(6)
@@ -4486,10 +4525,10 @@ function createDailyAppointmentSyncTrigger() {
 }
 
 function removeDailyAppointmentSyncTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
+  var triggers = pulseApp_().getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === "syncAppointmentStatusFromCalendar") {
-      ScriptApp.deleteTrigger(triggers[i]);
+      pulseApp_().deleteTrigger(triggers[i]);
     }
   }
 }
