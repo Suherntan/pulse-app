@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
+                "file": "Stevern - PULSE Update Guide (for Claude).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "PULSE_REMINDER_MENU_MARK_SENT_DEBUG"
+              "title": "Stevern - PULSE Update Guide (for Claude)"
             }
           }
         ]
@@ -210,13 +210,16 @@
   },
   "active": "d24f4dbc3ad5bac8",
   "lastOpenFiles": [
+    "Stevern - PULSE Update Guide (for Claude) 1.md",
+    "Stevern - PULSE Update Guide (for Claude).md",
+    "PULSE Home.md",
+    "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
     "attachments/7FBS-logo-square-white.png",
     "attachments/7FBS-logo-square-navy.png",
     "attachments/7FBS-logo-gold-white.png",
     "attachments/7FBS-logo-gold-navy.png",
     "attachments/7FBS-booklet-cover.jpg",
     "attachments",
-    "Stevern - PULSE Update Guide (for Claude).md",
     "Social Posts Skill/SKILL.md",
     "Social Posts Skill",
     "Social Posts - Nov 2026.md",
@@ -229,10 +232,8 @@
     "A-N-T Setup - Guide for Another Agent (Stevern).md",
     "7 Financial Blind Spots - Booklet Reference.md",
     "Client Tracker - Design Brief for Claude Code.md",
-    "PULSE Home.md",
     "Skills & Tools Log.md",
     "ANT_CLIENT_REGISTRATION_FORM.md",
-    "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
     "Welcome.md",
     "Client Tracker - Design Brief for Claude Code 1.md",
     "manulife_fund_scraper.py"
