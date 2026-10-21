@@ -762,13 +762,28 @@ $('readPaste').onclick = () => {
   toast(posts.length + ' post' + (posts.length > 1 ? 's' : '') + ' saved to My Posts');
   setMode('queue');
 };
-const MONTH_PROMPT = () => `Use my su-social-posts skill. Make this month's posts (${PostPlan.perWeek()} per week, ${PostPlan.daysText()}).
+// Topics already in My Posts (last 6 months + planned) go into the prompt, so Claude doesn't repeat them.
+function pastTopics() {
+  const toD = d => { const m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? new Date(+m[3], m[2] - 1, +m[1]) : null; };
+  const since = Date.now() - 183 * 864e5, seen = new Set();
+  return queue.map(q => ({d: toD(q.date), q})).filter(x => x.d && x.d >= since)
+    .sort((a, b) => a.d - b.d)
+    .map(x => `${x.q.date} – ${x.q.title}`)
+    .filter(t => !seen.has(t) && seen.add(t)).slice(-60);
+}
+const MONTH_PROMPT = () => {
+  const past = pastTopics();
+  return `Use my su-social-posts skill. Make this month's posts (${PostPlan.perWeek()} per week, ${PostPlan.daysText()}).
 Month: [month & year]
 Ideas (one per line, add any personal story you want in):
 -
 -
 -
-- `;
+- ` + (past.length ? `
+
+Topics I already posted or planned (don't repeat them; a new angle is fine only if 6+ months ago):
+${past.map(t => '- ' + t).join('\n')}` : '');
+};
 $('copyPrompt').onclick = async () => { try { await navigator.clipboard.writeText(MONTH_PROMPT()); toast('Prompt copied – paste it in Claude'); } catch (_) { toast('Copy failed'); } };
 
 /* ---------- My posts ---------- */

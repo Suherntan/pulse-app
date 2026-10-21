@@ -50,6 +50,7 @@ When Su gives a list of ideas or says "make this month's posts":
 - Date each post on its posting day (dd/mm/yyyy). PULSE schedules each platform at its own time: LinkedIn 5 PM, Facebook 8 PM, Instagram 9 PM.
 - Mix the week: Monday = Did you know? / awareness, Wednesday = L.I.F.E education or money habits, Friday = lighter (story, behind the scenes, festive, quick tip). Keep Friday posts shorter.
 - Spread the pillars, and match festive posts to the real dates in that month.
+- If the prompt lists **topics already posted or planned**, don't repeat them (same tax relief, product or story). A clearly new angle on an old topic is fine only if it was 6+ months ago; say so in [NOTE].
 - Keep each post focused (one idea) so 3 a week doesn't feel repetitive; don't repeat the same tax relief or product in the same week.
 - Ask nothing unless an idea is unclear. Write all posts in **one answer** (saves credits).
 
