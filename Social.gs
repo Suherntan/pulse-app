@@ -157,11 +157,14 @@ function socialQueuePost(data) {
   var sh = socialSheet_();
   posts.forEach(function (p) {
     var name = { instagram: 'Instagram', linkedin: 'LinkedIn' }[String(p.platform).toLowerCase()] || 'Facebook';
-    sh.appendRow([when, Utilities.formatDate(when, tz, 'HH:mm'), name,
+    var at = (p.time && socialParseWhen_(data.date, p.time)) || when;  // each platform can have its own time
+    p.when = Utilities.formatDate(at, tz, 'h:mm a');
+    sh.appendRow([at, Utilities.formatDate(at, tz, 'HH:mm'), name,
       String(data.title || ''), String(p.text), ids.join(','), 'Queued', '', '', '', new Date()]);
   });
   var s = socialStatus();
   return { ok: true, when: Utilities.formatDate(when, tz, 'EEE d MMM yyyy, h:mm a'),
+    times: posts.map(function (p) { return p.when; }),
     pictures: ids.length, platforms: posts.map(function (p) { return p.platform; }),
     connected: s.facebook, instagram: s.instagram, linkedin: s.linkedin, liDaysLeft: s.liDaysLeft, autoPost: s.autoPost };
 }
@@ -360,32 +363,40 @@ function socialConnectLinkedIn() {
   var url = 'https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=' + encodeURIComponent(id) +
     '&redirect_uri=' + encodeURIComponent(LI_REDIRECT) + '&scope=' + encodeURIComponent('openid profile w_member_social') +
     '&state=pulse' + Date.now();
+  // One box with the link AND the code field (a separate prompt would hide this box).
   ui.showModalDialog(HtmlService.createHtmlOutput(
     '<div style="font:15px Arial;line-height:1.5">1. Click the link and press <b>Allow</b> in LinkedIn.<br>' +
-    '2. A PULSE page shows a <b>code</b> – copy it.<br>3. Close this box and paste the code in the next box.<br><br>' +
-    '<a href="' + url + '" target="_blank" style="font-size:17px">👉 Open LinkedIn to allow PULSE</a></div>')
-    .setWidth(420).setHeight(200), 'Connect LinkedIn (3/3)');
-  var code = ask('Connect LinkedIn (3/3)', 'Paste the code from the PULSE page');
-  if (!code) return;
+    '2. A PULSE page shows a <b>code</b> – click COPY CODE.<br>3. Come back here, paste it below and click <b>Connect</b>.<br><br>' +
+    '<a href="' + url + '" target="_blank" style="font-size:17px">👉 Open LinkedIn to allow PULSE</a><br><br>' +
+    '<input id="c" placeholder="Paste the code here" style="width:100%;padding:8px;font-size:14px;box-sizing:border-box"><br><br>' +
+    '<button id="b" style="padding:8px 18px;font-size:15px">Connect</button> <span id="m"></span></div>' +
+    '<script>document.getElementById("b").onclick=function(){var c=document.getElementById("c").value.trim(),m=document.getElementById("m");' +
+    'if(!c){m.textContent="Paste the code first.";return;}this.disabled=true;m.textContent="Connecting…";' +
+    'google.script.run.withSuccessHandler(function(t){m.innerHTML="<b style=\'color:green\'>"+t+"</b>";})' +
+    '.withFailureHandler(function(e){document.getElementById("b").disabled=false;m.innerHTML="<b style=\'color:red\'>"+(e.message||e)+"</b>";})' +
+    '.socialFinishLinkedIn(c);};</script>')
+    .setWidth(460).setHeight(330), 'Connect LinkedIn (3/3)');
+}
 
-  try {
-    var tok = JSON.parse(UrlFetchApp.fetch('https://www.linkedin.com/oauth/v2/accessToken', {
-      method: 'post', muteHttpExceptions: true,
-      payload: { grant_type: 'authorization_code', code: code, redirect_uri: LI_REDIRECT, client_id: id, client_secret: secret }
-    }).getContentText());
-    if (!tok.access_token) throw new Error(tok.error_description || tok.error || 'no access token');
-    var me = JSON.parse(UrlFetchApp.fetch('https://api.linkedin.com/v2/userinfo', {
-      headers: { Authorization: 'Bearer ' + tok.access_token }, muteHttpExceptions: true }).getContentText());
-    if (!me.sub) throw new Error(me.message || 'could not read your LinkedIn profile');
-    props.setProperty(LI_PROP_TOKEN, tok.access_token);
-    props.setProperty(LI_PROP_URN, 'urn:li:person:' + me.sub);
-    props.setProperty(LI_PROP_NAME, me.name || '');
-    props.setProperty(LI_PROP_EXPIRES, String(Date.now() + (Number(tok.expires_in) || 5184000) * 1000));
-    socialSheet_();
-    ui.alert('LinkedIn connected ✓', (me.name || 'Your profile') + '\nLogin lasts about 60 days – run Connect LinkedIn again when PULSE reminds you.', ui.ButtonSet.OK);
-  } catch (e) {
-    ui.alert('Could not connect LinkedIn', String(e.message || e), ui.ButtonSet.OK);
-  }
+// Called from the Connect LinkedIn box: swaps the code for a 60-day login.
+function socialFinishLinkedIn(code) {
+  var props = pulseProps_();
+  var id = props.getProperty(LI_PROP_CLIENT), secret = props.getProperty(LI_PROP_SECRET);
+  if (!id || !secret) throw new Error('Client ID / secret missing – run Connect LinkedIn again');
+  var tok = JSON.parse(UrlFetchApp.fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+    method: 'post', muteHttpExceptions: true,
+    payload: { grant_type: 'authorization_code', code: String(code).trim(), redirect_uri: LI_REDIRECT, client_id: id, client_secret: secret }
+  }).getContentText());
+  if (!tok.access_token) throw new Error('LinkedIn said: ' + (tok.error_description || tok.error || 'no access token') + ' (codes work once and only for a few minutes – get a new one)');
+  var me = JSON.parse(UrlFetchApp.fetch('https://api.linkedin.com/v2/userinfo', {
+    headers: { Authorization: 'Bearer ' + tok.access_token }, muteHttpExceptions: true }).getContentText());
+  if (!me.sub) throw new Error(me.message || 'could not read your LinkedIn profile');
+  props.setProperty(LI_PROP_TOKEN, tok.access_token);
+  props.setProperty(LI_PROP_URN, 'urn:li:person:' + me.sub);
+  props.setProperty(LI_PROP_NAME, me.name || '');
+  props.setProperty(LI_PROP_EXPIRES, String(Date.now() + (Number(tok.expires_in) || 5184000) * 1000));
+  socialSheet_();
+  return 'LinkedIn connected ✓ ' + (me.name || '') + ' – you can close this box. Login lasts about 60 days.';
 }
 
 // Text, one picture, or several pictures (multi-image post).

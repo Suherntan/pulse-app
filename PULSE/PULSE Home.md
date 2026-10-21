@@ -24,3 +24,5 @@ BGL notes → BGL vault. Claude skills/tools for every project → Claude Toolki
 ## Where things are
 - Project folder on laptop: `C:\PULSE-app` (auto-backup to GitHub)
 - Fund price scraper script: `C:\PULSE-app\tools\manulife_fund_scraper.py`
+
+- [[Stevern - PULSE Update Guide (for Claude)]] – step-by-step for Stevern (or his Claude) to apply PULSE updates

@@ -355,7 +355,7 @@ function antSaveAnalysis(data) {
  * Offer Document saved from the web app (ant/offer.html).
  * data: { clientId, offer: { clientLabel, rows:[{label, existing, offer1, offer2, valueup}],
  *         premium:{annual:{…}, semiAnnual:{…}, monthly:{…}}, plans:{offer1:'…'} }, pdfBase64, fileName }
- * Same client + same day = a correction: replaces that offer and its PDF.
+ * Every save is kept as its own offer (history) – nothing is replaced.
  */
 function antSaveOffer(data) {
   if (!data || !data.clientId) return { ok: false, error: 'Save the client in the Fact-Find form first' };
@@ -369,18 +369,21 @@ function antSaveOffer(data) {
     var sheet = antSheet_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS);
     var agentId = antProfile().agentId;
     var now = new Date(), today = antDay_(now);
-    var same = antRows_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS).map(function (r, i) { return { row: r, index: i + 2 }; })
-      .filter(function (x) { return String(x.row['Client ID']) === String(data.clientId) && x.row['Date'] && antDay_(x.row['Date']) === today; })
-      .pop();
-    var offerId = same ? same.row['Offer ID'] : antNextId_(sheet, 'O-');
+    // Earlier offer for this client today? Keep it; the new PDF name gets the time so both are easy to tell apart.
+    var earlierToday = antRows_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS).some(function (r) {
+      return String(r['Client ID']) === String(data.clientId) && r['Date'] && antDay_(r['Date']) === today;
+    });
+    var same = null;
+    var offerId = antNextId_(sheet, 'O-');
 
     var pdfLink = '';
     if (data.pdfBase64) {
       var name = String(data.fileName || ('Offer Document - ' + client.row['Name'])).replace(/[\\/:*?"<>|]/g, '-');
-      if (!/\.pdf$/i.test(name)) name += '.pdf';
+      name = name.replace(/\.pdf$/i, '');
+      if (earlierToday) name += ' ' + Utilities.formatDate(now, Session.getScriptTimeZone(), 'HH.mm');
+      name += '.pdf';
       var blob = Utilities.newBlob(Utilities.base64Decode(data.pdfBase64), 'application/pdf', name);
       pdfLink = antClientFolder_(data.clientId, client.row['Name']).createFile(blob).getUrl();
-      if (same) antTrashFile_(same.row['PDF Link']);   // old PDF goes to Drive Bin (restorable for 30 days)
     } else if (same) {
       pdfLink = same.row['PDF Link'];
     }

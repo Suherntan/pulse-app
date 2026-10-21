@@ -1,6 +1,6 @@
 # Facebook Auto-Post through Google – Setup Guide (20 Oct 2026)
 
-> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram connected 21 Oct 2026. LinkedIn added – see the LinkedIn section.** First try (Explorer token) was blocked:
+> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram connected 21 Oct 2026. ✅ LinkedIn connected 21 Oct 2026 (re-connect ~20 Dec 2026).** First try (Explorer token) was blocked:
 > - App 1 "PULSE Poster" (Business type, use case *Manage everything on your Page*, App ID 1116027154533655): Page permissions OK, but Graph API Explorer says *"No configuration available"*; "Facebook Login for Business" can't be added; the manual login link returns `blank.html#_=_` (no token).
 > - App 2 "PULSE Poster 2" (*Facebook Login* use case): Page permissions are not offered at all.
 > - Online guides (Oct 2026) recommend a **System User token** from a Meta *business portfolio*: made in Business Settings, never expires, no Explorer needed. Social.gs "Connect Facebook Page" now accepts it (leave the 2nd box empty).
@@ -100,7 +100,7 @@ Same timer and SOCIAL QUEUE. Posts to your **personal LinkedIn profile** with th
 3. **Products** tab → request **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect** (both approved straight away).
 4. **Auth** tab → **Authorized redirect URLs** → add `https://pulse-app-seven-wine.vercel.app/linkedin.html` → Update. Copy **Client ID** and **Primary Client Secret** to Notepad.
 5. Paste the latest **Social.gs** → Save → Deploy → New version → refresh the Sheet.
-6. **Social Posts → Connect LinkedIn** → Client ID → Client Secret → a box opens: click **Open LinkedIn to allow PULSE** → Allow → the PULSE page shows a **code** → COPY CODE → paste in the Sheet box → "LinkedIn connected ✓".
+6. **Social Posts → Connect LinkedIn** → Client ID → Client Secret → one box opens with the link **and** a code field: click **Open LinkedIn to allow PULSE** → Allow → PULSE page → COPY CODE → back to the Sheet box → paste → **Connect** → "LinkedIn connected ✓". (Fixed 21 Oct 2026: before, the code prompt hid the link box.)
 7. Test: PULSE → post → MAKE SLIDES → **SCHEDULE POST** → type **L** → 20 min from now → SOCIAL QUEUE "LinkedIn" → Posted + link.
 - Uses the post's **LinkedIn** text. Pictures 4:5, up to 20. (PDF carousel = later, if wanted.)
 - Every ~2 months: Social Posts → Connect LinkedIn (leave ID/secret empty to keep them) → Allow → paste code.

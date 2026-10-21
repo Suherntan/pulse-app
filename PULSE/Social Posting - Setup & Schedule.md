@@ -74,3 +74,10 @@ Before scheduling each one: read the [NOTE] and re-check the facts (LHDN / PPA /
 - Cost: free, but ~half a day of setup (developer accounts, tokens) and things break when Meta/LinkedIn change rules.
 - 20 Oct 2026: tried **Facebook through Google** → blocked by Meta at the token step; Su kept going with a **System User token** (Plan B in [[Facebook Auto-Post - Setup Guide]]) → **Facebook auto-post works**. Instagram auto-post connected 21 Oct 2026. LinkedIn auto-post added 21 Oct 2026 (re-login every 60 days). Buffer no longer needed once LinkedIn works; 小红书 stays manual.
 - Earlier recommendation: **stay with Buffer free** (already connected, does the same). Revisit Google auto-post only if Buffer stops being free or we want "Post" buttons inside PULSE.
+
+
+## Social tab + schedule picker (21 Oct 2026)
+- Social Posts now has its own bottom tab **Social** in PULSE (no longer inside A-N-T).
+- **How often do you post?** 1× (Wed) · 2× (Tue, Thu) · 3× (Mon, Wed, Fri) a week + **usual time**. Saved on the phone. It sets the suggested dates in the scheduler and Claude's monthly prompt (COPY MONTHLY PROMPT).
+- **SCHEDULE POST** now opens a picker: tap Facebook / Instagram / LinkedIn, pick a date on the calendar (or tap one of the next plan days), pick a time from the list (every 30 min), then **SCHEDULE**.
+- **Each platform has its own suggested time** (from the best-times check of 13 Oct 2026): **LinkedIn 17:00 · Facebook 20:00 · Instagram 21:00**. Change them in the Social tab ("Best time for each platform") or per post in the picker. Needs the latest **Social.gs** in the Sheet (older code puts all platforms at one time).

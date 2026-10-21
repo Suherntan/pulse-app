@@ -66,7 +66,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
 </style>
 </head>
 <body>
-<header><a href="../index.html" aria-label="Back to PULSE">‹</a><h1>SOCIAL POSTS</h1></header>
+<header><a href="../index.html#social" aria-label="Back to PULSE">‹</a><h1>SOCIAL POSTS</h1></header>
 <main>
   <div class="seg" role="group" aria-label="Mode">
     <button id="mTpl" aria-pressed="true">TEMPLATES</button>
@@ -110,6 +110,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="ant-api.js"></script>
+<script src="post-plan.js"></script>
 <script src="slides-maker.js"></script>
 <script>
 (function () {
@@ -747,14 +748,14 @@ $('readPaste').onclick = () => {
   toast(posts.length + ' post' + (posts.length > 1 ? 's' : '') + ' saved to My Posts');
   setMode('queue');
 };
-const MONTH_PROMPT = `Use my su-social-posts skill. Make this month's posts (1 per week, Wednesdays).
+const MONTH_PROMPT = () => `Use my su-social-posts skill. Make this month's posts (${PostPlan.perWeek()} per week, ${PostPlan.daysText()}).
 Month: [month & year]
 Ideas (one per line, add any personal story you want in):
 -
 -
 -
 - `;
-$('copyPrompt').onclick = async () => { try { await navigator.clipboard.writeText(MONTH_PROMPT); toast('Prompt copied – paste it in Claude'); } catch (_) { toast('Copy failed'); } };
+$('copyPrompt').onclick = async () => { try { await navigator.clipboard.writeText(MONTH_PROMPT()); toast('Prompt copied – paste it in Claude'); } catch (_) { toast('Copy failed'); } };
 
 /* ---------- My posts ---------- */
 function renderQueue() {
@@ -784,6 +785,7 @@ $('mClaude').onclick = () => setMode('claude');
 $('mQueue').onclick = () => setMode('queue');
 
 renderPillars();
+if (location.hash === '#queue') setMode('queue');
 })();
 </script>
 </body>
