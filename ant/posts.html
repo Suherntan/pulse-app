@@ -712,13 +712,16 @@ function addToQueue(post, date) {
 /* ---------- Claude batch ---------- */
 const MAP = {FB: 'fb', IG: 'ig', LINKEDIN: 'li', 'XHS-TITLE': 'xt', XHS: 'xhs', IMAGE: 'img', NOTE: 'note'};
 function parseBatch(text) {
-  return String(text).split(/^\s*#{2,4}\s*POST\b/mi).slice(1).map(block => {
+  // Accepts Claude's answer copied with the Copy button (### POST …) or copied as plain text
+  // (heading marks lost, **bold** labels, "[FB]:" etc.).
+  text = String(text).replace(/\r/g, '').replace(/\u00a0/g, ' ');
+  return text.split(/^[ \t]*(?:#{1,6}[ \t]*)?(?:\*\*|__)?[ \t]*POST\b(?=[ \t]*\d*[ \t]*\|)/mi).slice(1).map(block => {
     const lines = block.split('\n');
-    const head = lines.shift().replace(/^\s*\d*\s*\|?\s*/, '').split('|').map(s => s.trim()).filter(Boolean);
+    const head = lines.shift().replace(/\*\*|__/g, '').replace(/^\s*\d*\s*\|?\s*/, '').split('|').map(s => s.trim()).filter(Boolean);
     const post = {title: head.slice(1).join(' · ') || head[0] || 'Post', date: head[0] || '', fb: '', ig: '', li: '', xt: '', xhs: '', img: '', note: ''};
     let key = null;
     lines.forEach(l => {
-      const m = l.trim().match(/^\[(FB|IG|LINKEDIN|XHS-TITLE|XHS|IMAGE|NOTE)\]$/i);
+      const m = l.trim().replace(/^(\*\*|__)|(\*\*|__)$/g, '').trim().match(/^\[(FB|IG|LINKEDIN|XHS-TITLE|XHS|IMAGE|NOTE)\]\s*:?$/i);
       if (m) { key = MAP[m[1].toUpperCase()]; return; }
       if (key) post[key] += (post[key] ? '\n' : '') + l;
     });
@@ -745,7 +748,14 @@ $('packs').onclick = async e => {
 
 $('readPaste').onclick = () => {
   const posts = parseBatch($('paste').value);
-  if (!posts.length) { $('pasteMsg').textContent = 'No posts found. Paste the whole answer from Claude (it starts with "### POST 1").'; return; }
+  const msg = $('pasteMsg');
+  if (!$('paste').value.trim()) { msg.innerHTML = '<b style="color:#C0392B">The box is empty – paste Claude\'s answer first.</b>'; toast('Paste Claude\'s answer first'); return; }
+  if (!posts.length) {
+    msg.innerHTML = '<b style="color:#C0392B">No posts found.</b> Claude\'s answer must have lines like <b>POST 1 | 02/11/2026 | …</b> and <b>[FB]</b>, <b>[IG]</b>. ' +
+      'Copy it with the <b>Copy</b> icon under Claude\'s answer. If Claude made a <b>file</b> instead, open the file and copy everything in it.';
+    toast('No posts found – see the red note');
+    return;
+  }
   posts.slice().reverse().forEach(p => addToQueue(p, p.date));
   $('paste').value = '';
   $('pasteMsg').textContent = '';
