@@ -82,7 +82,8 @@ function socialConnectFacebook() {
     var ig = socialFindInstagram_(page.id, page.access_token);
     socialSheet_();
     ui.alert('Connected ✓', 'Facebook Page: ' + page.name +
-      '\nInstagram: ' + (ig ? '@' + ig.username + ' ✓' : 'not found (link your Instagram Professional account to this Page, give the token instagram_basic + instagram_content_publish, then connect again)') +
+      '\nInstagram: ' + (ig && ig.id ? '@' + ig.username + ' ✓' : 'not found – ' + ig.error +
+        '\n(Link your Instagram Professional account to this Page and give the token instagram_basic + instagram_content_publish, then connect again.)') +
       '\n\nNext: Social Posts > Turn On Auto-Post.\n(Only the Page key is saved – not your token or App secret.)', ui.ButtonSet.OK);
   } catch (e) {
     ui.alert('Could not connect', String(e.message || e), ui.ButtonSet.OK);
@@ -250,18 +251,23 @@ function socialPostFacebook_(text, fileIds) {
 // ---------------------------------------------------------------------
 function socialFindInstagram_(pageId, pageToken) {
   var props = pulseProps_();
+  var why = '';
   try {
-    var r = socialFbGet_(pageId, { fields: 'instagram_business_account{id,username}', access_token: pageToken });
-    var ig = r.instagram_business_account;
+    var r = socialFbGet_(pageId, { fields: 'instagram_business_account{id,username},connected_instagram_account{id,username}',
+      access_token: pageToken });
+    var ig = r.instagram_business_account || r.connected_instagram_account;
     if (ig && ig.id) {
       props.setProperty(SOCIAL_PROP_IG_ID, ig.id);
       props.setProperty(SOCIAL_PROP_IG_NAME, ig.username || '');
       return { id: ig.id, username: ig.username || '' };
     }
-  } catch (e) { /* no Instagram permission yet */ }
+    why = 'Facebook says no Instagram account is linked to this Page';
+  } catch (e) {
+    why = String(e.message || e);   // usually a missing permission
+  }
   props.deleteProperty(SOCIAL_PROP_IG_ID);
   props.deleteProperty(SOCIAL_PROP_IG_NAME);
-  return null;
+  return { error: why };
 }
 
 function socialPostInstagram_(text, fileIds) {
