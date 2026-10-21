@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Client Tracker - Design Brief for Claude Code.md",
+                "file": "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Client Tracker - Design Brief for Claude Code"
+              "title": "PULSE_REMINDER_MENU_MARK_SENT_DEBUG"
             }
           }
         ]
@@ -31,10 +31,14 @@
             "id": "eb0ae9f81e8407a8",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "PULSE Home.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PULSE Home"
             }
           }
         ]
@@ -206,10 +210,31 @@
   },
   "active": "d24f4dbc3ad5bac8",
   "lastOpenFiles": [
-    "Client Tracker - Design Brief for Claude Code 1.md",
+    "attachments/7FBS-logo-square-white.png",
+    "attachments/7FBS-logo-square-navy.png",
+    "attachments/7FBS-logo-gold-white.png",
+    "attachments/7FBS-logo-gold-navy.png",
+    "attachments/7FBS-booklet-cover.jpg",
+    "attachments",
+    "Stevern - PULSE Update Guide (for Claude).md",
+    "Social Posts Skill/SKILL.md",
+    "Social Posts Skill",
+    "Social Posts - Nov 2026.md",
+    "Social Posting - Setup & Schedule.md",
+    "Social Content Generator - Plan.md",
+    "PULSE Trial Agreement (draft).md",
+    "PULSE Library - Setup Guide.md",
+    "Facebook Auto-Post - Setup Guide.md",
+    "Advisor Trial - Taking Back PULSE.md",
+    "A-N-T Setup - Guide for Another Agent (Stevern).md",
+    "7 Financial Blind Spots - Booklet Reference.md",
     "Client Tracker - Design Brief for Claude Code.md",
+    "PULSE Home.md",
+    "Skills & Tools Log.md",
+    "ANT_CLIENT_REGISTRATION_FORM.md",
+    "PULSE_REMINDER_MENU_MARK_SENT_DEBUG.md",
     "Welcome.md",
-    "manulife_fund_scraper.py",
-    "Skills & Tools Log.md"
+    "Client Tracker - Design Brief for Claude Code 1.md",
+    "manulife_fund_scraper.py"
   ]
 }
