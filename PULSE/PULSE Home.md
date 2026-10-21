@@ -26,3 +26,4 @@ BGL notes → BGL vault. Claude skills/tools for every project → Claude Toolki
 - Fund price scraper script: `C:\PULSE-app\tools\manulife_fund_scraper.py`
 
 - [[Stevern - PULSE Update Guide (for Claude)]] – step-by-step for Stevern (or his Claude) to apply PULSE updates
+- [[Backup - How It Works]] – how the GitHub backup works and what to do if the BACKUP PROBLEM note appears
