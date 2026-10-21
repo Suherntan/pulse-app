@@ -105,25 +105,47 @@
 <h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#137333 stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=1 y=4 width=22 height=16 rx=2></rect><line x1=1 y1=10 x2=23 y2=10></line></svg> Payment Due</h3>
 <div id=payments-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
-<a id=xhs-today class="reminder-card" href="/ant/posts.html#queue" style="display:none;text-decoration:none;color:inherit;border-left:4px solid #FF2442">
+<div id=xhs-today class="reminder-card" style="display:none;border-left:4px solid #FF2442">
 <h3>&#128213; 小红书 to post</h3>
 <div id=xhs-today-list style="margin:4px 0 0;font-size:14px"></div>
-<small style="color:var(--text-light)">Tap a post &rarr; copy the 中文 text &rarr; post in 小红书 &rarr; tick Posted</small>
-</a>
+</div>
 <script>
-// 小红书 can't auto-post: remind on its day (and if missed), until "Posted" is ticked for XHS.
+// 小红书 can't auto-post: remind on its day (and up to 14 days late) until "Posted" is ticked for XHS.
+// Buttons: copy title + text and open the 小红书 app / get the slides / mark as posted.
 (function(){try{
   var q=JSON.parse(localStorage.getItem('posts-queue')||'[]');if(!q.length)return;
   var now=new Date();now.setHours(0,0,0,0);
   var due=q.map(function(p){var m=String(p.date||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return{p:p,d:m?new Date(+m[3],m[2]-1,+m[1]):null};})
     .filter(function(x){return x.d&&x.d<=now&&now-x.d<=14*864e5&&String(x.p.xhs||'').trim()&&!(x.p.done||{}).xhs;})
-    .sort(function(a,b){return a.d-b.d;});
+    .sort(function(a,b){return a.d-b.d;}).slice(0,3);
   if(!due.length)return;
   var esc=function(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-  document.getElementById('xhs-today-list').innerHTML=due.slice(0,3).map(function(x){
-    var late=x.d<now;return '<div style="padding:3px 0">'+(late?'<b style="color:#C0392B">Missed '+esc(x.p.date)+':</b> ':'<b>Today:</b> ')+esc(x.p.xt||x.p.title)+'</div>';
-  }).join('')+(due.length>3?'<div>+'+(due.length-3)+' more</div>':'');
-  var card=document.getElementById('xhs-today');card.href='/ant/posts.html?open='+encodeURIComponent(due[0].p.id)+'#queue';card.style.display='block';
+  var btn='border:0;border-radius:8px;padding:8px 10px;font-size:13px;font-weight:700;cursor:pointer;';
+  var card=document.getElementById('xhs-today'),list=document.getElementById('xhs-today-list');
+  list.innerHTML=due.map(function(x){
+    var late=x.d<now,id=esc(x.p.id);
+    return '<div style="padding:8px 0;border-top:1px solid var(--border)">'+(late?'<b style="color:#C0392B">Missed '+esc(x.p.date)+':</b> ':'<b>Today:</b> ')+esc(x.p.xt||x.p.title)+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
+      '<button data-xcopy="'+id+'" style="'+btn+'background:#FF2442;color:#fff">&#128203; Copy &amp; open 小红书</button>'+
+      '<a href="/ant/posts.html?open='+encodeURIComponent(x.p.id)+'#queue" style="'+btn+'background:#EEF1F5;color:#0B2545;text-decoration:none">&#128444; Slides</a>'+
+      '<button data-xdone="'+id+'" style="'+btn+'background:#EEF1F5;color:#1E8E3E">&#10003; Posted</button></div></div>';
+  }).join('')+'<small style="color:var(--text-light)">1) Slides &rarr; MAKE SLIDES &rarr; 中文 + 小红书 3:4 &rarr; SAVE PICTURES (once). 2) Copy &amp; open 小红书 &rarr; + &rarr; pick the pictures &rarr; paste. 3) Tick Posted.</small>';
+  card.style.display='block';
+  var find=function(id){return q.filter(function(p){return String(p.id)===String(id);})[0];};
+  card.onclick=function(e){
+    var c=e.target.closest('[data-xcopy]'),d=e.target.closest('[data-xdone]');
+    if(c){var p=find(c.getAttribute('data-xcopy'));if(!p)return;
+      var text=(p.xt?p.xt+'\n\n':'')+p.xhs;
+      var go=function(ok){ if(typeof showToast==='function')showToast(ok?'Title + text copied – paste in 小红书':'Copy failed – open the post and use COPY');
+        location.href='xhsdiscover://home'; setTimeout(function(){ if(!document.hidden) window.open('https://www.xiaohongshu.com/','_blank'); },1500); };
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){go(true);},function(){go(false);}); else go(false);
+    }
+    if(d){var p2=find(d.getAttribute('data-xdone'));if(!p2)return;
+      p2.done=p2.done||{};p2.done.xhs=true;localStorage.setItem('posts-queue',JSON.stringify(q));
+      d.closest('div[style*="border-top"]').remove();
+      if(!list.querySelector('[data-xdone]'))card.style.display='none';
+    }
+  };
 }catch(e){}})();
 </script>
 <a id=post-today class="reminder-card" href="/ant/posts.html" style="display:none;text-decoration:none;color:inherit;border-left:4px solid #F3AF3D">
