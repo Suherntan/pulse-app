@@ -612,6 +612,18 @@ Grateful for the families, colleagues and friends who make this work meaningful.
 /* ---------- state ---------- */
 let pillar = 'aware', tplIdx = null, values = read('posts-values') || {};
 let queue = read('posts-queue') || [];
+// Same post pasted twice (same title + date) → keep one, keeping its Posted ticks and Scheduled mark.
+(function dedupe() {
+  const keep = new Map();
+  queue.forEach(q => {
+    const k = q.title + '|' + q.date, first = keep.get(k);
+    if (!first) { keep.set(k, q); return; }
+    first.done = Object.assign({}, q.done, first.done);
+    Object.keys(q.done || {}).forEach(p => { if (q.done[p]) first.done[p] = true; });
+    first.scheduled = first.scheduled || q.scheduled;
+  });
+  if (keep.size < queue.length) { queue = [...keep.values()]; write('posts-queue', queue); }
+})();
 let current = null;                       // {title, fb, ig, li, xt, xhs, img, note}
 
 function fill(text) {
@@ -756,10 +768,12 @@ $('readPaste').onclick = () => {
     toast('No posts found – see the red note');
     return;
   }
-  posts.slice().reverse().forEach(p => addToQueue(p, p.date));
+  const have = new Set(queue.map(q => q.title + '|' + q.date));
+  const fresh = posts.filter(p => !have.has(p.title + '|' + p.date));
+  fresh.slice().reverse().forEach(p => addToQueue(p, p.date));
   $('paste').value = '';
   $('pasteMsg').textContent = '';
-  toast(posts.length + ' post' + (posts.length > 1 ? 's' : '') + ' saved to My Posts');
+  toast(fresh.length ? fresh.length + ' post' + (fresh.length > 1 ? 's' : '') + ' saved to My Posts' + (fresh.length < posts.length ? ` (${posts.length - fresh.length} already there)` : '') : 'All these posts are already in My Posts');
   setMode('queue');
 };
 // Topics already in My Posts (last 6 months + planned) go into the prompt, so Claude doesn't repeat them.

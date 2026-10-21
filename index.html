@@ -117,7 +117,8 @@
   var now=new Date();now.setHours(0,0,0,0);
   var due=q.map(function(p){var m=String(p.date||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return{p:p,d:m?new Date(+m[3],m[2]-1,+m[1]):null};})
     .filter(function(x){return x.d&&x.d<=now&&now-x.d<=14*864e5&&String(x.p.xhs||'').trim()&&!(x.p.done||{}).xhs;})
-    .sort(function(a,b){return a.d-b.d;}).slice(0,3);
+    .sort(function(a,b){return a.d-b.d;});
+  var seen={};due=due.filter(function(x){var k=(x.p.xt||x.p.title)+'|'+x.p.date;return seen[k]?false:(seen[k]=1);}).slice(0,3);
   if(!due.length)return;
   var esc=function(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var btn='border:0;border-radius:8px;padding:8px 10px;font-size:13px;font-weight:700;cursor:pointer;';
@@ -141,29 +142,11 @@
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){go(true);},function(){go(false);}); else go(false);
     }
     if(d){var p2=find(d.getAttribute('data-xdone'));if(!p2)return;
-      p2.done=p2.done||{};p2.done.xhs=true;localStorage.setItem('posts-queue',JSON.stringify(q));
+      q.forEach(function(p){if(p.title===p2.title&&p.date===p2.date){p.done=p.done||{};p.done.xhs=true;}});localStorage.setItem('posts-queue',JSON.stringify(q));
       d.closest('div[style*="border-top"]').remove();
       if(!list.querySelector('[data-xdone]'))card.style.display='none';
     }
   };
-}catch(e){}})();
-</script>
-<a id=post-today class="reminder-card" href="/ant/posts.html" style="display:none;text-decoration:none;color:inherit;border-left:4px solid #F3AF3D">
-<h3>&#9998; This week's post</h3>
-<p id=post-today-text style="margin:4px 0 0;font-size:14px"></p>
-</a>
-<script>
-// Social Posts: show this week's planned post (saved on this phone by /ant/posts.html)
-(function(){try{
-  var q=JSON.parse(localStorage.getItem('posts-queue')||'[]');if(!q.length)return;
-  var now=new Date();now.setHours(0,0,0,0);
-  var due=q.map(function(p){var m=String(p.date||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return{p:p,d:m?new Date(+m[3],m[2]-1,+m[1]):null};})
-    .filter(function(x){var left=['fb','ig','li','xhs'].some(function(k){return !(x.p.done||{})[k];});return x.d&&left&&x.d-now<=6*864e5;})
-    .sort(function(a,b){return a.d-b.d;})[0];
-  if(!due)return;
-  var late=due.d<now;
-  document.getElementById('post-today-text').textContent=(late?'Not posted yet: ':'')+due.p.title+' \u00b7 '+due.p.date;
-  document.getElementById('post-today').style.display='block';
 }catch(e){}})();
 </script>
 <div class="reminder-card followup-card">
