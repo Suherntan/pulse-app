@@ -836,7 +836,13 @@ $('mClaude').onclick = () => setMode('claude');
 $('mQueue').onclick = () => setMode('queue');
 
 renderPillars();
-if (location.hash === '#queue') setMode('queue');
+if (location.hash === '#queue') {
+  setMode('queue');
+  // From the Today card: open that post straight away (?open=<id>)
+  const openId = new URLSearchParams(location.search).get('open');
+  const q = openId && queue.find(x => String(x.id) === openId);
+  if (q) { renderOut(q, q.id); $('out').scrollIntoView({behavior: 'smooth'}); }
+}
 })();
 </script>
 </body>

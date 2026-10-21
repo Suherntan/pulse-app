@@ -105,6 +105,27 @@
 <h3><svg class=card-icon width=16 height=16 viewBox="0 0 24 24" fill=none stroke=#137333 stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=1 y=4 width=22 height=16 rx=2></rect><line x1=1 y1=10 x2=23 y2=10></line></svg> Payment Due</h3>
 <div id=payments-list class=reminder-list><p class=placeholder>Loading...</p></div>
 </div>
+<a id=xhs-today class="reminder-card" href="/ant/posts.html#queue" style="display:none;text-decoration:none;color:inherit;border-left:4px solid #FF2442">
+<h3>&#128213; 小红书 to post</h3>
+<div id=xhs-today-list style="margin:4px 0 0;font-size:14px"></div>
+<small style="color:var(--text-light)">Tap a post &rarr; copy the 中文 text &rarr; post in 小红书 &rarr; tick Posted</small>
+</a>
+<script>
+// 小红书 can't auto-post: remind on its day (and if missed), until "Posted" is ticked for XHS.
+(function(){try{
+  var q=JSON.parse(localStorage.getItem('posts-queue')||'[]');if(!q.length)return;
+  var now=new Date();now.setHours(0,0,0,0);
+  var due=q.map(function(p){var m=String(p.date||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return{p:p,d:m?new Date(+m[3],m[2]-1,+m[1]):null};})
+    .filter(function(x){return x.d&&x.d<=now&&now-x.d<=14*864e5&&String(x.p.xhs||'').trim()&&!(x.p.done||{}).xhs;})
+    .sort(function(a,b){return a.d-b.d;});
+  if(!due.length)return;
+  var esc=function(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  document.getElementById('xhs-today-list').innerHTML=due.slice(0,3).map(function(x){
+    var late=x.d<now;return '<div style="padding:3px 0">'+(late?'<b style="color:#C0392B">Missed '+esc(x.p.date)+':</b> ':'<b>Today:</b> ')+esc(x.p.xt||x.p.title)+'</div>';
+  }).join('')+(due.length>3?'<div>+'+(due.length-3)+' more</div>':'');
+  var card=document.getElementById('xhs-today');card.href='/ant/posts.html?open='+encodeURIComponent(due[0].p.id)+'#queue';card.style.display='block';
+}catch(e){}})();
+</script>
 <a id=post-today class="reminder-card" href="/ant/posts.html" style="display:none;text-decoration:none;color:inherit;border-left:4px solid #F3AF3D">
 <h3>&#9998; This week's post</h3>
 <p id=post-today-text style="margin:4px 0 0;font-size:14px"></p>
