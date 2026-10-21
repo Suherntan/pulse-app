@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PULSE – LinkedIn code</title>
+<style>
+  body{margin:0;background:#F4F2EC;color:#0B2545;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  main{max-width:560px;margin:0 auto;padding:40px 16px}
+  h1{font-size:22px;margin:0 0 8px}
+  textarea{width:100%;box-sizing:border-box;height:120px;font:14px/1.4 monospace;padding:10px;border:1px solid #c9ccd3;border-radius:8px;word-break:break-all}
+  button{margin-top:12px;background:#F3AF3D;color:#0B2545;border:0;border-radius:8px;padding:12px 20px;font-weight:700;font-size:15px;cursor:pointer}
+  .err{color:#a11}
+</style>
+</head>
+<body>
+<main>
+  <h1>PULSE – LinkedIn</h1>
+  <div id="box"></div>
+</main>
+<script>
+  // Shows the one-time code LinkedIn sends back. Nothing is sent anywhere –
+  // you copy it into your Google Sheet (Social Posts > Connect LinkedIn).
+  (function () {
+    var q = new URLSearchParams(location.search), box = document.getElementById('box');
+    if (q.get('error')) {
+      box.innerHTML = '<p class="err"></p>';
+      box.firstChild.textContent = 'LinkedIn said: ' + (q.get('error_description') || q.get('error'));
+      return;
+    }
+    var code = q.get('code');
+    if (!code) { box.textContent = 'No code here. Start again from your Google Sheet: Social Posts > Connect LinkedIn.'; return; }
+    box.innerHTML = '<p>Copy this code and paste it into the box in your Google Sheet. It works once, for a few minutes.</p>' +
+      '<textarea id="c" readonly></textarea><br><button id="b">COPY CODE</button>';
+    var t = document.getElementById('c'); t.value = code;
+    document.getElementById('b').onclick = function () {
+      t.select();
+      (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).catch(function () { document.execCommand('copy'); });
+      this.textContent = 'COPIED ✓';
+    };
+  })();
+</script>
+</body>
+</html>

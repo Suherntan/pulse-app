@@ -67,6 +67,7 @@ function setupWhatsAppBlastSheet(e) { use_(); return PULSE.setupWhatsAppBlastShe
 function socialAutoPostOff(e) { use_(); return PULSE.socialAutoPostOff(e); }
 function socialAutoPostOn(e) { use_(); return PULSE.socialAutoPostOn(e); }
 function socialConnectFacebook(e) { use_(); return PULSE.socialConnectFacebook(e); }
+function socialConnectLinkedIn(e) { use_(); return PULSE.socialConnectLinkedIn(e); }
 function socialRunQueue(e) { use_(); return PULSE.socialRunQueue(e); }
 function socialTestFacebook(e) { use_(); return PULSE.socialTestFacebook(e); }
 function syncAppointmentStatusFromCalendar(e) { use_(); return PULSE.syncAppointmentStatusFromCalendar(e); }

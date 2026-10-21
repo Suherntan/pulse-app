@@ -170,7 +170,7 @@
         <div class="sm-acts">
           <button class="btn gold" id="smSave">${f.pdf ? 'SAVE PDF' : 'SAVE PICTURES'}</button>
           <button class="btn ghost" id="smShare">SHARE TO APP</button>
-          ${typeof AntApi !== 'undefined' && AntApi.connected() ? '<button class="btn ghost" id="smFb">SCHEDULE POST (FB / IG)</button>' : ''}
+          ${typeof AntApi !== 'undefined' && AntApi.connected() ? '<button class="btn ghost" id="smFb">SCHEDULE POST (FB / IG / LinkedIn)</button>' : ''}
           <button class="btn ghost" id="smEditBtn">EDIT TEXT</button>
         </div>
         <p class="hint" id="smMsg">${slides.length} slides · ${f.label}. Tap EDIT TEXT to change any slide.</p>
@@ -235,11 +235,12 @@
       const msg = box.querySelector('#smMsg');
       const m = String(post.date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       const defDate = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
-      const where = prompt('Post where?\n1 = Facebook\n2 = Instagram\n3 = Both', '3');
+      const where = prompt('Post where? Type the letters:\nF = Facebook\nI = Instagram\nL = LinkedIn\n(e.g. FIL = all three)', 'FIL');
       if (!where) return;
-      const posts = [];
-      if (/[13]/.test(where)) posts.push({platform: 'facebook', text: post.fb || ''});
-      if (/[23]/.test(where)) posts.push({platform: 'instagram', text: post.ig || ''});
+      const w = where.toUpperCase(), posts = [];
+      if (w.includes('F')) posts.push({platform: 'facebook', text: post.fb || ''});
+      if (w.includes('I')) posts.push({platform: 'instagram', text: post.ig || ''});
+      if (w.includes('L')) posts.push({platform: 'linkedin', text: post.li || ''});
       const usable = posts.filter(p => String(p.text).trim());
       if (!usable.length) { msg.textContent = 'This post has no text for that platform.'; return; }
       const date = prompt('Post on which date? (yyyy-mm-dd)', defDate);
@@ -253,10 +254,12 @@
         const images = await makeFiles(true);
         msg.textContent = 'Sending to your Google Sheet…';
         const res = await AntApi.post('socialQueuePost', {title: post.title || '', posts: usable, date, time, images});
-        const names = usable.map(p => p.platform === 'instagram' ? 'Instagram' : 'Facebook').join(' + ');
+        const names = usable.map(p => ({instagram: 'Instagram', linkedin: 'LinkedIn'})[p.platform] || 'Facebook').join(' + ');
         msg.textContent = 'Scheduled on ' + names + ' ✓ ' + res.when + ' · ' + res.pictures + ' pictures.' +
           (!res.connected ? ' Facebook is not connected yet – Sheet menu: Social Posts > Connect Facebook Page.' :
            usable.some(p => p.platform === 'instagram') && res.instagram === false ? ' Instagram is not connected yet – see the setup guide.' :
+           usable.some(p => p.platform === 'linkedin') && res.linkedin === false ? ' LinkedIn is not connected yet – Sheet menu: Social Posts > Connect LinkedIn.' :
+           usable.some(p => p.platform === 'linkedin') && res.liDaysLeft != null && res.liDaysLeft < 10 ? ' ⚠ LinkedIn login ends in ' + res.liDaysLeft + ' days – Sheet menu: Social Posts > Connect LinkedIn.' :
            !res.autoPost ? ' Turn on: Sheet menu Social Posts > Turn On Auto-Post.' : '');
         if (toast) toast('Scheduled on ' + names);
       } catch (err) {
