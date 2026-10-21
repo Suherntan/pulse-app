@@ -94,6 +94,7 @@ Same Google timer, same SOCIAL QUEUE. Posts the slides as a **carousel** (2–10
 ## LinkedIn auto-post (added 21 Oct 2026)
 Same timer and SOCIAL QUEUE. Posts to your **personal LinkedIn profile** with the slides as a multi-picture post. ⚠ LinkedIn logins last **60 days** – PULSE warns when <10 days are left; then run **Social Posts → Connect LinkedIn** again (2 min, Client ID/secret are remembered).
 1. **LinkedIn Page needed (free):** LinkedIn apps must belong to a Company Page. If you have none: linkedin.com → **For Business → Create a Company Page** (e.g. *Tan Su Hern Advisory*).
+   - **No converting needed.** Your personal LinkedIn stays as it is. The Company Page is a separate free page you create *from* your personal account (you become its admin). Posts from PULSE still go to your **personal** profile.
 2. **linkedin.com/developers/apps → Create app**: name `PULSE Poster`, LinkedIn Page = your Page, privacy policy `https://pulse-app-seven-wine.vercel.app/privacy.html`, upload a logo (any square image, e.g. the ANT logo) → Create. If asked, **Verify** the app for the Page (you are the Page admin).
 3. **Products** tab → request **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect** (both approved straight away).
 4. **Auth** tab → **Authorized redirect URLs** → add `https://pulse-app-seven-wine.vercel.app/linkedin.html` → Update. Copy **Client ID** and **Primary Client Secret** to Notepad.
