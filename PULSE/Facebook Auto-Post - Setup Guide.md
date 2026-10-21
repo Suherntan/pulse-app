@@ -1,6 +1,6 @@
 # Facebook Auto-Post through Google – Setup Guide (20 Oct 2026)
 
-> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram connected 21 Oct 2026. LinkedIn added – see the LinkedIn section.** First try (Explorer token) was blocked:
+> **Status 20 Oct 2026: ✅ Facebook auto-post WORKS (System User token, Plan B). Instagram connected 21 Oct 2026. ✅ LinkedIn connected 21 Oct 2026 (re-connect ~20 Dec 2026).** First try (Explorer token) was blocked:
 > - App 1 "PULSE Poster" (Business type, use case *Manage everything on your Page*, App ID 1116027154533655): Page permissions OK, but Graph API Explorer says *"No configuration available"*; "Facebook Login for Business" can't be added; the manual login link returns `blank.html#_=_` (no token).
 > - App 2 "PULSE Poster 2" (*Facebook Login* use case): Page permissions are not offered at all.
 > - Online guides (Oct 2026) recommend a **System User token** from a Meta *business portfolio*: made in Business Settings, never expires, no Explorer needed. Social.gs "Connect Facebook Page" now accepts it (leave the 2nd box empty).
