@@ -101,6 +101,10 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
   <!-- Saved posts -->
   <section id="queueView" class="card" hidden>
     <h2>MY POSTS</h2>
+    <div id="schedAll" hidden style="margin:0 0 12px">
+      <button class="btn gold" id="schedAllBtn">SCHEDULE WHOLE MONTH</button>
+      <p class="hint" id="schedAllMsg" style="margin:6px 0 0">Makes the slides and schedules every post that has a date and isn't scheduled yet – each on its own date, at each platform's time (Social tab).</p>
+    </div>
     <div id="queue"></div>
   </section>
 
@@ -692,7 +696,7 @@ function renderOut(post, qid) {
       return;
     }
     if (e.target.id === 'saveQ') { addToQueue(post); toast('Saved to My Posts'); }
-    if (e.target.id === 'mkSlides') window.SlideMaker.open(post, $('slideBox'), toast);
+    if (e.target.id === 'mkSlides') window.SlideMaker.open(post, $('slideBox'), toast, () => { if (q) { q.scheduled = Date.now(); write('posts-queue', queue); } });
   };
   $('out').onchange = e => {
     const k = e.target.dataset.done; if (!k || !q) return;
@@ -761,7 +765,7 @@ $('copyPrompt').onclick = async () => { try { await navigator.clipboard.writeTex
 function renderQueue() {
   if (!queue.length) { $('queue').innerHTML = '<p class="empty">Nothing saved yet. Use a template or paste Claude\'s posts.</p>'; return; }
   $('queue').innerHTML = queue.map(q => `<div class="qitem">
-      <button class="open" data-open="${q.id}">${esc(q.title)}<small>${esc(q.date || 'no date')}</small></button>
+      <button class="open" data-open="${q.id}">${esc(q.title)}<small>${esc(q.date || 'no date')}${q.scheduled ? ' · <b style="color:var(--ok)">Scheduled ✓</b>' : ''}</small></button>
       <div class="dots" aria-label="Posted on">${PLATFORMS.map(p => `<span class="${q.done[p.k] ? 'on' : ''}" title="${p.name}">${p.k.toUpperCase()}</span>`).join('')}</div>
       <button class="btn ghost small" data-del="${q.id}" aria-label="Delete ${esc(q.title)}">×</button></div>`).join('');
 }
@@ -771,13 +775,50 @@ $('queue').onclick = e => {
   if (d && confirm('Delete this post from My Posts?')) { queue = queue.filter(x => String(x.id) !== d.dataset.del); write('posts-queue', queue); renderQueue(); $('out').innerHTML = ''; }
 };
 
+/* ---------- schedule whole month ---------- */
+// Every saved post with a date from today on, not scheduled yet → slides + SOCIAL QUEUE (FB / IG / LinkedIn at their own times).
+const toIso = d => { const m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : ''; };
+function dueToSchedule() {
+  const today = PostPlan.iso(new Date());
+  return queue.filter(q => !q.scheduled && toIso(q.date) >= today && [q.fb, q.ig, q.li].some(t => String(t || '').trim()))
+    .sort((a, b) => toIso(a.date) < toIso(b.date) ? -1 : 1);
+}
+$('schedAllBtn').onclick = async () => {
+  const list = dueToSchedule(), msg = $('schedAllMsg'), btn = $('schedAllBtn');
+  if (!list.length) { msg.textContent = 'Nothing to schedule: every post with a date from today on is already scheduled.'; return; }
+  const times = `LinkedIn ${PostPlan.time('linkedin')} · Facebook ${PostPlan.time('facebook')} · Instagram ${PostPlan.time('instagram')}`;
+  if (!confirm(`Schedule ${list.length} post${list.length > 1 ? 's' : ''} (${list[0].date} – ${list[list.length - 1].date})?\n\n${times}\n\nKeep this page open until it says Done (about 20 seconds per post).`)) return;
+  btn.disabled = true;
+  let ok = 0; const failed = [];
+  let res = null;
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i];
+    msg.textContent = `Post ${i + 1} of ${list.length}: making slides for "${q.title}"…`;
+    try {
+      const images = await window.SlideMaker.jpegs(q);
+      msg.textContent = `Post ${i + 1} of ${list.length}: sending to your Google Sheet…`;
+      const posts = [['facebook', q.fb], ['instagram', q.ig], ['linkedin', q.li]]
+        .filter(([, t]) => String(t || '').trim()).map(([platform, text]) => ({platform, text, time: PostPlan.time(platform)}));
+      res = await AntApi.post('socialQueuePost', {title: q.title || '', posts, date: toIso(q.date), time: posts[0].time, images});
+      q.scheduled = Date.now(); write('posts-queue', queue); ok++;
+    } catch (err) { failed.push(q.title + ' (' + (err && err.message || err) + ')'); }
+  }
+  btn.disabled = false;
+  renderQueue();
+  const warn = res && (!res.connected ? ' Facebook is not connected.' : '') + (res && res.instagram === false ? ' Instagram is not connected.' : '') +
+    (res && res.linkedin === false ? ' LinkedIn is not connected.' : res && res.liDaysLeft != null && res.liDaysLeft < 31 ? ` ⚠ LinkedIn login ends in ${res.liDaysLeft} days – posts after that need Connect LinkedIn again.` : '') +
+    (res && !res.autoPost ? ' Auto-Post is off – Sheet menu Social Posts > Turn On Auto-Post.' : '');
+  msg.textContent = `Done ✓ ${ok} scheduled.` + (failed.length ? ` Not scheduled: ${failed.join('; ')}.` : '') + (warn || '');
+  toast(`${ok} post${ok === 1 ? '' : 's'} scheduled`);
+};
+
 /* ---------- modes ---------- */
 function setMode(m) {
   [['tpl', 'mTpl', 'tplView'], ['claude', 'mClaude', 'claudeView'], ['queue', 'mQueue', 'queueView']].forEach(([k, b, v]) => {
     $(b).setAttribute('aria-pressed', k === m); $(v).hidden = k !== m;
   });
   $('out').innerHTML = ''; $('slideBox').innerHTML = '';
-  if (m === 'queue') renderQueue();
+  if (m === 'queue') { renderQueue(); $('schedAll').hidden = !(typeof AntApi !== 'undefined' && AntApi.connected()); }
   if (m === 'tpl') renderFromTemplate();
 }
 $('mTpl').onclick = () => setMode('tpl');

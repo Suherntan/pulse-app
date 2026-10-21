@@ -46,8 +46,11 @@ Su is an insurance and financial planning advisor in Malaysia (ANT Wealth System
 
 ## Monthly batch
 When Su gives a list of ideas or says "make this month's posts":
-- Default is **1 post per week** (4–5 posts). Use 3 per week only if Su asks.
+- Default is **3 posts per week on Monday, Wednesday and Friday** (12–14 posts a month). If Su's prompt says another number or other days (the PULSE monthly prompt does), follow the prompt.
+- Date each post on its posting day (dd/mm/yyyy). PULSE schedules each platform at its own time: LinkedIn 5 PM, Facebook 8 PM, Instagram 9 PM.
+- Mix the week: Monday = Did you know? / awareness, Wednesday = L.I.F.E education or money habits, Friday = lighter (story, behind the scenes, festive, quick tip). Keep Friday posts shorter.
 - Spread the pillars, and match festive posts to the real dates in that month.
+- Keep each post focused (one idea) so 3 a week doesn't feel repetitive; don't repeat the same tax relief or product in the same week.
 - Ask nothing unless an idea is unclear. Write all posts in **one answer** (saves credits).
 
 ## OUTPUT FORMAT (always exactly this – the PULSE app reads it)
