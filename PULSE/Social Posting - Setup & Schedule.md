@@ -80,3 +80,4 @@ Before scheduling each one: read the [NOTE] and re-check the facts (LHDN / PPA /
 - Social Posts now has its own bottom tab **Social** in PULSE (no longer inside A-N-T).
 - **How often do you post?** 1× (Wed) · 2× (Tue, Thu) · 3× (Mon, Wed, Fri) a week + **usual time**. Saved on the phone. It sets the suggested dates in the scheduler and Claude's monthly prompt (COPY MONTHLY PROMPT).
 - **SCHEDULE POST** now opens a picker: tap Facebook / Instagram / LinkedIn, pick a date on the calendar (or tap one of the next plan days), pick a time from the list (every 30 min), then **SCHEDULE**.
+- **Each platform has its own suggested time** (from the best-times check of 13 Oct 2026): **LinkedIn 17:00 · Facebook 20:00 · Instagram 21:00**. Change them in the Social tab ("Best time for each platform") or per post in the picker. Needs the latest **Social.gs** in the Sheet (older code puts all platforms at one time).

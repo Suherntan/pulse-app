@@ -157,11 +157,14 @@ function socialQueuePost(data) {
   var sh = socialSheet_();
   posts.forEach(function (p) {
     var name = { instagram: 'Instagram', linkedin: 'LinkedIn' }[String(p.platform).toLowerCase()] || 'Facebook';
-    sh.appendRow([when, Utilities.formatDate(when, tz, 'HH:mm'), name,
+    var at = (p.time && socialParseWhen_(data.date, p.time)) || when;  // each platform can have its own time
+    p.when = Utilities.formatDate(at, tz, 'h:mm a');
+    sh.appendRow([at, Utilities.formatDate(at, tz, 'HH:mm'), name,
       String(data.title || ''), String(p.text), ids.join(','), 'Queued', '', '', '', new Date()]);
   });
   var s = socialStatus();
   return { ok: true, when: Utilities.formatDate(when, tz, 'EEE d MMM yyyy, h:mm a'),
+    times: posts.map(function (p) { return p.when; }),
     pictures: ids.length, platforms: posts.map(function (p) { return p.platform; }),
     connected: s.facebook, instagram: s.instagram, linkedin: s.linkedin, liDaysLeft: s.liDaysLeft, autoPost: s.autoPost };
 }

@@ -748,7 +748,7 @@ $('readPaste').onclick = () => {
   toast(posts.length + ' post' + (posts.length > 1 ? 's' : '') + ' saved to My Posts');
   setMode('queue');
 };
-const MONTH_PROMPT = () => `Use my su-social-posts skill. Make this month's posts (${PostPlan.perWeek()} per week, ${PostPlan.daysText()}, ${PostPlan.time()}).
+const MONTH_PROMPT = () => `Use my su-social-posts skill. Make this month's posts (${PostPlan.perWeek()} per week, ${PostPlan.daysText()}).
 Month: [month & year]
 Ideas (one per line, add any personal story you want in):
 -

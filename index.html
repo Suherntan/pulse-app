@@ -586,10 +586,10 @@
 </div>
 <div class=plan-card>
 <h3>How often do you post?</h3>
-<p>Used for the suggested dates when you schedule, and for Claude's monthly prompt.</p>
+<p>Used for the suggested dates and times when you schedule, and for Claude's monthly prompt.</p>
 <div class=plan-opts id=plan-opts></div>
-<h3 style="margin-top:14px">Usual time</h3>
-<select id=plan-time aria-label="Usual posting time"></select>
+<h3 style="margin-top:14px">Best time for each platform</h3>
+<div class=plan-opts id=plan-times></div>
 <div class=plan-next id=plan-next></div>
 </div>
 </section>
@@ -640,12 +640,12 @@
       var days=P.PLANS[n].days.map(function(d){return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d];}).join(' · ');
       return '<button data-n='+n+' aria-pressed='+(P.perWeek()===n)+'>'+P.PLANS[n].label+' <small>('+days+')</small></button>';
     }).join('');
-    document.getElementById('plan-next').innerHTML='Next posting days: <b>'+P.nextDays(4).map(P.label).join(', ')+'</b> at <b>'+P.time()+'</b>';
+    document.getElementById('plan-next').innerHTML='Next posting days: <b>'+P.nextDays(4).map(P.label).join(', ')+'</b><br>Facebook <b>'+P.time('facebook')+'</b> · Instagram <b>'+P.time('instagram')+'</b> · LinkedIn <b>'+P.time('linkedin')+'</b>';
   }
   document.getElementById('plan-opts').onclick=function(e){var b=e.target.closest('[data-n]');if(!b)return;P.setPerWeek(b.dataset.n);draw();};
-  var sel=document.getElementById('plan-time');
-  sel.innerHTML=P.times().map(function(t){return '<option'+(t===P.time()?' selected':'')+'>'+t+'</option>';}).join('');
-  sel.onchange=function(){P.setTime(sel.value);draw();};
+  var PL=[['facebook','Facebook'],['instagram','Instagram'],['linkedin','LinkedIn']],box=document.getElementById('plan-times');
+  box.innerHTML=PL.map(function(x){return '<label style="display:flex;align-items:center;gap:8px">'+x[1]+' <select data-pl='+x[0]+'>'+P.times().map(function(t){return '<option'+(t===P.time(x[0])?' selected':'')+'>'+t+'</option>';}).join('')+'</select></label>';}).join('');
+  box.onchange=function(e){var s=e.target.closest('[data-pl]');if(s){P.setTime(s.dataset.pl,s.value);draw();}};
   draw();
   if(location.hash==='#social') window.addEventListener('load',function(){switchTab('social');});
 })();

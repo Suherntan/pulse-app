@@ -1,4 +1,4 @@
-/* Posting plan: how many posts a week, on which days, at what time.
+/* Posting plan: how many posts a week, on which days, and the time for each platform.
  * Saved on this phone. Used by the Social tab (index.html), Social Posts
  * (posts.html) and the SCHEDULE POST picker (slides-maker.js).
  */
@@ -17,7 +17,9 @@
   const pad = n => String(n).padStart(2, '0');
 
   const perWeek = () => PLANS[get('posts-per-week')] ? Number(get('posts-per-week')) : 1;
-  const time = () => /^\d{2}:\d{2}$/.test(get('posts-plan-time')) ? get('posts-plan-time') : '20:00';
+  // Best times checked 13 Oct 2026 (Malaysia): LinkedIn 5 PM, Facebook 8 PM, Instagram 9 PM.
+  const TIMES = {facebook: '20:00', instagram: '21:00', linkedin: '17:00'};
+  const time = pl => { const t = get('posts-time-' + (pl || 'facebook')); return /^\d{2}:\d{2}$/.test(t) ? t : TIMES[pl || 'facebook']; };
 
   // yyyy-mm-dd of the next `count` plan days, starting today.
   function nextDays(count, from) {
@@ -41,6 +43,6 @@
   window.PostPlan = {
     PLANS, perWeek, time, nextDays, label, iso, daysText, times,
     setPerWeek: n => set('posts-per-week', String(n)),
-    setTime: t => set('posts-plan-time', t)
+    setTime: (pl, t) => set('posts-time-' + pl, t)
   };
 })();

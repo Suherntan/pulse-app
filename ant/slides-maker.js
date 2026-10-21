@@ -101,6 +101,7 @@
   .sm-sched .chip:disabled{opacity:.4;cursor:not-allowed}
   .sm-sched input[type=date],.sm-sched select{padding:10px;border:1px solid var(--border,#d8dee8);border-radius:10px;font-size:15px;min-height:44px}
   .sm-sched .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .sm-sched .row[hidden]{display:none}
   .sm-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
   .sm-thumb{flex:none;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18);position:relative}
   .sm-thumb .sm-scale{transform-origin:0 0}
@@ -247,8 +248,8 @@
       const postDate = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
       const planDays = plan ? plan.nextDays(4) : [];
       const defDate = postDate >= today ? postDate : (planDays[0] || today);
-      const defTime = plan ? plan.time() : '20:00';
-      const times = plan ? plan.times() : ['20:00'];
+      const times = plan ? plan.times() : ['17:00', '20:00', '21:00'];
+      const tOf = k => plan ? plan.time(k) : ({facebook: '20:00', instagram: '21:00', linkedin: '17:00'})[k];
       const PL = [['facebook', 'Facebook', post.fb], ['instagram', 'Instagram', post.ig], ['linkedin', 'LinkedIn', post.li]];
       panel.innerHTML = `<b>POST ON</b>
         <div class="sm-opts">${PL.map(([k, n, t]) => `<button class="chip" data-pl="${k}" aria-pressed="${!!String(t || '').trim()}"${String(t || '').trim() ? '' : ' disabled title="No text for this platform"'}>${n}</button>`).join('')}</div>
@@ -256,24 +257,26 @@
         <div class="row"><input type="date" id="smDate" min="${today}" value="${defDate}" aria-label="Post date"></div>
         ${planDays.length ? `<div class="sm-opts">${planDays.map(d => `<button class="chip" data-day="${d}" aria-pressed="${d === defDate}">${plan.label(d)}</button>`).join('')}</div>` : ''}
         <b>TIME</b>
-        <div class="row"><select id="smTime" aria-label="Post time">${(times.includes(defTime) ? times : [defTime, ...times]).map(t => `<option${t === defTime ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+        ${PL.map(([k, n]) => `<div class="row" data-trow="${k}"><select data-time="${k}" aria-label="${n} time">${(times.includes(tOf(k)) ? times : [tOf(k), ...times]).map(t => `<option${t === tOf(k) ? ' selected' : ''}>${t}</option>`).join('')}</select> ${n}</div>`).join('')}
         <div class="row"><button class="btn gold" id="smGo">SCHEDULE</button><button class="btn ghost" id="smCancel">CANCEL</button></div>`;
       panel.hidden = false;
       const dateIn = panel.querySelector('#smDate');
       panel.onclick = e => {
         const pl = e.target.closest('[data-pl]'), day = e.target.closest('[data-day]');
-        if (pl && !pl.disabled) pl.setAttribute('aria-pressed', pl.getAttribute('aria-pressed') !== 'true');
+        if (pl && !pl.disabled) { pl.setAttribute('aria-pressed', pl.getAttribute('aria-pressed') !== 'true'); showTimes(); }
         if (day) { dateIn.value = day.dataset.day; dateIn.onchange(); }
         if (e.target.id === 'smCancel') panel.hidden = true;
         if (e.target.id === 'smGo') {
           const chosen = [...panel.querySelectorAll('[data-pl][aria-pressed=true]')].map(b => b.dataset.pl);
-          const usable = PL.filter(([k]) => chosen.includes(k)).map(([platform, , text]) => ({platform, text: text || ''}));
+          const usable = PL.filter(([k]) => chosen.includes(k)).map(([platform, , text]) => ({platform, text: text || '', time: panel.querySelector(`[data-time=${platform}]`).value}));
           if (!usable.length) { box.querySelector('#smMsg').textContent = 'Pick at least one platform.'; return; }
           if (!dateIn.value) { box.querySelector('#smMsg').textContent = 'Pick a date.'; return; }
           panel.hidden = true;
-          sendSchedule(usable, dateIn.value, panel.querySelector('#smTime').value);
+          sendSchedule(usable, dateIn.value, usable[0].time);
         }
       };
+      const showTimes = () => PL.forEach(([k]) => { panel.querySelector(`[data-trow=${k}]`).hidden = panel.querySelector(`[data-pl=${k}]`).getAttribute('aria-pressed') !== 'true'; });
+      showTimes();
       dateIn.onchange = () => panel.querySelectorAll('[data-day]').forEach(b => b.setAttribute('aria-pressed', b.dataset.day === dateIn.value));
       panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
     }
@@ -288,7 +291,8 @@
         msg.textContent = 'Sending to your Google Sheet…';
         const res = await AntApi.post('socialQueuePost', {title: post.title || '', posts: usable, date, time, images});
         const names = usable.map(p => ({instagram: 'Instagram', linkedin: 'LinkedIn'})[p.platform] || 'Facebook').join(' + ');
-        msg.textContent = 'Scheduled on ' + names + ' ✓ ' + res.when + ' · ' + res.pictures + ' pictures.' +
+        const at = res.times ? usable.map((p, i) => ({instagram: 'IG', linkedin: 'LinkedIn'})[p.platform] + ' ' + res.times[i]).map(t => t.replace(/^undefined/, 'FB')).join(', ') : '';
+        msg.textContent = 'Scheduled on ' + names + ' ✓ ' + res.when + (at ? ' (' + at + ')' : '') + ' · ' + res.pictures + ' pictures.' +
           (!res.connected ? ' Facebook is not connected yet – Sheet menu: Social Posts > Connect Facebook Page.' :
            usable.some(p => p.platform === 'instagram') && res.instagram === false ? ' Instagram is not connected yet – see the setup guide.' :
            usable.some(p => p.platform === 'linkedin') && res.linkedin === false ? ' LinkedIn is not connected yet – Sheet menu: Social Posts > Connect LinkedIn.' :
