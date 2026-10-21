@@ -100,7 +100,7 @@ Same timer and SOCIAL QUEUE. Posts to your **personal LinkedIn profile** with th
 3. **Products** tab → request **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect** (both approved straight away).
 4. **Auth** tab → **Authorized redirect URLs** → add `https://pulse-app-seven-wine.vercel.app/linkedin.html` → Update. Copy **Client ID** and **Primary Client Secret** to Notepad.
 5. Paste the latest **Social.gs** → Save → Deploy → New version → refresh the Sheet.
-6. **Social Posts → Connect LinkedIn** → Client ID → Client Secret → a box opens: click **Open LinkedIn to allow PULSE** → Allow → the PULSE page shows a **code** → COPY CODE → paste in the Sheet box → "LinkedIn connected ✓".
+6. **Social Posts → Connect LinkedIn** → Client ID → Client Secret → one box opens with the link **and** a code field: click **Open LinkedIn to allow PULSE** → Allow → PULSE page → COPY CODE → back to the Sheet box → paste → **Connect** → "LinkedIn connected ✓". (Fixed 21 Oct 2026: before, the code prompt hid the link box.)
 7. Test: PULSE → post → MAKE SLIDES → **SCHEDULE POST** → type **L** → 20 min from now → SOCIAL QUEUE "LinkedIn" → Posted + link.
 - Uses the post's **LinkedIn** text. Pictures 4:5, up to 20. (PDF carousel = later, if wanted.)
 - Every ~2 months: Social Posts → Connect LinkedIn (leave ID/secret empty to keep them) → Allow → paste code.
