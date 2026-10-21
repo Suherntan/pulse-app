@@ -150,3 +150,8 @@ To remove a client completely:
 - **Nothing to do by hand.** After pasting the new `Code.gs` + `ANT.gs` (and `ANT-Master.gs` on the manager sheet) and deploying a **New version**, the old column/tab names are renamed automatically the first time the sheet is used. Data stays in place.
 - An advisor still on the old script can keep sending to an updated Master (it maps "Agent ID" to "Advisor ID").
 - Message templates: `{agent}` still works; `{advisor}` works too.
+
+
+## Changes 21 Oct 2026
+- **Offer Document history:** every SAVE TO DRIVE now keeps a new offer (new Offer ID + new PDF). Before, a 2nd save for the same client on the same day replaced the first one. A 2nd PDF on the same day gets the time in its name (e.g. "… 15.40.pdf"). Needs the new **ANT.gs** (Stevern too, or the Library project for library users).
+- **A-N-T Analysis page:** TOTAL row removed; the red dots on the pyramid removed. In **PRIORITY** the advisor taps the areas the client wants first (numbered in tap order, gold highlight, also highlighted in the table and pyramid). In the saved PDF only the picked areas show; if none is picked, all areas show.

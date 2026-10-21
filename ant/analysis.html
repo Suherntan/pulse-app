@@ -52,6 +52,15 @@ td.short{color:var(--red)} td.ok{color:var(--ok)}
 tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px}
 .prio{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .prio div{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#FBF6EA;font-size:13px}
+.prio div{cursor:pointer;border:2px solid transparent}
+.prio span.n{margin-left:0}
+.prio div.pick{background:#F3AF3D33;border-color:#F3AF3D}
+.prio div:not(.pick) .n{background:#C9D2E0}
+.prio .ok{color:var(--ok,#1E8E3E)}
+body.capturing .prio.has-pick div:not(.pick){display:none}
+.pick-hint{margin:6px 0 0;font-size:12px;color:#6B7A90}
+body.capturing .pick-hint{display:none}
+tr.pick td{background:#F3AF3D22;font-weight:700}
 .prio .n{width:26px;height:26px;border-radius:7px;background:var(--navy);color:#fff;display:grid;place-items:center;font-family:var(--head);font-weight:700;flex:none}
 .prio b{font-family:var(--head);letter-spacing:.04em;color:var(--navy)}
 .prio span{margin-left:auto;color:var(--red);font-weight:700}
@@ -117,13 +126,13 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
         <table>
           <thead><tr><th>AREA</th><th>CURRENT STATUS</th><th>L.I.F.E</th><th>FINANCIAL GOALS</th></tr></thead>
           <tbody id="rows"></tbody>
-          <tfoot><tr><td>TOTAL</td><td id="tCur"></td><td id="tGap" class="gap"></td><td id="tGoal"></td></tr></tfoot>
         </table>
       </div>
     </section>
 
     <section>
       <h2>PRIORITY</h2>
+      <p class="pick-hint">Tap the areas your client wants to put first – in their order. Tap again to remove.</p>
       <div class="prio" id="prio" style="margin-top:14px"></div>
     </section>
 
@@ -190,39 +199,52 @@ if (b) {
   if (!rows.length) $('bgSec').remove();
 } else { $('bgSec').remove(); }
 
-// Table + totals
-let tCur = 0, tGoal = 0, tGap = 0, anyGap = false;
+// Table
 $('rows').innerHTML = AREAS.map(a => {
   const v = analysis.life[a.k] || {}, cur = v.current ?? null, goal = v.goal ?? null;
   const gap = cur !== null && goal !== null ? goal - cur : null;
-  if (cur !== null) tCur += cur;
-  if (goal !== null) tGoal += goal;
-  if (gap !== null) { anyGap = true; tGap += Math.max(gap, 0); }
   const cls = gap === null ? '' : gap > 0 ? 'short' : 'ok';
-  return `<tr style="--c:${a.c}"><td><i></i>${a.name}</td><td>${fmt(cur)}</td>
+  return `<tr style="--c:${a.c}" data-k="${a.k}"><td><i></i>${a.name}</td><td>${fmt(cur)}</td>
     <td class="gap ${cls}">${gap === null ? '–' : gap > 0 ? fmt(gap) : '✓'}</td><td>${fmt(goal)}</td></tr>`;
 }).join('');
-$('tCur').textContent = fmt(tCur); $('tGoal').textContent = fmt(tGoal);
-$('tGap').textContent = anyGap ? (tGap > 0 ? fmt(tGap) : '✓') : '–';
-$('tGap').classList.add(tGap > 0 ? 'short' : 'ok');
 
-// Mini pyramid, coloured tiers; tiers still short get a red dot
+// Mini pyramid, coloured tiers; the client's priority areas get a gold outline
 const H = 240, W = 210, N = AREAS.length, gapPx = 4, th = (H - gapPx * (N - 1)) / N;
 const tiers = AREAS.map((a, i) => {
   const y1 = i * (th + gapPx), y2 = y1 + th;
   const w1 = W * y1 / H, w2 = W * y2 / H, cx = W / 2;
-  const v = analysis.life[a.k] || {}, short = v.current != null && v.goal != null && v.goal - v.current > 0;
-  return `<polygon points="${cx - w1 / 2},${y1} ${cx + w1 / 2},${y1} ${cx + w2 / 2},${y2} ${cx - w2 / 2},${y2}" fill="${a.c}"/>` +
-    (short ? `<circle cx="${cx + w2 / 2 - 2}" cy="${(y1 + y2) / 2}" r="5" fill="#fff" stroke="#C9402B" stroke-width="3"/>` : '');
+  return `<polygon data-k="${a.k}" points="${cx - w1 / 2},${y1} ${cx + w1 / 2},${y1} ${cx + w2 / 2},${y2} ${cx - w2 / 2},${y2}" fill="${a.c}"/>`;
 }).join('');
 $('pyr').innerHTML = `<svg viewBox="-6 0 ${W + 12} ${H}" role="img" aria-label="L.I.F.E pyramid">${tiers}</svg>`;
 
-// Priority: gaps, most urgent (bottom of pyramid) first
-const prio = AREAS.slice().reverse().map(a => ({a, v: analysis.life[a.k] || {}}))
-  .filter(x => x.v.current != null && x.v.goal != null && x.v.goal - x.v.current > 0);
-$('prio').innerHTML = prio.length
-  ? prio.map((x, i) => `<div><span class="n">${i + 1}</span><b>${x.a.name}</b><span>${fmt(x.v.goal - x.v.current)}</span></div>`).join('')
-  : '<p class="none">No gaps – all areas covered.</p>';
+// Priority: the advisor taps the areas the client wants first (in that order).
+// Nothing picked yet = the gaps, most urgent (bottom of pyramid) first.
+let picks = Array.isArray(analysis.priority) ? analysis.priority.filter(k => AREAS.some(a => a.k === k)) : [];
+function renderPrio() {
+  const gapOf = a => { const v = analysis.life[a.k] || {}; return v.current != null && v.goal != null ? v.goal - v.current : null; };
+  const rest = AREAS.slice().reverse().filter(a => !picks.includes(a.k));
+  const order = picks.map(k => AREAS.find(a => a.k === k)).concat(rest);
+  $('prio').classList.toggle('has-pick', picks.length > 0);
+  $('prio').innerHTML = order.map(a => {
+    const i = picks.indexOf(a.k), g = gapOf(a);
+    return `<div data-k="${a.k}" class="${i > -1 ? 'pick' : ''}" role="button" aria-pressed="${i > -1}"><span class="n">${i > -1 ? i + 1 : ''}</span><b>${a.name}</b>` +
+      `<span class="${g !== null && g <= 0 ? 'ok' : ''}">${g === null ? '–' : g > 0 ? fmt(g) : '✓'}</span></div>`;
+  }).join('');
+  document.querySelectorAll('#rows tr').forEach(tr => tr.classList.toggle('pick', picks.includes(tr.dataset.k)));
+  document.querySelectorAll('#pyr polygon').forEach(pg => {
+    const on = picks.includes(pg.dataset.k);
+    pg.setAttribute('stroke', on ? '#F3AF3D' : 'none'); pg.setAttribute('stroke-width', on ? '5' : '0');
+  });
+}
+$('prio').onclick = e => {
+  const d = e.target.closest('[data-k]'); if (!d) return;
+  const k = d.dataset.k;
+  picks = picks.includes(k) ? picks.filter(x => x !== k) : picks.concat(k);
+  analysis.priority = picks;
+  try { const cur = read('ant-analysis-current'); if (cur) { cur.priority = picks; localStorage.setItem('ant-analysis-current', JSON.stringify(cur)); } } catch (_) {}
+  renderPrio();
+};
+renderPrio();
 
 // ---- Save: download on this device, or into the client's Drive folder ----
 document.getElementById('printBtn').onclick = () => window.print();
