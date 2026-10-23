@@ -700,6 +700,8 @@ function doGet(e) {
         return jsonResponse(socialStatus());
       case 'socialQueue':
         return jsonResponse(socialQueue());
+      case 'socialPostsGet':
+        return jsonResponse(socialPostsGet());
       case 'leads':
         return jsonResponse(getNewLeads(e.parameter.status));
       // A-N-T (see ANT.gs)
@@ -741,6 +743,8 @@ function doPost(e) {
       // Social auto-post (see Social.gs)
       case 'socialQueuePost':
         return jsonResponse(socialQueuePost(data));
+      case 'socialPostsSave':
+        return jsonResponse(socialPostsSave(data));
       // Leads inbox (see Leads.gs)
       case 'addWebLead':
         return jsonResponse(addWebLead(data));

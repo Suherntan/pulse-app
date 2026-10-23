@@ -115,6 +115,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
 
 <script src="ant-api.js"></script>
 <script src="post-plan.js"></script>
+<script src="posts-sync.js"></script>
 <script src="slides-maker.js"></script>
 <script>
 (function () {
@@ -122,7 +123,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);ou
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
-const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} if (k === 'posts-queue' && window.PostsSync) PostsSync.soon(); };
 let tt; const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2200); };
 
 const PLATFORMS = [
@@ -708,11 +709,12 @@ function renderOut(post, qid) {
       return;
     }
     if (e.target.id === 'saveQ') { addToQueue(post); toast('Saved to My Posts'); }
-    if (e.target.id === 'mkSlides') window.SlideMaker.open(post, $('slideBox'), toast, () => { if (q) { q.scheduled = Date.now(); write('posts-queue', queue); } });
+    if (e.target.id === 'mkSlides') window.SlideMaker.open(post, $('slideBox'), toast, () => { const cur = q && (queue.find(x => x.id === q.id) || q); if (cur) { cur.scheduled = Date.now(); write('posts-queue', queue); } });
   };
   $('out').onchange = e => {
     const k = e.target.dataset.done; if (!k || !q) return;
-    q.done[k] = e.target.checked; write('posts-queue', queue);
+    const cur = queue.find(x => x.id === q.id) || q;
+    cur.done = cur.done || {}; cur.done[k] = e.target.checked; write('posts-queue', queue);
   };
 }
 
@@ -811,7 +813,7 @@ function renderQueue() {
 $('queue').onclick = e => {
   const o = e.target.closest('[data-open]'), d = e.target.closest('[data-del]');
   if (o) { const q = queue.find(x => String(x.id) === o.dataset.open); if (q) { renderOut(q, q.id); $('out').scrollIntoView({behavior: 'smooth'}); } }
-  if (d && confirm('Delete this post from My Posts?')) { queue = queue.filter(x => String(x.id) !== d.dataset.del); write('posts-queue', queue); renderQueue(); $('out').innerHTML = ''; }
+  if (d && confirm('Delete this post from My Posts?')) { const gone = queue.find(x => String(x.id) === d.dataset.del); if (gone && window.PostsSync) PostsSync.markDeleted(gone); queue = queue.filter(x => String(x.id) !== d.dataset.del); write('posts-queue', queue); renderQueue(); $('out').innerHTML = ''; }
 };
 
 /* ---------- schedule whole month ---------- */
@@ -865,6 +867,13 @@ $('mClaude').onclick = () => setMode('claude');
 $('mQueue').onclick = () => setMode('queue');
 
 renderPillars();
+// Same My Posts on every device (hidden MY POSTS tab in the Google Sheet).
+if (window.PostsSync && PostsSync.connected()) {
+  PostsSync.sync().then(list => {
+    queue = list;
+    if (!$('queueView').hidden && !$('out').innerHTML) renderQueue();
+  }).catch(() => {});
+}
 if (location.hash === '#queue') {
   setMode('queue');
   // From the Today card: open that post straight away (?open=<id>)
