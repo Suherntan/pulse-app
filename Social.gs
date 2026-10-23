@@ -505,3 +505,53 @@ function socialFolder_() {
   props.setProperty(SOCIAL_PROP_FOLDER, f.getId());
   return f;
 }
+
+
+// ---------------------------------------------------------------------
+// My Posts (Social Posts page) kept in a hidden "MY POSTS" tab, so every
+// phone / computer shows the same list. The app merges and sends the whole list.
+// ---------------------------------------------------------------------
+var MYPOSTS_SHEET = 'MY POSTS';
+var MYPOSTS_HEADERS = ['Key', 'Post Date', 'Title', 'Post (data)', 'Deleted At', 'Saved'];
+
+function socialMyPostsSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(MYPOSTS_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(MYPOSTS_SHEET);
+    sh.getRange(1, 1, 1, MYPOSTS_HEADERS.length).setValues([MYPOSTS_HEADERS]).setFontWeight('bold')
+      .setBackground('#0B2545').setFontColor('#FFFFFF');
+    sh.setFrozenRows(1);
+    sh.hideSheet();
+  }
+  return sh;
+}
+
+function socialPostsGet() {
+  var sh = socialMyPostsSheet_();
+  var rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, MYPOSTS_HEADERS.length).getValues() : [];
+  var posts = [], deleted = {};
+  rows.forEach(function (r) {
+    if (r[4]) { deleted[String(r[0])] = Number(r[4]); return; }
+    try { posts.push(JSON.parse(String(r[3]))); } catch (e) {}
+  });
+  return { ok: true, posts: posts, deleted: deleted };
+}
+
+function socialPostsSave(data) {
+  var posts = (data && data.posts) || [], deleted = (data && data.deleted) || {};
+  var lock = pulseLock_();
+  lock.waitLock(20000);
+  try {
+    var sh = socialMyPostsSheet_(), now = new Date();
+    var rows = posts.map(function (p) {
+      return [String(p.title || '') + '|' + String(p.date || ''), String(p.date || ''), String(p.title || ''), JSON.stringify(p), '', now];
+    });
+    Object.keys(deleted).forEach(function (k) { rows.push([k, '', '', '', Number(deleted[k]) || Date.now(), now]); });
+    if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, MYPOSTS_HEADERS.length).clearContent();
+    if (rows.length) sh.getRange(2, 1, rows.length, MYPOSTS_HEADERS.length).setValues(rows);
+    return { ok: true, count: posts.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
