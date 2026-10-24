@@ -154,14 +154,14 @@ body.capturing .att-del{display:none}
 <script src="ant-api.js"></script>
 <script>
 // Top → bottom of the pyramid; priority runs the other way (most urgent first).
-// ANT colours: navy blues on top (growth), golds at the base (protection).
+// Deep, clearly different colours (not neon) so each area stands out.
 const AREAS = [
-  {k:'investment',      name:'INVESTMENT',       c:'#3E6A9E'},
-  {k:'education',       name:'EDUCATION',        c:'#7FA0C9'},
-  {k:'death',           name:'DEATH',            c:'#B9C6D8'},
-  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#F7D58C'},
-  {k:'disability',      name:'DISABILITY',       c:'#F3AF3D'},
-  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#C98A22'}
+  {k:'investment',      name:'INVESTMENT',       c:'#1F7A6D'},
+  {k:'education',       name:'EDUCATION',        c:'#2F5F98'},
+  {k:'death',           name:'DEATH',            c:'#5B4B8A'},
+  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#B8860B'},
+  {k:'disability',      name:'DISABILITY',       c:'#C2571A'},
+  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#9E2B2B'}
 ];
 const $ = id => document.getElementById(id);
 const fmt = n => n === null || n === undefined ? '–' : Math.round(n).toLocaleString('en-US');
@@ -220,7 +220,8 @@ const H = 240, W = 210, N = AREAS.length, gapPx = 4, th = (H - gapPx * (N - 1)) 
 const tiers = AREAS.map((a, i) => {
   const y1 = i * (th + gapPx), y2 = y1 + th;
   const w1 = W * y1 / H, w2 = W * y2 / H, cx = W / 2;
-  return `<polygon data-k="${a.k}" points="${cx - w1 / 2},${y1} ${cx + w1 / 2},${y1} ${cx + w2 / 2},${y2} ${cx - w2 / 2},${y2}" fill="${a.c}"/>`;
+  const pts = `${cx - w1 / 2},${y1} ${cx + w1 / 2},${y1} ${cx + w2 / 2},${y2} ${cx - w2 / 2},${y2}`;
+  return `<polygon data-k="${a.k}" points="${pts}" fill="${a.c}"/><polygon data-hl="${a.k}" points="${pts}" fill="none" stroke="#fff" stroke-width="2" visibility="hidden"/>`;
 }).join('');
 $('pyr').innerHTML = `<svg viewBox="-6 0 ${W + 12} ${H}" role="img" aria-label="L.I.F.E pyramid">${tiers}</svg>`;
 
@@ -238,10 +239,12 @@ function renderPrio() {
       `<span class="${g !== null && g <= 0 ? 'ok' : ''}">${g === null ? '–' : g > 0 ? fmt(g) : '✓'}</span></div>`;
   }).join('');
   document.querySelectorAll('#rows tr').forEach(tr => tr.classList.toggle('pick', picks.includes(tr.dataset.k)));
-  document.querySelectorAll('#pyr polygon').forEach(pg => {
+  // Navy outline with a thin white line inside, so it shows on dark tiers too.
+  document.querySelectorAll('#pyr polygon[data-k]').forEach(pg => {
     const on = picks.includes(pg.dataset.k);
-    pg.setAttribute('stroke', on ? '#0B2545' : 'none'); pg.setAttribute('stroke-width', on ? '6' : '0');
+    pg.setAttribute('stroke', on ? '#0B2545' : 'none'); pg.setAttribute('stroke-width', on ? '7' : '0');
   });
+  document.querySelectorAll('#pyr polygon[data-hl]').forEach(pg => pg.setAttribute('visibility', picks.includes(pg.dataset.hl) ? 'visible' : 'hidden'));
 }
 $('prio').onclick = e => {
   const d = e.target.closest('[data-k]'); if (!d) return;
