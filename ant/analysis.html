@@ -154,13 +154,14 @@ body.capturing .att-del{display:none}
 <script src="ant-api.js"></script>
 <script>
 // Top → bottom of the pyramid; priority runs the other way (most urgent first).
+// ANT colours: navy blues on top (growth), golds at the base (protection).
 const AREAS = [
-  {k:'investment',      name:'INVESTMENT',       c:'#10B981'},
-  {k:'education',       name:'EDUCATION',        c:'#0EA5E9'},
-  {k:'death',           name:'DEATH',            c:'#7C3AED'},
-  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#FACC15'},
-  {k:'disability',      name:'DISABILITY',       c:'#F97316'},
-  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#E11D48'}
+  {k:'investment',      name:'INVESTMENT',       c:'#3E6A9E'},
+  {k:'education',       name:'EDUCATION',        c:'#7FA0C9'},
+  {k:'death',           name:'DEATH',            c:'#B9C6D8'},
+  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#F7D58C'},
+  {k:'disability',      name:'DISABILITY',       c:'#F3AF3D'},
+  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#C98A22'}
 ];
 const $ = id => document.getElementById(id);
 const fmt = n => n === null || n === undefined ? '–' : Math.round(n).toLocaleString('en-US');
