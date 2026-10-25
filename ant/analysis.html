@@ -154,14 +154,14 @@ body.capturing .att-del{display:none}
 <script src="ant-api.js"></script>
 <script>
 // Top → bottom of the pyramid; priority runs the other way (most urgent first).
-// Deep, clearly different colours (not neon) so each area stands out.
+// "Ocean to sunset": deep, clearly different colours (not neon) so each area stands out.
 const AREAS = [
-  {k:'investment',      name:'INVESTMENT',       c:'#1F7A6D'},
-  {k:'education',       name:'EDUCATION',        c:'#2F5F98'},
-  {k:'death',           name:'DEATH',            c:'#5B4B8A'},
-  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#B8860B'},
-  {k:'disability',      name:'DISABILITY',       c:'#C2571A'},
-  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#9E2B2B'}
+  {k:'investment',      name:'INVESTMENT',       c:'#0F6E7A'},
+  {k:'education',       name:'EDUCATION',        c:'#1F4E8C'},
+  {k:'death',           name:'DEATH',            c:'#6A3D7C'},
+  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#D08C1F'},
+  {k:'disability',      name:'DISABILITY',       c:'#C1440E'},
+  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#8E1B2C'}
 ];
 const $ = id => document.getElementById(id);
 const fmt = n => n === null || n === undefined ? '–' : Math.round(n).toLocaleString('en-US');
