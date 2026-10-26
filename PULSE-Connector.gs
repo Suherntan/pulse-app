@@ -50,6 +50,7 @@ function antConnectMaster(e) { use_(); return PULSE.antConnectMaster(e); }
 function antFlushOutbox(e) { use_(); return PULSE.antFlushOutbox(e); }
 function antRecheckLicence(e) { use_(); return PULSE.antRecheckLicence(e); }
 function antSendAllToMaster(e) { use_(); return PULSE.antSendAllToMaster(e); }
+function antSendPipelineToMaster(e) { use_(); return PULSE.antSendPipelineToMaster(e); }
 function antSetup(e) { use_(); return PULSE.antSetup(e); }
 function antShowFolderLink(e) { use_(); return PULSE.antShowFolderLink(e); }
 function backfillActivityLog(e) { use_(); return PULSE.backfillActivityLog(e); }
