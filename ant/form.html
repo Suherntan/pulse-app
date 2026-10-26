@@ -31,6 +31,18 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .results button{display:flex;justify-content:space-between;width:100%;padding:12px 14px;border:0;background:none;font:500 15px var(--body);text-align:left;cursor:pointer}
 .results button:hover{background:#FBF4E6}
 .results small{color:var(--text-light)}
+.hist h2{margin:0 0 8px;font-size:15px;letter-spacing:.06em;color:var(--navy,#0B2545)}
+.hist h3{margin:14px 0 6px;font-size:13px;letter-spacing:.08em;color:#8A6416}
+.hist details{border:1px solid #E3E6EC;border-radius:12px;padding:8px 12px;margin-bottom:8px}
+.hist summary{cursor:pointer;font-weight:700;font-size:14px;list-style-position:inside}
+.hist summary small{font-weight:400;color:#5F6673}
+.hist table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.hist td,.hist th{padding:5px 4px;border-bottom:1px solid #EEF0F3;text-align:right}
+.hist td:first-child,.hist th:first-child{text-align:left}
+.hist th{font-size:11px;letter-spacing:.06em;color:#5F6673}
+.hist .short{color:#C0392B;font-weight:700} .hist .ok{color:#1E8E3E;font-weight:700}
+.hist a.pdf{display:inline-block;margin-top:8px;font-weight:700;color:var(--navy,#0B2545)}
+.hist .none{font-size:13px;color:#5F6673}
 .card{background:var(--card);border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(11,37,69,.04),0 6px 18px rgba(11,37,69,.06)}
 .card h2{font-family:var(--head);font-weight:600;font-size:17px;letter-spacing:.1em;color:var(--navy);display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .card h2 .n{width:28px;height:28px;border-radius:8px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--gold-dark)}
@@ -99,6 +111,8 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
     <input id="q" type="search" placeholder="Find existing client (name or phone)" autocomplete="off">
     <div class="results" id="results"></div>
   </div>
+
+  <section class="card hist" id="history" hidden></section>
 
   <form id="ff" novalidate>
     <section class="card">
@@ -333,7 +347,32 @@ results.addEventListener('click', async e => {
   } catch (err) { toast(err.message); }
 });
 
+// Past A-N-T Analyses and Offer Documents for the loaded client (from the Google Sheet).
+function renderHistory(c) {
+  const box = $('history'), h = c && c.history;
+  if (!h) { box.hidden = true; box.innerHTML = ''; return; }
+  const AREAS = [['hospitalization', 'Hospitalization'], ['disability', 'Disability'], ['criticalIllness', 'Critical Illness'],
+    ['death', 'Death'], ['education', 'Education'], ['investment', 'Investment']];
+  const num = v => v === '' || v == null ? null : Number(v);
+  const money = v => num(v) == null || isNaN(num(v)) ? (v ? esc(v) : '–') : Math.round(num(v)).toLocaleString('en-US');
+  const day = iso => { const d = new Date(iso); return isNaN(d) ? esc(iso || '') : d.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}); };
+  const pdf = u => u ? `<a class="pdf" href="${esc(u)}" target="_blank" rel="noopener">Open PDF in Drive ↗</a>` : '';
+  const analyses = h.analyses.map((a, i) => `<details${i ? '' : ' open'}><summary>${day(a.date)} <small>· ${esc(a.id)}${num(a.totalGap) ? ' · total gap RM ' + money(a.totalGap) : ''}</small></summary>
+      <table><tr><th>AREA</th><th>CURRENT</th><th>GOAL</th><th>L.I.F.E</th></tr>${AREAS.map(([k, n]) => {
+        const v = a.life[k] || {}, g = num(v.gap);
+        return `<tr><td>${n}</td><td>${money(v.current)}</td><td>${money(v.goal)}</td><td class="${g == null ? '' : g > 0 ? 'short' : 'ok'}">${g == null ? '–' : g > 0 ? money(g) : '✓'}</td></tr>`;
+      }).join('')}</table>${a.notes ? `<p style="font-size:13px;margin:8px 0 0"><b>Notes:</b> ${esc(a.notes)}</p>` : ''}${pdf(a.pdf)}</details>`).join('');
+  const offers = h.offers.map((o, i) => `<details${i ? '' : ' open'}><summary>${day(o.date)} <small>· ${esc(o.id)}</small></summary>
+      <table><tr><th></th><th>PLAN</th><th>BASIC LIFE</th><th>ANNUAL</th></tr>${o.slots.map(x =>
+        `<tr><td>${esc(x.label)}</td><td>${esc(x.plan || '–')}</td><td>${money(x.basicLife)}</td><td>${money(x.annual)}</td></tr>`).join('')}</table>${pdf(o.pdf)}</details>`).join('');
+  box.innerHTML = `<h2>CLIENT FILE</h2>
+    <h3>A-N-T ANALYSIS (${h.analyses.length})</h3>${analyses || '<p class="none">No analysis saved yet.</p>'}
+    <h3>OFFER DOCUMENTS (${h.offers.length})</h3>${offers || '<p class="none">No offer document saved yet.</p>'}`;
+  box.hidden = false;
+}
+
 function fill(c) {
+  if (c.history || c.clientId !== currentId) renderHistory(c);   // keep the file shown after a save
   currentId = c.clientId;
   $('cid').textContent = 'EDIT · ' + c.clientId;
   $('name').value = c.name; $('dob').value = isoToDmy(c.dob); $('phone').value = c.phone; $('email').value = c.email || '';
@@ -407,6 +446,7 @@ $('ff').addEventListener('submit', async e => {
 });
 
 function reset() {
+  renderHistory(null);
   $('ff').reset(); currentId = ''; $('cid').textContent = 'NEW'; $('folderLink').style.display = 'none';
   $('age').textContent = '—'; setBackground(); clearErrors(); $('saved').classList.remove('show');
   window.scrollTo({top:0, behavior:'smooth'});
