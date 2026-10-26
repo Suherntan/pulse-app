@@ -29,10 +29,12 @@ var ANT_PROP_ROOT_FOLDER = 'ANT_ROOT_FOLDER_ID';
 var ANT_PROP_AGENT_ID = 'ANT_AGENT_ID';
 var ANT_PROP_MASTER_URL = 'ANT_MASTER_URL';
 var ANT_PROP_MASTER_KEY = 'ANT_MASTER_KEY';
+var ANT_POLICIES_SHEET = 'ANT_POLICIES';
+var ANT_NOTES_SHEET = 'ANT_NOTES';
 var ANT_OUTBOX_SHEET = 'ANT_OUTBOX';
 var ANT_OUTBOX_HEADERS = ['Time', 'Type', 'Record', 'Last Error'];
 // Only on the agent's side – the manager's master gets data, not file links.
-var ANT_LOCAL_ONLY = ['Folder Link', 'PDF Link'];
+var ANT_LOCAL_ONLY = ['Folder Link', 'PDF Link', 'IC No', 'Address'];   // IC and address stay with the advisor
 // The PULSE pipeline tabs, in the order a match is preferred
 // (an existing client's CLOSING row wins over an old APPROACH row).
 var ANT_PIPELINE_TABS = ['CLOSING', 'PRESENTATION', 'APPROACH', 'SR'];
@@ -48,8 +50,21 @@ var ANT_CLIENT_HEADERS = [
   'Client ID', 'Advisor ID', 'Name', 'DOB', 'Age', 'Phone', 'Email',
   'Motivation', 'Goals', 'Retire Age', 'Retire Cash / Month', 'Other Goals',
   'Important People', 'Spouse Job', 'Children Ages', 'Parents Depending', 'Other People',
-  'Consent', 'Pipeline Stage', 'Folder Link', 'Created', 'Updated'
+  'Consent', 'Pipeline Stage', 'Folder Link', 'Created', 'Updated',
+  'Occupation', 'Employer', 'Monthly Income', 'IC No', 'Address'
 ];
+
+// Policies the client already has (added after a search, in the CLIENT FILE).
+var ANT_POLICY_HEADERS = [
+  'Policy ID', 'Client ID', 'Advisor ID', 'Client Name', 'Policy No', 'Insurer', 'Plan',
+  'Sum Assured', 'Premium', 'Payment Mode', 'Start Date', 'Next Due', 'Nominee', 'Status', 'Notes', 'Updated'
+];
+var ANT_POLICY_FIELDS = {       // app field → column
+  policyNo: 'Policy No', insurer: 'Insurer', plan: 'Plan', sumAssured: 'Sum Assured', premium: 'Premium',
+  mode: 'Payment Mode', startDate: 'Start Date', nextDue: 'Next Due', nominee: 'Nominee', status: 'Status', notes: 'Notes'
+};
+// Dated notes / meeting log for a client. Kept in the advisor's Sheet only.
+var ANT_NOTE_HEADERS = ['Note ID', 'Client ID', 'Advisor ID', 'Date', 'Note'];
 
 var ANT_ANALYSIS_HEADERS = (function () {
   var h = ['Analysis ID', 'Client ID', 'Advisor ID', 'Client Name', 'Date'];
@@ -252,7 +267,44 @@ function antClientHistory_(id) {
     return { id: r['Offer ID'], date: when(r), slots: slots, pdf: r['PDF Link'] };
   });
   var newest = function (a, b) { return a.date < b.date ? 1 : -1; };
-  return { analyses: analyses.sort(newest), offers: offers.sort(newest) };
+  var tz = Session.getScriptTimeZone();
+  var day = function (v) { return v instanceof Date ? Utilities.formatDate(v, tz, 'yyyy-MM-dd') : String(v || ''); };
+  var policies = antRows_(ANT_POLICIES_SHEET, ANT_POLICY_HEADERS).filter(mine).map(function (r) {
+    var p = { id: r['Policy ID'] };
+    Object.keys(ANT_POLICY_FIELDS).forEach(function (k) {
+      var v = r[ANT_POLICY_FIELDS[k]];
+      p[k] = k === 'startDate' || k === 'nextDue' ? day(v) : String(v === null || v === undefined ? '' : v).replace(/^'/, '');
+    });
+    return p;
+  });
+  var notes = antRows_(ANT_NOTES_SHEET, ANT_NOTE_HEADERS).filter(mine).map(function (r) {
+    return { id: r['Note ID'], date: when(r), note: r['Note'] };
+  });
+  return { analyses: analyses.sort(newest), offers: offers.sort(newest), policies: policies,
+           notes: notes.sort(newest), pulse: antPulseRow_(id) };
+}
+
+// The client's own row in the PULSE tabs (CLOSING / SR …): every filled-in column,
+// so policy number, premium due, payment mode etc. show in the CLIENT FILE.
+function antPulseRow_(id) {
+  try {
+    var c = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', id);
+    var hit = antPipelineFind_(id, c ? String(c.row['Phone']).replace(/^'/, '') : '', c ? c.row['Name'] : '');
+    if (!hit) return null;
+    var sh = hit.sheet, width = sh.getLastColumn(), tz = Session.getScriptTimeZone();
+    var head = sh.getRange(hit.cols._headerRow, 1, 1, width).getValues()[0];
+    var row = sh.getRange(hit.row, 1, 1, width).getValues()[0], fields = [];
+    head.forEach(function (h, i) {
+      h = String(h).trim();
+      var v = row[i];
+      if (!h || v === '' || v === null || h === ANT_PIPELINE_ID_HEADER) return;
+      if (v instanceof Date) v = Utilities.formatDate(v, tz, 'dd/MM/yyyy');
+      fields.push([h, String(v).replace(/^'/, '')]);
+    });
+    return { tab: hit.tab, fields: fields };
+  } catch (e) {
+    return null;
+  }
 }
 
 /** POST ?action=antSaveClient — new client (no clientId) or update. */
@@ -297,7 +349,12 @@ function antSaveClient(data) {
       'Pipeline Stage': pipeline.tab || (existing ? existing.row['Pipeline Stage'] : ''),
       'Folder Link': folderLink,
       'Created': existing ? existing.row['Created'] : now,
-      'Updated': now
+      'Updated': now,
+      'Occupation': b.occupation || '',
+      'Employer': b.employer || '',
+      'Monthly Income': b.income != null ? b.income : '',
+      'IC No': b.icNo ? "'" + String(b.icNo).trim() : '',
+      'Address': b.address || ''
     };
     var rowArr = antHeaderOrder_(sheet, ANT_CLIENT_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; });
 
@@ -463,6 +520,74 @@ function antSaveOffer(data) {
  * one (at the end of that tab). Rows are copied by column title when they
  * move between tabs, so the columns don't need to line up.
  */
+/**
+ * POST ?action=antSavePolicy
+ * { clientId, policy:{id?, policyNo, insurer, plan, sumAssured, premium, mode, startDate, nextDue, nominee, status, notes}, remove? }
+ * Adds or updates one of the client's policies (remove:true deletes it). Copied to the Master.
+ */
+function antSavePolicy(data) {
+  var p = (data && data.policy) || {};
+  if (!data || !data.clientId) return { ok: false, error: 'Save the client first' };
+  var client = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', data.clientId);
+  if (!client) return { ok: false, error: 'Client not found: ' + data.clientId };
+  var lock = pulseLock_();
+  lock.waitLock(20000);
+  try {
+    var sheet = antSheet_(ANT_POLICIES_SHEET, ANT_POLICY_HEADERS);
+    var agentId = antProfile().agentId;
+    var existing = p.id ? antFindRow_(ANT_POLICIES_SHEET, ANT_POLICY_HEADERS, 'Policy ID', p.id) : null;
+    if (data.remove) {
+      if (!existing) return { ok: true };
+      sheet.deleteRow(existing.index);
+      antLog_(agentId, data.clientId, 'Policy deleted', p.id);
+      var gone = antMasterRecord_(existing.row);
+      gone['Status'] = 'Deleted'; gone['Updated'] = antMasterRecord_({ d: new Date() }).d;
+      return { ok: true, master: antSendToMaster_('policy', gone) };
+    }
+    if (!String(p.policyNo || p.plan || p.insurer || '').trim()) return { ok: false, error: 'Enter at least the policy number or plan' };
+    var id = existing ? p.id : antNextId_(sheet, 'P-');
+    var values = { 'Policy ID': id, 'Client ID': data.clientId, 'Advisor ID': agentId, 'Client Name': client.row['Name'], 'Updated': new Date() };
+    Object.keys(ANT_POLICY_FIELDS).forEach(function (k) {
+      var v = p[k] == null ? '' : String(p[k]).trim(), col = ANT_POLICY_FIELDS[k];
+      if (k === 'startDate' || k === 'nextDue') v = antDateFromIso_(v);
+      else if (k === 'sumAssured' || k === 'premium') v = antNum_(v) == null ? v : antNum_(v);
+      else if (k === 'policyNo' && v) v = "'" + v;                     // keep leading zeros
+      values[col] = v;
+    });
+    var rowArr = antHeaderOrder_(sheet, ANT_POLICY_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; });
+    if (existing) sheet.getRange(existing.index, 1, 1, rowArr.length).setValues([rowArr]);
+    else sheet.appendRow(rowArr);
+    antApplyDateFormats_(sheet);
+    antLog_(agentId, data.clientId, existing ? 'Policy updated' : 'Policy added', id + ' ' + (p.policyNo || p.plan || ''));
+    return { ok: true, id: id, master: antSendToMaster_('policy', values) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** POST ?action=antSaveNote { clientId, note } adds a dated note; { clientId, id, remove:true } deletes one. */
+function antSaveNote(data) {
+  if (!data || !data.clientId) return { ok: false, error: 'Save the client first' };
+  var lock = pulseLock_();
+  lock.waitLock(20000);
+  try {
+    var sheet = antSheet_(ANT_NOTES_SHEET, ANT_NOTE_HEADERS);
+    if (data.remove) {
+      var found = antFindRow_(ANT_NOTES_SHEET, ANT_NOTE_HEADERS, 'Note ID', data.id);
+      if (found) sheet.deleteRow(found.index);
+      return { ok: true };
+    }
+    var note = String(data.note || '').trim();
+    if (!note) return { ok: false, error: 'Note is empty' };
+    var id = antNextId_(sheet, 'N-'), now = new Date();
+    var values = { 'Note ID': id, 'Client ID': data.clientId, 'Advisor ID': antProfile().agentId, 'Date': now, 'Note': note };
+    sheet.appendRow(antHeaderOrder_(sheet, ANT_NOTE_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; }));
+    return { ok: true, id: id, date: now.toISOString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function antEnsurePipelineIdColumn_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   ANT_PIPELINE_TABS.forEach(function (n) {
@@ -697,7 +822,7 @@ function antSendAllToMaster() {
   if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
   var counts = { sent: 0, queued: 0 };
   [['client', ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], ['analysis', ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS],
-   ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
+   ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS], ['policy', ANT_POLICIES_SHEET, ANT_POLICY_HEADERS]].forEach(function (t) {
     antRows_(t[1], t[2]).forEach(function (row) { counts[antSendToMaster_(t[0], row)]++; });
   });
   var pipe = antPipelineToMaster_();
@@ -766,7 +891,7 @@ function antRecheckLicence() {
 
 // Dates show as dd/mm/yyyy (same as the PULSE tabs); timestamps add the time.
 var ANT_DATE_FORMATS = {
-  'DOB': 'dd/mm/yyyy', 'Created': 'dd/mm/yyyy hh:mm', 'Updated': 'dd/mm/yyyy hh:mm',
+  'DOB': 'dd/mm/yyyy', 'Start Date': 'dd/mm/yyyy', 'Next Due': 'dd/mm/yyyy', 'Created': 'dd/mm/yyyy hh:mm', 'Updated': 'dd/mm/yyyy hh:mm',
   'Date': 'dd/mm/yyyy hh:mm', 'Time': 'dd/mm/yyyy hh:mm'
 };
 
@@ -914,7 +1039,9 @@ function antRowToClient_(r) {
       retireAge: antNum_(r['Retire Age']), retireCash: antNum_(r['Retire Cash / Month']),
       otherGoals: r['Other Goals'], people: list(r['Important People']), spouseJob: r['Spouse Job'],
       childrenAges: list(r['Children Ages']).map(function (a) { return antNum_(a); }),
-      parentsDepend: r['Parents Depending'], otherPeople: r['Other People']
+      parentsDepend: r['Parents Depending'], otherPeople: r['Other People'],
+      occupation: r['Occupation'] || '', employer: r['Employer'] || '', income: antNum_(r['Monthly Income']),
+      icNo: String(r['IC No'] || '').replace(/^'/, ''), address: r['Address'] || ''
     }
   };
 }
@@ -949,9 +1076,14 @@ function antLog_(agentId, clientId, action, detail) {
 // Runs from the menu, from Send Everything, and every night.
 // ---------------------------------------------------------------------
 function antSendPipelineToMaster() {
-  var ui = SpreadsheetApp.getUi();
-  if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
-  ui.alert('Pipeline clients → Master', antPipelineToMaster_().message, ui.ButtonSet.OK);
+  // Run from the Apps Script editor there is no Sheet pop-up: show the result in the log instead.
+  var ui = null;
+  try { ui = SpreadsheetApp.getUi(); } catch (e) {}
+  var msg = pulseProps_().getProperty(ANT_PROP_MASTER_URL)
+    ? antPipelineToMaster_().message : 'Connect to Master first.';
+  if (ui) ui.alert('Pipeline clients → Master', msg, ui.ButtonSet.OK);
+  else Logger.log('Pipeline clients → Master: ' + msg);
+  return msg;
 }
 
 function antPipelineToMaster_() {

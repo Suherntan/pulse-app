@@ -43,6 +43,23 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .hist .short{color:#C0392B;font-weight:700} .hist .ok{color:#1E8E3E;font-weight:700}
 .hist a.pdf{display:inline-block;margin-top:8px;font-weight:700;color:var(--navy,#0B2545)}
 .hist .none{font-size:13px;color:#5F6673}
+.hist .pol{border:1px solid #E3E6EC;border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+.hist .pol b{font-size:14px}
+.hist .pol .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-top:6px}
+.hist .pol .kv span:nth-child(odd){color:#5F6673}
+.hist .acts{display:flex;gap:8px;margin-top:8px}
+.hist .mini{border:1px solid #D5DAE3;background:#fff;border-radius:8px;padding:6px 12px;font:600 12px var(--body);color:var(--navy);cursor:pointer}
+.hist .mini.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.hist .mini.del{color:#C0392B}
+.hist .pform{border:1.5px solid var(--gold);background:#FFFBF2;border-radius:12px;padding:12px;margin-bottom:8px}
+.hist .pform .grid{gap:8px}
+.hist .pform input,.hist .pform select{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font:500 14px var(--body);background:#fff}
+.hist .pform label{font-size:12px;font-weight:600;color:var(--text-light)}
+.hist .note-add{display:flex;gap:8px;margin-bottom:8px}
+.hist .note-add textarea{flex:1;min-height:44px;padding:9px;border:1px solid var(--border);border-radius:8px;font:500 14px var(--body)}
+.hist .nt{border-left:3px solid var(--gold);padding:6px 10px;margin-bottom:6px;font-size:13px;display:flex;gap:8px;justify-content:space-between}
+.hist .nt small{color:#5F6673;display:block}
+.hist .nt button{border:0;background:none;color:#C0392B;cursor:pointer;font-size:16px}
 .card{background:var(--card);border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(11,37,69,.04),0 6px 18px rgba(11,37,69,.06)}
 .card h2{font-family:var(--head);font-weight:600;font-size:17px;letter-spacing:.1em;color:var(--navy);display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .card h2 .n{width:28px;height:28px;border-radius:8px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--gold-dark)}
@@ -175,6 +192,18 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 
 
     <section class="card">
+      <h2><span class="n">D</span>WORK &amp; PERSONAL <span class="opt">optional</span></h2>
+      <div class="grid">
+        <div class="fg"><label for="occupation">Occupation</label><input id="occupation" placeholder="e.g. Engineer"></div>
+        <div class="fg"><label for="employer">Employer</label><input id="employer" placeholder="Company name"></div>
+        <div class="fg"><label for="income">Monthly income (RM)</label><input id="income" class="money" inputmode="numeric" placeholder="e.g. 6,000"></div>
+        <div class="fg"><label for="icNo">IC number</label><input id="icNo" inputmode="numeric" placeholder="e.g. 900101-14-5678"></div>
+        <div class="fg full"><label for="address">Address</label><textarea id="address" placeholder="Home address"></textarea></div>
+      </div>
+      <div class="note">IC number and address stay in your own Google Sheet – they are not copied to the Master.</div>
+    </section>
+
+    <section class="card">
       <label class="consent" id="consentWrap"><input type="checkbox" id="consent">
         <span>Client agrees that these details are kept by the agency for financial planning and follow-up.</span></label>
     </section>
@@ -286,6 +315,9 @@ function setBackground(b = {}) {
   $('ages').innerHTML = ''; setKids((b.childrenAges || []).length, b.childrenAges || []);
   $('parentsDep').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === b.parentsDepend ? 'true' : 'false'));
   $('otherPeople').value = b.otherPeople || '';
+  $('occupation').value = b.occupation || ''; $('employer').value = b.employer || '';
+  $('income').value = b.income != null ? Math.round(b.income).toLocaleString('en-US') : '';
+  $('icNo').value = b.icNo || ''; $('address').value = b.address || '';
   updateFollowUps();
 }
 function getBackground() {
@@ -301,7 +333,12 @@ function getBackground() {
     spouseJob: people.includes('spouse') ? $('spouseJob').value.trim() : '',
     childrenAges: kidsAsked ? [...$('ages').querySelectorAll('input')].map(i => toNum(i.value)) : [],
     parentsDepend: people.includes('parents') ? parentsDep() : '',
-    otherPeople: $('otherPeople').value.trim()
+    otherPeople: $('otherPeople').value.trim(),
+    occupation: $('occupation').value.trim(),
+    employer: $('employer').value.trim(),
+    income: toNum($('income').value),
+    icNo: $('icNo').value.trim(),
+    address: $('address').value.trim()
   };
 }
 
@@ -365,11 +402,105 @@ function renderHistory(c) {
   const offers = h.offers.map((o, i) => `<details${i ? '' : ' open'}><summary>${day(o.date)} <small>· ${esc(o.id)}</small></summary>
       <table><tr><th></th><th>PLAN</th><th>BASIC LIFE</th><th>ANNUAL</th></tr>${o.slots.map(x =>
         `<tr><td>${esc(x.label)}</td><td>${esc(x.plan || '–')}</td><td>${money(x.basicLife)}</td><td>${money(x.annual)}</td></tr>`).join('')}</table>${pdf(o.pdf)}</details>`).join('');
+  h.policies = h.policies || []; h.notes = h.notes || [];
+  fileData = h; fileClient = c.clientId;
+  const pulse = h.pulse && h.pulse.fields && h.pulse.fields.length ? `<h3>IN YOUR PULSE SHEET · ${esc(h.pulse.tab)}</h3>
+    <div class="pol"><div class="kv">${h.pulse.fields.map(([k, v]) => `<span>${esc(k)}</span><span>${esc(v)}</span>`).join('')}</div></div>` : '';
   box.innerHTML = `<h2>CLIENT FILE</h2>
+    <h3>POLICIES (${h.policies.length})</h3><div id="pols">${policiesHtml()}</div>
+    <button type="button" class="mini gold" data-act="addPol">+ ADD POLICY</button>
+    <h3>NOTES / MEETING LOG (${h.notes.length})</h3>
+    <div class="note-add"><textarea id="noteIn" placeholder="e.g. Met today – wants to review medical card next month"></textarea><button type="button" class="mini gold" data-act="addNote">ADD</button></div>
+    ${h.notes.map(n => `<div class="nt"><div><small>${day(n.date)}</small>${esc(n.note).replace(/\n/g, '<br>')}</div><button type="button" data-act="delNote" data-id="${esc(n.id)}" aria-label="Delete note">×</button></div>`).join('')}
+    ${pulse}
     <h3>A-N-T ANALYSIS (${h.analyses.length})</h3>${analyses || '<p class="none">No analysis saved yet.</p>'}
     <h3>OFFER DOCUMENTS (${h.offers.length})</h3>${offers || '<p class="none">No offer document saved yet.</p>'}`;
   box.hidden = false;
 }
+
+// ---- Policies & notes in the CLIENT FILE (saved straight away, separate from SAVE CLIENT) ----
+let fileData = null, fileClient = '';
+const POL_FIELDS = [['policyNo', 'Policy no.'], ['insurer', 'Insurer'], ['plan', 'Plan name'], ['sumAssured', 'Sum assured (RM)', 'money'],
+  ['premium', 'Premium (RM)', 'money'], ['mode', 'Payment mode', 'mode'], ['startDate', 'Start date', 'date'], ['nextDue', 'Next due date', 'date'],
+  ['nominee', 'Nominee / beneficiary'], ['status', 'Status', 'status'], ['notes', 'Notes', 'full']];
+const OPTS = {mode: ['', 'Monthly', 'Quarterly', 'Half-yearly', 'Yearly', 'Single'], status: ['In force', 'Lapsed', 'Surrendered', 'Matured', 'Claimed']};
+const rm = v => v === '' || v == null || isNaN(Number(v)) ? esc(v || '') : 'RM ' + Number(v).toLocaleString('en-US');
+const dmy = iso => isoToDmy(iso) || esc(iso || '');
+function policiesHtml(editId) {
+  const list = fileData.policies.map(p => p.id === editId ? policyForm(p) : `<div class="pol"><b>${esc(p.plan || 'Policy')}</b>${p.insurer ? ' · ' + esc(p.insurer) : ''}${p.status && p.status !== 'In force' ? ' · <span class="short">' + esc(p.status) + '</span>' : ''}
+      <div class="kv">${p.policyNo ? `<span>Policy no.</span><span>${esc(p.policyNo)}</span>` : ''}${p.sumAssured ? `<span>Sum assured</span><span>${rm(p.sumAssured)}</span>` : ''}
+      ${p.premium || p.mode ? `<span>Premium</span><span>${[p.premium ? rm(p.premium) : '', esc(p.mode || '')].filter(Boolean).join(' · ')}</span>` : ''}${p.startDate ? `<span>Start</span><span>${dmy(p.startDate)}</span>` : ''}
+      ${p.nextDue ? `<span>Next due</span><span>${dmy(p.nextDue)}</span>` : ''}${p.nominee ? `<span>Nominee</span><span>${esc(p.nominee)}</span>` : ''}${p.notes ? `<span>Notes</span><span>${esc(p.notes)}</span>` : ''}</div>
+      <div class="acts"><button type="button" class="mini" data-act="editPol" data-id="${esc(p.id)}">EDIT</button><button type="button" class="mini del" data-act="delPol" data-id="${esc(p.id)}">DELETE</button></div></div>`).join('');
+  return (editId === 'new' ? policyForm({status: 'In force'}) : '') + (list || (editId === 'new' ? '' : '<p class="none">No policy added yet.</p>'));
+}
+function policyForm(p) {
+  const field = ([k, label, type]) => {
+    const v = p[k] ?? '';
+    const input = OPTS[type] ? `<select data-f="${k}">${OPTS[type].map(o => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('')}</select>`
+      : type === 'date' ? `<input data-f="${k}" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" value="${esc(isoToDmy(v) || v)}">`
+      : `<input data-f="${k}"${type === 'money' ? ' inputmode="decimal"' : ''} value="${esc(v)}">`;
+    return `<div class="${type === 'full' ? 'full' : ''}"><label>${label}</label>${input}</div>`;
+  };
+  return `<div class="pform" data-pid="${esc(p.id || '')}"><div class="grid">${POL_FIELDS.map(field).join('')}</div>
+    <div class="acts"><button type="button" class="mini gold" data-act="savePol">SAVE POLICY</button><button type="button" class="mini" data-act="cancelPol">CANCEL</button></div></div>`;
+}
+async function fileCall(action, body) {
+  if (!LIVE) throw new Error('Demo only – connect your Google Sheet to save');
+  return AntApi.post(action, Object.assign({clientId: fileClient}, body));
+}
+$('history').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  try {
+    if (act === 'addPol') { $('pols').innerHTML = policiesHtml('new'); return; }
+    if (act === 'editPol') { $('pols').innerHTML = policiesHtml(id); return; }
+    if (act === 'cancelPol') { $('pols').innerHTML = policiesHtml(); return; }
+    if (act === 'savePol') {
+      const f = b.closest('.pform'), p = {id: f.dataset.pid};
+      f.querySelectorAll('[data-f]').forEach(i => { p[i.dataset.f] = i.value.trim(); });
+      for (const k of ['startDate', 'nextDue']) {
+        if (p[k] && !dmyToIso(p[k])) { toast('Please type the date as dd/mm/yyyy'); return; }
+        p[k] = dmyToIso(p[k]) || '';
+      }
+      p.sumAssured = p.sumAssured.replace(/[^0-9.]/g, ''); p.premium = p.premium.replace(/[^0-9.]/g, '');
+      if (!p.policyNo && !p.plan && !p.insurer) { toast('Enter at least the policy number or plan'); return; }
+      b.disabled = true; b.textContent = 'SAVING…';
+      const r = await fileCall('antSavePolicy', {policy: p});
+      p.id = r.id;
+      const i = fileData.policies.findIndex(x => x.id === p.id);
+      if (i > -1) fileData.policies[i] = p; else fileData.policies.push(p);
+      renderHistory({clientId: fileClient, history: fileData});
+      toast('Policy saved' + (r.master === 'sent' ? ' · copied to Master ✓' : ''));
+    }
+    if (act === 'delPol') {
+      if (!confirm('Delete this policy?')) return;
+      await fileCall('antSavePolicy', {policy: {id}, remove: true});
+      fileData.policies = fileData.policies.filter(x => x.id !== id);
+      renderHistory({clientId: fileClient, history: fileData}); toast('Policy deleted');
+    }
+    if (act === 'addNote') {
+      const note = $('noteIn').value.trim(); if (!note) return;
+      b.disabled = true;
+      const r = await fileCall('antSaveNote', {note});
+      fileData.notes.unshift({id: r.id, date: r.date, note});
+      renderHistory({clientId: fileClient, history: fileData}); toast('Note added');
+    }
+    if (act === 'delNote') {
+      if (!confirm('Delete this note?')) return;
+      await fileCall('antSaveNote', {id, remove: true});
+      fileData.notes = fileData.notes.filter(x => x.id !== id);
+      renderHistory({clientId: fileClient, history: fileData});
+    }
+  } catch (err) { toast(err.message); b.disabled = false; }
+});
+// Date boxes in the policy form: slashes added while typing.
+$('history').addEventListener('input', e => {
+  const i = e.target;
+  if (!i.matches('[data-f="startDate"],[data-f="nextDue"]') || (e.inputType || '').startsWith('delete')) return;
+  const d = i.value.replace(/\D/g, '').slice(0, 8);
+  i.value = d.length > 4 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+});
 
 function fill(c) {
   if (c.history || c.clientId !== currentId) renderHistory(c);   // keep the file shown after a save
@@ -429,6 +560,7 @@ $('ff').addEventListener('submit', async e => {
       currentId = record.clientId = r.clientId;
       $('cid').textContent = 'EDIT · ' + r.clientId;
       $('folderLink').href = r.folderUrl; $('folderLink').style.display = 'block';
+      if ($('history').hidden) renderHistory({clientId: r.clientId, history: {analyses: [], offers: [], policies: [], notes: []}});   // new client: policies & notes can be added now
       $('savedMsg').textContent = record.name + ' (' + r.clientId + ') saved to your Google Sheet' +
         (r.pipeline ? ' · ' + r.pipeline : '') +
         (r.master === 'sent' ? ' · copied to Master ✓' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '.';

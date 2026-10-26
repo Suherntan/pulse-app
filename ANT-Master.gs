@@ -22,6 +22,7 @@ var M_ANALYSIS = 'ANALYSIS';
 var M_OFFERS = 'OFFERS';
 var M_LOG = 'LOG';
 var M_PIPELINE = 'PIPELINE';
+var M_POLICIES = 'POLICIES';
 // Old PULSE pipeline clients (APPROACH / PRESENTATION / CLOSING / SR tabs), one row per advisor + client.
 var M_PIPELINE_HEADERS = ['Advisor ID', 'Stage', 'Name', 'Phone', 'Pipeline Key', 'Received'];
 var M_AGENT_HEADERS = ['Advisor ID', 'Advisor Name', 'Phone', 'Secret Key', 'Active', 'Trial Ends', 'Added', 'Last Received'];
@@ -36,7 +37,8 @@ var M_BACKUP_KEEP = 8;
 var M_TYPES = {
   client:   { sheet: M_CLIENTS,  idKey: 'Client ID',   headers: ['Master ID', 'Advisor ID', 'Client ID', 'Received'] },
   analysis: { sheet: M_ANALYSIS, idKey: 'Analysis ID', headers: ['Master ID', 'Master Client ID', 'Advisor ID', 'Analysis ID', 'Client ID', 'Received'] },
-  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID',    headers: ['Master ID', 'Master Client ID', 'Advisor ID', 'Offer ID', 'Client ID', 'Received'] }
+  offer:    { sheet: M_OFFERS,   idKey: 'Offer ID',    headers: ['Master ID', 'Master Client ID', 'Advisor ID', 'Offer ID', 'Client ID', 'Received'] },
+  policy:   { sheet: M_POLICIES, idKey: 'Policy ID',   headers: ['Master ID', 'Master Client ID', 'Advisor ID', 'Policy ID', 'Client ID', 'Received'] }
 };
 function mMasterId_(agentId, id) { return id ? agentId + '-' + id : ''; }
 

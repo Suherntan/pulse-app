@@ -759,6 +759,10 @@ function doPost(e) {
         return jsonResponse(antSaveAnalysis(data));
       case 'antSaveOffer':
         return jsonResponse(antSaveOffer(data));
+      case 'antSavePolicy':
+        return jsonResponse(antSavePolicy(data));
+      case 'antSaveNote':
+        return jsonResponse(antSaveNote(data));
       default:
         return jsonResponse({ error: 'Unknown action: ' + action });
     }
