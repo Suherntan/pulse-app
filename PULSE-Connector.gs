@@ -24,6 +24,18 @@ function use_() {
   });
 }
 
+// Google only asks for permissions it sees in THIS file, so this names every
+// service the library uses. Run once after setup: choose pulseAuthorize > Run > Allow.
+function pulseAuthorize() {
+  UrlFetchApp.getRequest('https://script.google.com');   // Master Sheet, Facebook, Instagram, LinkedIn
+  DriveApp.getRootFolder();                               // client folders, PDFs, slide pictures
+  SpreadsheetApp.getActiveSpreadsheet();
+  ScriptApp.getProjectTriggers();                         // daily reminders, auto-post timer
+  MailApp.getRemainingDailyQuota();                       // email reminders
+  GmailApp.getAliases();                                  // birthday / client emails
+  return 'PULSE permissions OK';
+}
+
 // The PULSE app (web link)
 function doGet(e) { use_(); return PULSE.doGet(e); }
 function doPost(e) { use_(); return PULSE.doPost(e); }

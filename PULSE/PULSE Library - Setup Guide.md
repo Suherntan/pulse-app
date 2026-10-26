@@ -52,3 +52,6 @@ For now Su updates **two places** every time: her own Sheet (Code.gs, ANT.gs, So
 
 ## If PULSE stops connecting after pasting code (26 Oct 2026 – fixed this way)
 Re-paste **all 4 files** from GitHub master into the Sheet's Apps Script – **Code.gs, ANT.gs, Social.gs, Leads.gs** (copy button on each GitHub page → Ctrl+A → Ctrl+V → Save). Keep `appsscript.json` as it is. Run **socialStatus** once (allow if asked) → **Deploy → Manage deployments → ✏️ → New version → Deploy** (not "New deployment"). Likely cause: one file was pasted into the wrong file or only part of the update was pasted.
+
+## Advisor on the Library gets "You do not have permission to call UrlFetchApp…" (26 Oct 2026)
+Google only asks for permissions it sees in the advisor's own Sheet code. Fix: replace the advisor's Code.gs with the latest **PULSE-Connector.gs** (it now has `pulseAuthorize`) → Save → choose **pulseAuthorize** → ▶ Run → Review permissions → Allow → Deploy → Manage deployments → ✏️ → New version → Deploy. Then retry (e.g. A-N-T → Connect to Master).
