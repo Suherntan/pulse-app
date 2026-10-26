@@ -49,3 +49,6 @@ For now Su updates **two places** every time: her own Sheet (Code.gs, ANT.gs, So
 | Data, settings, timers | Own Sheet | Stay in own Sheet (unchanged) |
 
 **When there is time (≈10 min):** make sure the Library has the latest Code.gs, ANT.gs, Social.gs, Leads.gs → Notepad backup of Su's current code → do **Part B** above on Su's own Sheet (Libraries + → Script ID → Version **HEAD**, Identifier PULSE → delete ANT/Leads/Social → Code.gs = PULSE-Connector.gs → run onOpen → Deploy → New version) → test SAVE CLIENT. Ask Claude: "switch me to the library".
+
+## If PULSE stops connecting after pasting code (26 Oct 2026 – fixed this way)
+Re-paste **all 4 files** from GitHub master into the Sheet's Apps Script – **Code.gs, ANT.gs, Social.gs, Leads.gs** (copy button on each GitHub page → Ctrl+A → Ctrl+V → Save). Keep `appsscript.json` as it is. Run **socialStatus** once (allow if asked) → **Deploy → Manage deployments → ✏️ → New version → Deploy** (not "New deployment"). Likely cause: one file was pasted into the wrong file or only part of the update was pasted.
