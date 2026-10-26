@@ -14,8 +14,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:#E9E6DF;color:var(--text);-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.tools{position:sticky;top:0;z-index:5;display:flex;gap:10px;justify-content:center;padding:12px 16px;background:#E9E6DF}
-.tools button,.tools a{border:0;border-radius:12px;padding:12px 18px;font:700 14px var(--head);letter-spacing:.1em;cursor:pointer;text-decoration:none}
+.tools{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:12px 16px;background:#E9E6DF}
+.tools button,.tools a,.tools label{border:0;border-radius:12px;padding:12px 18px;font:700 14px var(--head);letter-spacing:.1em;cursor:pointer;text-decoration:none}
 .tools .primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark)}
 .tools .ghost{background:#fff;color:var(--navy)}
 .tools button:disabled{opacity:.6;cursor:wait}
@@ -24,7 +24,7 @@ body{font-family:var(--body);background:#E9E6DF;color:var(--text);-webkit-print-
 body.capturing{overflow:hidden}
 body.capturing .page{width:794px;min-height:1123px;height:1123px;margin:0;box-shadow:none}
 body.capturing .notes:empty::before{content:''}
-.page{width:210mm;min-height:297mm;margin:0 auto 24px;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.page{break-after:page;width:210mm;min-height:297mm;margin:0 auto 24px;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.15);display:flex;flex-direction:column}
 .band{background:var(--navy);color:#fff;padding:22px 28px;display:flex;align-items:center;gap:20px}
 .band img{height:56px}
 .band h1{font-family:var(--head);font-weight:700;font-size:28px;letter-spacing:.14em}
@@ -80,10 +80,14 @@ tr.pick td{background:#F3AF3D22;font-weight:700}
   body:not(.capturing) .pyr{max-width:220px;margin:0 auto}
   body:not(.capturing) .prio{grid-template-columns:1fr}
 }
+.att-body{flex:1;display:flex;align-items:center;justify-content:center;padding:18px 28px;min-height:0}
+.att-body img{max-width:100%;max-height:250mm;object-fit:contain;border:1px solid var(--line)}
+.att-del{margin-left:auto;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer}
+body.capturing .att-del{display:none}
 @page{size:A4;margin:0}
 @media print{
   body{background:#fff}
-  .tools{display:none}
+  .tools,.att-del{display:none}
   .page{box-shadow:none;margin:0;width:210mm;height:297mm}
   .notes:empty::before{content:''}
 }
@@ -93,6 +97,7 @@ tr.pick td{background:#F3AF3D22;font-weight:700}
 <div class="tools">
   <a class="ghost" href="../index.html">PULSE</a>
   <a class="ghost" href="slides.html">← SLIDES</a>
+  <label class="ghost" style="cursor:pointer">+ PHOTO / PDF<input type="file" id="attIn" accept="image/*,application/pdf" multiple hidden></label>
   <button class="ghost" id="printBtn">DOWNLOAD PDF</button>
   <button class="primary" id="driveBtn" style="display:none">SAVE TO DRIVE</button>
   <a class="ghost" href="offer.html">OFFER →</a>
@@ -144,17 +149,19 @@ tr.pick td{background:#F3AF3D22;font-weight:700}
   </div>
   <div class="foot"><span id="prep">ANT Wealth System · Analyze. Navigate. Transform.</span><span id="ref"></span></div>
 </article>
+<div id="atts"></div>
 
 <script src="ant-api.js"></script>
 <script>
 // Top → bottom of the pyramid; priority runs the other way (most urgent first).
+// "Ocean to sunset": deep, clearly different colours (not neon) so each area stands out.
 const AREAS = [
-  {k:'investment',      name:'INVESTMENT',       c:'#1B998B'},
-  {k:'education',       name:'EDUCATION',        c:'#2E86AB'},
-  {k:'death',           name:'DEATH',            c:'#C9962B'},
-  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#E67E22'},
-  {k:'disability',      name:'DISABILITY',       c:'#D35400'},
-  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#C0392B'}
+  {k:'investment',      name:'INVESTMENT',       c:'#0F6E7A'},
+  {k:'education',       name:'EDUCATION',        c:'#1F4E8C'},
+  {k:'death',           name:'DEATH',            c:'#6A3D7C'},
+  {k:'criticalIllness', name:'CRITICAL ILLNESS', c:'#D08C1F'},
+  {k:'disability',      name:'DISABILITY',       c:'#C1440E'},
+  {k:'hospitalization', name:'HOSPITALIZATION',  c:'#8E1B2C'}
 ];
 const $ = id => document.getElementById(id);
 const fmt = n => n === null || n === undefined ? '–' : Math.round(n).toLocaleString('en-US');
@@ -208,12 +215,13 @@ $('rows').innerHTML = AREAS.map(a => {
     <td class="gap ${cls}">${gap === null ? '–' : gap > 0 ? fmt(gap) : '✓'}</td><td>${fmt(goal)}</td></tr>`;
 }).join('');
 
-// Mini pyramid, coloured tiers; the client's priority areas get a gold outline
+// Mini pyramid, coloured tiers; the client's priority areas get a navy outline
 const H = 240, W = 210, N = AREAS.length, gapPx = 4, th = (H - gapPx * (N - 1)) / N;
 const tiers = AREAS.map((a, i) => {
   const y1 = i * (th + gapPx), y2 = y1 + th;
   const w1 = W * y1 / H, w2 = W * y2 / H, cx = W / 2;
-  return `<polygon data-k="${a.k}" points="${cx - w1 / 2},${y1} ${cx + w1 / 2},${y1} ${cx + w2 / 2},${y2} ${cx - w2 / 2},${y2}" fill="${a.c}"/>`;
+  const pts = `${cx - w1 / 2},${y1} ${cx + w1 / 2},${y1} ${cx + w2 / 2},${y2} ${cx - w2 / 2},${y2}`;
+  return `<polygon data-k="${a.k}" points="${pts}" fill="${a.c}"/><polygon data-hl="${a.k}" points="${pts}" fill="none" stroke="#fff" stroke-width="2" visibility="hidden"/>`;
 }).join('');
 $('pyr').innerHTML = `<svg viewBox="-6 0 ${W + 12} ${H}" role="img" aria-label="L.I.F.E pyramid">${tiers}</svg>`;
 
@@ -231,10 +239,12 @@ function renderPrio() {
       `<span class="${g !== null && g <= 0 ? 'ok' : ''}">${g === null ? '–' : g > 0 ? fmt(g) : '✓'}</span></div>`;
   }).join('');
   document.querySelectorAll('#rows tr').forEach(tr => tr.classList.toggle('pick', picks.includes(tr.dataset.k)));
-  document.querySelectorAll('#pyr polygon').forEach(pg => {
+  // Navy outline with a thin white line inside, so it shows on dark tiers too.
+  document.querySelectorAll('#pyr polygon[data-k]').forEach(pg => {
     const on = picks.includes(pg.dataset.k);
-    pg.setAttribute('stroke', on ? '#F3AF3D' : 'none'); pg.setAttribute('stroke-width', on ? '5' : '0');
+    pg.setAttribute('stroke', on ? '#0B2545' : 'none'); pg.setAttribute('stroke-width', on ? '7' : '0');
   });
+  document.querySelectorAll('#pyr polygon[data-hl]').forEach(pg => pg.setAttribute('visibility', picks.includes(pg.dataset.hl) ? 'visible' : 'hidden'));
 }
 $('prio').onclick = e => {
   const d = e.target.closest('[data-k]'); if (!d) return;
@@ -249,6 +259,54 @@ renderPrio();
 // ---- Save: download on this device, or into the client's Drive folder ----
 document.getElementById('printBtn').onclick = () => window.print();
 
+// ---- Attachments: photos / PDF pages added as extra A4 pages (screen, print and PDF) ----
+const atts = [];   // {name, src} – one entry per picture or PDF page (kept until the page is closed)
+function renderAtts() {
+  $('atts').innerHTML = atts.map((a, i) => `<article class="page att">
+    <header class="band"><h1 style="font-size:20px">ATTACHMENT <span>${i + 1}</span></h1>
+      <div class="date" style="margin-left:16px;text-align:left">${a.name.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</div>
+      <button class="att-del" data-del="${i}" aria-label="Remove attachment ${i + 1}">✕ Remove</button></header>
+    <div class="att-body"><img src="${a.src}" alt="Attachment ${i + 1}"></div>
+    <div class="foot"><span>${$('prep').textContent}</span><span>${$('ref').textContent}</span></div></article>`).join('');
+}
+$('atts').onclick = e => { const d = e.target.closest('[data-del]'); if (d) { atts.splice(+d.dataset.del, 1); renderAtts(); } };
+// Shrink big photos so the PDF stays small enough for Drive.
+function toJpeg(canvasOrImg, w, h) {
+  const k = Math.min(1, 1600 / Math.max(w, h)), c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(canvasOrImg, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+$('attIn').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  for (const f of files) {
+    try {
+      status.textContent = 'Adding ' + f.name + '…';
+      if (f.type === 'application/pdf') {
+        if (!window.pdfjsLib) await loadScript('vendor/pdf.min.js');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+        const doc = await pdfjsLib.getDocument({data: await f.arrayBuffer(), isEvalSupported: false}).promise;
+        const n = Math.min(doc.numPages, 10);
+        for (let i = 1; i <= n; i++) {
+          const pg = await doc.getPage(i), vp = pg.getViewport({scale: 2});
+          const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+          await pg.render({canvasContext: c.getContext('2d'), viewport: vp}).promise;
+          atts.push({name: f.name + (doc.numPages > 1 ? ` (page ${i} of ${doc.numPages})` : ''), src: toJpeg(c, c.width, c.height)});
+        }
+        if (doc.numPages > 10) alert('Only the first 10 pages of ' + f.name + ' were added.');
+      } else if (f.type.startsWith('image/')) {
+        const url = URL.createObjectURL(f), img = new Image();
+        await new Promise((ok, fail) => { img.onload = ok; img.onerror = () => fail(new Error('this picture type cannot be read – save it as JPG/PNG')); img.src = url; });
+        atts.push({name: f.name, src: toJpeg(img, img.naturalWidth, img.naturalHeight)});
+        URL.revokeObjectURL(url);
+      }
+      status.textContent = '';
+    } catch (err) { status.textContent = 'Could not add ' + f.name + ': ' + err.message; }
+  }
+  renderAtts();
+  if (atts.length) $('atts').lastElementChild.scrollIntoView({behavior: 'smooth'});
+};
+
 function loadScript(src) {
   return new Promise((ok, fail) => { const t = document.createElement('script'); t.src = src; t.onload = ok; t.onerror = () => fail(new Error('Could not load ' + src)); document.head.appendChild(t); });
 }
@@ -259,9 +317,13 @@ async function makePdfBase64() {
   document.body.classList.add('capturing');
   try {
     await document.fonts?.ready;
-    const canvas = await html2canvas(document.querySelector('.page'), {scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: 794});
     const pdf = new jspdf.jsPDF({unit: 'mm', format: 'a4'});
-    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+    const pages = [...document.querySelectorAll('.page')];   // analysis + attachment pages
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], {scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: 794});
+      if (i) pdf.addPage('a4', 'portrait');
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+    }
     return pdf.output('datauristring').split(',')[1];
   } finally {
     document.body.classList.remove('capturing');

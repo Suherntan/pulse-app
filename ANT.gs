@@ -227,7 +227,31 @@ function antSearchPipeline_(q, matches, antRows) {
 function antGetClient(id) {
   var found = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', id);
   if (!found) return { ok: false, error: 'Client not found: ' + id };
-  return { ok: true, client: antRowToClient_(found.row) };
+  var client = antRowToClient_(found.row);
+  client.history = antClientHistory_(id);
+  return { ok: true, client: client };
+}
+
+// Every saved A-N-T Analysis and Offer Document for one client, newest first.
+function antClientHistory_(id) {
+  var mine = function (r) { return String(r['Client ID']) === String(id); };
+  var when = function (r) { var d = r['Date']; return d instanceof Date ? d.toISOString() : String(d || ''); };
+  var analyses = antRows_(ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS).filter(mine).map(function (r) {
+    var life = {};
+    ANT_AREAS.forEach(function (k) {
+      var l = ANT_AREA_LABELS[k];
+      life[k] = { current: r[l + ' Current'], goal: r[l + ' Goal'], gap: r[l + ' Gap'] };
+    });
+    return { id: r['Analysis ID'], date: when(r), life: life, totalGap: r['Total Gap'], notes: r['Notes'], pdf: r['PDF Link'] };
+  });
+  var offers = antRows_(ANT_OFFERS_SHEET, ANT_OFFER_HEADERS).filter(mine).map(function (r) {
+    var slots = ANT_OFFER_SLOTS.map(function (s) {
+      return { label: s[1], plan: r[s[1] + ' Plan'], basicLife: r[s[1] + ' Basic Life'], annual: r[s[1] + ' Annual Premium'] };
+    }).filter(function (x) { return String(x.plan || x.basicLife || x.annual).trim(); });
+    return { id: r['Offer ID'], date: when(r), slots: slots, pdf: r['PDF Link'] };
+  });
+  var newest = function (a, b) { return a.date < b.date ? 1 : -1; };
+  return { analyses: analyses.sort(newest), offers: offers.sort(newest) };
 }
 
 /** POST ?action=antSaveClient — new client (no clientId) or update. */

@@ -36,3 +36,16 @@ Links: [[Advisor Trial - Taking Back PULSE]] · [[PULSE Trial Agreement (draft)]
 - Google only lets non-editors use a fixed **version** of a library, so each advisor must move to the new version after an update (step 2 above).
 - Library calls are a little slower (about +1 second).
 - **Not yet tested live** – try it on **Stevern's** Sheet first, keep the Notepad backup until it works.
+
+## To do later: move Su's own Sheet onto the Library (decided 26 Oct 2026 – not yet)
+For now Su updates **two places** every time: her own Sheet (Code.gs, ANT.gs, Social.gs, Leads.gs) **and** the PULSE Library (for Stevern / advisors).
+
+| | Own copy (now) | Linked to Library (later) |
+|---|---|---|
+| Each update | Paste twice (own Sheet + Library) | Paste once (Library) |
+| Su's Sheet after an update | Deploy → New version | Library version **HEAD (development mode)** → just Deploy → New version |
+| If the Library breaks | Su still works | Everyone on that version affected (fix = paste again) |
+| Speed | Normal | ~1 s slower per action |
+| Data, settings, timers | Own Sheet | Stay in own Sheet (unchanged) |
+
+**When there is time (≈10 min):** make sure the Library has the latest Code.gs, ANT.gs, Social.gs, Leads.gs → Notepad backup of Su's current code → do **Part B** above on Su's own Sheet (Libraries + → Script ID → Version **HEAD**, Identifier PULSE → delete ANT/Leads/Social → Code.gs = PULSE-Connector.gs → run onOpen → Deploy → New version) → test SAVE CLIENT. Ask Claude: "switch me to the library".
