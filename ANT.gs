@@ -949,9 +949,14 @@ function antLog_(agentId, clientId, action, detail) {
 // Runs from the menu, from Send Everything, and every night.
 // ---------------------------------------------------------------------
 function antSendPipelineToMaster() {
-  var ui = SpreadsheetApp.getUi();
-  if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
-  ui.alert('Pipeline clients → Master', antPipelineToMaster_().message, ui.ButtonSet.OK);
+  // Run from the Apps Script editor there is no Sheet pop-up: show the result in the log instead.
+  var ui = null;
+  try { ui = SpreadsheetApp.getUi(); } catch (e) {}
+  var msg = pulseProps_().getProperty(ANT_PROP_MASTER_URL)
+    ? antPipelineToMaster_().message : 'Connect to Master first.';
+  if (ui) ui.alert('Pipeline clients → Master', msg, ui.ButtonSet.OK);
+  else Logger.log('Pipeline clients → Master: ' + msg);
+  return msg;
 }
 
 function antPipelineToMaster_() {

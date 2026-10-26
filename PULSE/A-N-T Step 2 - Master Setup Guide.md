@@ -75,3 +75,4 @@ Before **Connect to Master**: their Code.gs must be the latest **PULSE-Connector
 - Same client (same phone – or same name if no phone) = **same row**: when a client moves stage, the row's Stage is updated (no duplicates). Each advisor's clients stay separate.
 - Sent by: **A-N-T → Send Pipeline Clients to Master** (any time), **Send Everything to Master**, and **automatically every night** (with the nightly re-send) – so the Master stays up to date.
 - Needs: new **ANT-Master.gs** in the Master Sheet (then Deploy → ✏️ → New version), new **ANT.gs** in Su's Sheet + the PULSE Library, new **PULSE-Connector.gs** for Library advisors (Stevern) – it adds the menu item.
+- Menu item missing? Reload the Sheet (F5). Or in Apps Script choose **antSendPipelineToMaster → ▶ Run**; the result shows in the **Execution log** at the bottom (fixed 26 Oct: it used to fail with "Cannot call SpreadsheetApp.getUi() from this context").
