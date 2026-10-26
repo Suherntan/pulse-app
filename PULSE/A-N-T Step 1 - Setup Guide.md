@@ -157,3 +157,12 @@ To remove a client completely:
 - **A-N-T Analysis page:** TOTAL row removed; the red dots on the pyramid removed. In **PRIORITY** the advisor taps the areas the client wants first (numbered in tap order, gold highlight, also highlighted in the table and pyramid). In the saved PDF only the picked areas show; if none is picked, all areas show.
 - **24 Oct 2026 – A-N-T Analysis:** pyramid uses deep, clearly different colours – "Ocean to sunset" – teal, royal blue, plum, amber, rust, crimson; the client's priority areas get a **navy** outline (thin white line inside so it shows on dark tiers). **+ PHOTO / PDF** adds references (photos, or up to 10 pages of a PDF) as extra A4 pages after the analysis – they show on screen, in DOWNLOAD PDF and in SAVE TO DRIVE. ✕ Remove takes one out. Attachments are not kept after the page is closed – add them just before saving.
 - **26 Oct 2026 – Client file:** finding an existing client in Fact-Find now also shows a **CLIENT FILE** card: every saved A-N-T Analysis (date, L.I.F.E table, notes, PDF link) and every Offer Document (plans, basic life, annual premium, PDF link), newest first. Needs the new **ANT.gs** (and the PULSE Library for advisors).
+
+## Client file: policies, notes, work & personal (26 Oct 2026)
+- Search a client in **Fact-Find** → the **CLIENT FILE** box now has:
+  - **POLICIES** – **+ ADD POLICY**: policy no., insurer, plan, sum assured, premium, payment mode, start date, next due, nominee, status, notes. **EDIT / DELETE** each. Saved at once (no need to press SAVE CLIENT) in tab **ANT_POLICIES**, copied to the Master tab **POLICIES** (deleted = Status "Deleted" there).
+  - **NOTES / MEETING LOG** – dated notes, tab **ANT_NOTES** (your Sheet only, not sent to Master).
+  - **IN YOUR PULSE SHEET** – the client's own row from CLOSING / SR / PRESENTATION / APPROACH (policy number, payment mode, due date…), read-only.
+- New card **D WORK & PERSONAL** (optional): occupation, employer, monthly income, IC number, address → new columns in ANT_CLIENTS. **IC and address are not sent to the Master.**
+- A brand-new client: press **SAVE CLIENT** first, then the CLIENT FILE appears for policies & notes.
+- Needs: new **ANT.gs** + **Code.gs** (your Sheet and the PULSE Library → new version), new **ANT-Master.gs** in the Master (→ New version). Library advisors (Stevern): only pick the newest Library version.
