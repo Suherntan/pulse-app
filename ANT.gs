@@ -84,6 +84,7 @@ function antAddMenu_() {
     .addItem('Connect to Master (from your manager)', 'antConnectMaster')
     .addItem('Re-send Waiting Items to Master Now', 'antFlushOutbox')
     .addItem('Send Everything to Master (one-time)', 'antSendAllToMaster')
+    .addItem('Send Pipeline Clients to Master', 'antSendPipelineToMaster')
     .addItem('Check PULSE On / Off', 'antRecheckLicence')
     .addToUi();
 }
@@ -684,8 +685,10 @@ function antFlushOutbox() {
     if (res.ok) { sh.deleteRow(r); sent++; }
     else { sh.getRange(r, 4).setValue(res.error); left++; }
   }
+  var pipe = { message: '' };
+  try { pipe = antPipelineToMaster_(); } catch (e) { pipe.message = e.message; }   // keeps the PIPELINE tab in the Master up to date
   try {
-    SpreadsheetApp.getUi().alert('Master: ' + sent + ' sent, ' + left + ' still waiting.');
+    SpreadsheetApp.getUi().alert('Master: ' + sent + ' sent, ' + left + ' still waiting.\nPipeline clients: ' + pipe.message);
   } catch (e) { /* running from the nightly timer – no screen */ }
 }
 
@@ -697,7 +700,9 @@ function antSendAllToMaster() {
    ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS]].forEach(function (t) {
     antRows_(t[1], t[2]).forEach(function (row) { counts[antSendToMaster_(t[0], row)]++; });
   });
-  ui.alert('Sent ' + counts.sent + ' to Master.' + (counts.queued ? ' ' + counts.queued + ' waiting (see ANT_OUTBOX, retried tonight).' : ''));
+  var pipe = antPipelineToMaster_();
+  ui.alert('Sent ' + counts.sent + ' to Master.' + (counts.queued ? ' ' + counts.queued + ' waiting (see ANT_OUTBOX, retried tonight).' : '') +
+    '\nPipeline clients: ' + pipe.message);
 }
 
 function antMasterRecord_(values) {
@@ -935,4 +940,50 @@ function antNum_(v) {
 
 function antLog_(agentId, clientId, action, detail) {
   antSheet_(ANT_LOG_SHEET, ANT_LOG_HEADERS).appendRow([new Date(), agentId, clientId, action, detail || '']);
+}
+
+
+// ---------------------------------------------------------------------
+// Old PULSE pipeline clients (APPROACH / PRESENTATION / CLOSING / SR) →
+// Master PIPELINE tab. Every column of each row is sent, plus the stage.
+// Runs from the menu, from Send Everything, and every night.
+// ---------------------------------------------------------------------
+function antSendPipelineToMaster() {
+  var ui = SpreadsheetApp.getUi();
+  if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
+  ui.alert('Pipeline clients → Master', antPipelineToMaster_().message, ui.ButtonSet.OK);
+}
+
+function antPipelineToMaster_() {
+  if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) return { ok: false, message: 'not connected to Master' };
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), records = [];
+  ANT_PIPELINE_TABS.forEach(function (tab) {
+    var sh = ss.getSheetByName(tab);
+    if (!sh) return;
+    var cols = getColumnMap_(sh), last = sh.getLastRow();
+    if (cols.name === -1 || last < cols._dataStartRow) return;
+    var width = sh.getLastColumn();
+    var head = sh.getRange(cols._headerRow, 1, 1, width).getValues()[0].map(function (h) { return String(h).trim(); });
+    sh.getRange(cols._dataStartRow, 1, last - cols._dataStartRow + 1, width).getValues().forEach(function (r) {
+      var name = String(r[cols.name] || '').trim();
+      if (!name) return;
+      var phone = cols.contact > -1 ? String(r[cols.contact] || '').replace(/^'/, '').trim() : '';
+      var values = {};
+      head.forEach(function (h, i) { if (h && values[h] === undefined) values[h] = r[i]; });
+      var rec = antMasterRecord_(values);
+      rec['Stage'] = tab;
+      rec['Name'] = name;
+      rec['Phone'] = phone;
+      rec['Pipeline Key'] = antPhoneKey_(phone) || name.toLowerCase();
+      records.push(rec);
+    });
+  });
+  if (!records.length) return { ok: true, message: 'no pipeline clients found' };
+  var added = 0, updated = 0;
+  for (var i = 0; i < records.length; i += 200) {               // a few big sends instead of one per client
+    var res = antPostMaster_({ type: 'pipeline', records: records.slice(i, i + 200) });
+    if (!res.ok) return { ok: false, message: 'stopped after ' + (added + updated) + ': ' + res.error };
+    added += res.added || 0; updated += res.updated || 0;
+  }
+  return { ok: true, message: records.length + ' sent (' + added + ' new, ' + updated + ' updated)' };
 }

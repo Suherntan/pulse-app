@@ -4,6 +4,7 @@
 - **Cost:** $0
 - **Time:** manager ~10 min once · each advisor ~3 min
 - **Test account:** the "ANT Master" Gmail (later the real agency manager does the same)
+- **Status 26 Oct 2026:** ✅ Master Sheet live in Su's account. Su's PULSE ✅ connected. Stevern's PULSE ✅ connected (Library version – needed the new connector + pulseAuthorize).
 
 ## What Step 2 does
 - Every time an advisor **saves a client** or **saves an A-N-T Analysis**, a copy of the **data** goes to the manager's **Master Sheet**.
@@ -63,3 +64,14 @@
 ## Moving from the test account to the real manager
 1. Real manager does **Part A** in their account.
 2. Each advisor: **A-N-T → Connect to Master** with the new link + key, then **Send Everything to Master (one-time)**.
+
+## Advisors on the Library version (26 Oct 2026)
+Before **Connect to Master**: their Code.gs must be the latest **PULSE-Connector.gs** → run **pulseAuthorize** → on Google's permission screen tick **Select all** (else Gmail/URL permissions are skipped) → Deploy → ✏️ → New version → Deploy.
+- Their project should only have **Code.gs** (connector) + Library **PULSE**. An old **ANT.gs** left there clashes with the Library – back it up (Notepad) and delete it.
+- Several Google accounts in one browser → "Sorry, unable to open the file" (`authuser=1`): use an InPrivate/Incognito window with only the advisor's account.
+
+## PIPELINE tab – old PULSE pipeline clients (26 Oct 2026)
+- Master gets a **PIPELINE** tab: every client in the advisor's **APPROACH / PRESENTATION / CLOSING / SR** tabs, with **Advisor ID, Stage, Name, Phone** and all the other columns of that row.
+- Same client (same phone – or same name if no phone) = **same row**: when a client moves stage, the row's Stage is updated (no duplicates). Each advisor's clients stay separate.
+- Sent by: **A-N-T → Send Pipeline Clients to Master** (any time), **Send Everything to Master**, and **automatically every night** (with the nightly re-send) – so the Master stays up to date.
+- Needs: new **ANT-Master.gs** in the Master Sheet (then Deploy → ✏️ → New version), new **ANT.gs** in Su's Sheet + the PULSE Library, new **PULSE-Connector.gs** for Library advisors (Stevern) – it adds the menu item.

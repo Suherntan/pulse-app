@@ -10,7 +10,7 @@
  * needs an Advisor ID + secret key from the ADVISORS tab, so nobody else
  * can write in, and agents never get access to this sheet.
  *
- * Tabs: ADVISORS · CLIENTS · ANALYSIS · OFFERS · LOG
+ * Tabs: ADVISORS · CLIENTS · ANALYSIS · OFFERS · PIPELINE · LOG
  * Menu: A-N-T Master > Set Up / Add Agent / Turn Agent On-Off /
  *       Weekly Backup On-Off
  * =====================================================================
@@ -21,6 +21,9 @@ var M_CLIENTS = 'CLIENTS';
 var M_ANALYSIS = 'ANALYSIS';
 var M_OFFERS = 'OFFERS';
 var M_LOG = 'LOG';
+var M_PIPELINE = 'PIPELINE';
+// Old PULSE pipeline clients (APPROACH / PRESENTATION / CLOSING / SR tabs), one row per advisor + client.
+var M_PIPELINE_HEADERS = ['Advisor ID', 'Stage', 'Name', 'Phone', 'Pipeline Key', 'Received'];
 var M_AGENT_HEADERS = ['Advisor ID', 'Advisor Name', 'Phone', 'Secret Key', 'Active', 'Trial Ends', 'Added', 'Last Received'];
 var M_LOG_HEADERS = ['Time', 'Advisor ID', 'Type', 'Record ID', 'Result'];
 var M_BACKUP_FOLDER = 'A-N-T Master Backups';
@@ -151,6 +154,8 @@ function doPost(e) {
     return mJson_({ ok: false, off: true, error: 'Your PULSE trial has ended. Please contact your manager to continue.' });
   }
   if (body.ping) return mJson_({ ok: true, agentName: agent.row['Advisor Name'] });
+
+  if (body.type === 'pipeline') return mJson_(mSavePipeline_(agentId, body.records || [], agents));
 
   var t = M_TYPES[body.type];
   if (!t || !body.record || !body.record[t.idKey]) return mJson_({ ok: false, error: 'Unknown record' });
@@ -312,4 +317,49 @@ function mUpsert_(sh, keys, rec) {
   if (found) sh.getRange(found.index, 1, 1, row.length).setValues([row]);
   else sh.appendRow(row);
   return { isNew: !found };
+}
+
+
+// ---------------------------------------------------------------------
+// PIPELINE tab: a batch of an advisor's pipeline clients. Same client (phone,
+// or name if no phone) = same row, so a client moving stage is updated, not doubled.
+// ---------------------------------------------------------------------
+function mSavePipeline_(agentId, records, agents) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = mSheet_(M_PIPELINE, M_PIPELINE_HEADERS), now = new Date();
+    var recs = records.filter(function (r) { return r && r['Pipeline Key']; }).map(function (r) {
+      var rec = {};
+      Object.keys(r).forEach(function (k) { if (String(k).trim()) rec[k] = r[k]; });
+      rec['Advisor ID'] = agentId;
+      rec['Received'] = now;
+      return rec;
+    });
+    if (!recs.length) return { ok: true, added: 0, updated: 0 };
+    var names = {};
+    recs.forEach(function (r) { Object.keys(r).forEach(function (k) { names[k] = true; }); });
+    mAddHeaders_(sh, Object.keys(names));
+    var head = mHeaders_(sh), last = sh.getLastRow();
+    var data = last > 1 ? sh.getRange(2, 1, last - 1, head.length).getValues() : [];
+    var ai = head.indexOf('Advisor ID'), ki = head.indexOf('Pipeline Key'), index = {};
+    data.forEach(function (row, i) { index[String(row[ai]) + '|' + String(row[ki])] = i; });
+    var added = [], updated = 0;
+    recs.forEach(function (rec) {
+      var k = agentId + '|' + rec['Pipeline Key'], i = index[k];
+      var base = i === undefined ? null : data[i];
+      var row = head.map(function (h, c) {
+        if (rec[h] !== undefined) return h === 'Phone' && rec[h] !== '' ? "'" + rec[h] : rec[h];
+        return base ? base[c] : '';
+      });
+      if (base) { data[i] = row; updated++; } else { index[k] = data.length + added.length; added.push(row); }
+    });
+    if (data.length) sh.getRange(2, 1, data.length, head.length).setValues(data);
+    if (added.length) sh.getRange(last + 1, 1, added.length, head.length).setValues(added);
+    mUpsert_(agents, 'Advisor ID', { 'Advisor ID': agentId, 'Last Received': now });
+    mSheet_(M_LOG, M_LOG_HEADERS).appendRow([now, agentId, 'pipeline', recs.length + ' clients', added.length + ' added, ' + updated + ' updated']);
+    return { ok: true, added: added.length, updated: updated };
+  } finally {
+    lock.releaseLock();
+  }
 }
