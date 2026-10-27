@@ -62,8 +62,16 @@ td{white-space:nowrap}
 td input[data-k="name"]{min-width:170px}
 td select{min-width:90px}
 .mx td.hl{background:#E7F4EA;font-weight:700}
-.who{max-width:760px;margin:12px auto 0;padding:0 16px;font-size:13px;color:var(--text-light)}
+.cbar{max-width:760px;margin:12px auto 0;padding:0 16px;position:relative}
+.cbar input{padding:11px 12px 11px 38px}
+.cbar svg{position:absolute;left:28px;top:13px}
+.cbar .res{position:absolute;left:16px;right:16px;top:100%;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(11,37,69,.15);display:none;z-index:6;overflow:hidden}
+.cbar .res button{display:flex;justify-content:space-between;width:100%;padding:11px 14px;border:0;background:none;font:500 15px var(--body);text-align:left;cursor:pointer}
+.cbar .res button:hover{background:#FBF4E6}
+.cbar .res small{color:var(--text-light)}
+.who{max-width:760px;margin:8px auto 0;padding:0 16px;font-size:13px;color:var(--text-light)}
 .who b{color:var(--navy)}
+.who a{color:var(--navy);font-weight:700;margin-left:6px}
 .save{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .save button{border:0;border-radius:12px;padding:14px 22px;font:700 15px var(--head);letter-spacing:.1em;cursor:pointer;background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark)}
 .save button:disabled{opacity:.6;cursor:wait}
@@ -82,6 +90,11 @@ td select{min-width:90px}
   <button type="button" onclick="window.print()">SAVE PDF</button>
 </header>
 
+<div class="cbar no-print">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F6673" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+  <input id="cq" type="search" placeholder="Find client (name or phone)" autocomplete="off">
+  <div class="res" id="cres"></div>
+</div>
 <p class="who no-print" id="who"></p>
 <main>
   <section class="card">
@@ -234,8 +247,60 @@ try {
     if (last.inputs.risk) risk = last.inputs.risk;
   }
 } catch (_) {}
-$('who').innerHTML = clientId ? `For <b>${esc($('cname').value || clientId)}</b> (${esc(clientId)})`
-  : 'No saved client – save the client in Fact-Find first to keep this plan in the client file.';
+function showWho() {
+  const nm = $('cname').value.trim();
+  $('who').innerHTML = clientId
+    ? `For <b>${esc(nm || clientId)}</b> (${esc(clientId)})<a href="form.html?q=${encodeURIComponent(nm || clientId)}">Open client file ›</a>`
+    : 'No client picked – search above, or save the client in Fact-Find first to keep this plan in the client file.';
+}
+showWho();
+
+// ---- Client profile link: search the Google Sheet, load the profile and the latest saved plan ----
+const LIVE = typeof AntApi !== 'undefined' && AntApi.connected();
+const ageFrom = iso => { const d = new Date(String(iso || '') + 'T00:00:00'), t = new Date(); if (isNaN(d)) return null;
+  let a = t.getFullYear() - d.getFullYear(); if (t < new Date(t.getFullYear(), d.getMonth(), d.getDate())) a--; return a; };
+async function loadClient(id, quiet) {
+  if (!LIVE || !id) return;
+  try {
+    const c = (await AntApi.get('antGetClient', {id})).client, b = c.background || {};
+    clientId = c.clientId;
+    $('cname').value = c.name || '';
+    const a = ageFrom(c.dob); if (a != null) $('age').value = a;
+    if (num(b.income)) $('income').value = Math.round(num(b.income)).toLocaleString('en-US');
+    if (num(b.retireAge)) $('retire').value = b.retireAge;
+    const last = c.history && c.history.plans && c.history.plans[0];
+    if (last && last.inputs) {                       // the latest plan saved for this client (any device)
+      INPUTS.filter(k => !['cname', 'age'].includes(k)).forEach(k => { if (last.inputs[k] != null) $(k).value = last.inputs[k]; });
+      if (last.inputs.risk) risk = last.inputs.risk;
+      setRiskButtons();
+    }
+    $('saveBtn').textContent = 'SAVE TO CLIENT FILE'; $('saveMsg').textContent = '';
+    showWho(); render();
+    if (!quiet) $('saveMsg').textContent = last ? 'Loaded ' + c.name + ' and the last plan (' + last.id + ').' : 'Loaded ' + c.name + '.';
+  } catch (err) { $('saveMsg').textContent = 'Could not load the client: ' + err.message; }
+}
+let cTimer, cList = [];
+$('cq').addEventListener('input', () => {
+  const q = $('cq').value.trim(), box = $('cres');
+  clearTimeout(cTimer);
+  if (!q) { box.style.display = 'none'; return; }
+  if (!LIVE) { box.innerHTML = '<button type="button" disabled><small>Connect your Google Sheet in PULSE to search clients</small></button>'; box.style.display = 'block'; return; }
+  cTimer = setTimeout(async () => {
+    try {
+      const r = await AntApi.get('antSearchClients', {q});
+      if ($('cq').value.trim() !== q) return;
+      cList = (r.clients || []).filter(c => c.clientId);    // pipeline-only clients need a Fact-Find first
+      box.innerHTML = cList.map((c, i) => `<button type="button" data-i="${i}"><span>${esc(c.name)}</span><small>${esc(c.clientId)} · ${esc(c.phone || '')}</small></button>`).join('')
+        || '<button type="button" disabled><small>No A-N-T client found – save them in Fact-Find first</small></button>';
+      box.style.display = 'block';
+    } catch (err) { box.innerHTML = `<button type="button" disabled><small>${esc(err.message)}</small></button>`; box.style.display = 'block'; }
+  }, 300);
+});
+$('cres').addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  $('cres').style.display = 'none'; $('cq').value = '';
+  loadClient(cList[+b.dataset.i].clientId);
+});
 
 function render() {
   const age = num($('age').value), retire = Math.max(num($('retire').value), age + 1), years = retire - age;
@@ -381,12 +446,15 @@ $('risk').addEventListener('click', e => {
   $('risk').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
   render();
 });
-$('risk').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === risk ? 'true' : 'false'));
+function setRiskButtons() { $('risk').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === risk ? 'true' : 'false')); }
+setRiskButtons();
 document.addEventListener('focusout', e => {
   if (['income', 'expense', 'otherRelief', 'prs', 'savings', 'utLump', 'utMonthly'].includes(e.target.id) && e.target.value.trim())
     e.target.value = Math.round(num(e.target.value)).toLocaleString('en-US');
 });
 render();
+// Opened from the CLIENT FILE: also bring the latest saved plan from the Google Sheet.
+if (new URLSearchParams(location.search).get('id') && clientId) loadClient(clientId, true);
 
 // ---- Save: this phone (for the Analysis PDF) + the client's file in the Google Sheet ----
 $('saveBtn').onclick = async () => {

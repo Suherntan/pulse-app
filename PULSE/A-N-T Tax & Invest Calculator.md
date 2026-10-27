@@ -37,3 +37,9 @@
 - Update EPF_RATE in the calculator each year when EPF declares the new dividend.
 
 - **Update 27 Oct 2026 (Su):** sales charge and management fee **removed** from the Unit Trust card. It now uses one yearly return per fund type (Equity 7%, Shariah equity 6.5%, Balanced 5.5%, Bond 4%, Money market 3% – editable) and compares with EPF and FD. The client file and Analysis PDF no longer show fees.
+
+## Linked to the client profile (27 Oct 2026)
+- Calculator top: **Find client (name or phone)** – searches the Google Sheet. Pick a client → name, age (from date of birth), monthly income, retire age come from the profile, and the **latest saved plan** for that client is loaded (works on any phone).
+- Line under the search: "For Name (C-0001) · **Open client file ›**" (goes to Fact-Find with that client).
+- From the CLIENT FILE, **+ NEW PLAN** opens the calculator for that client and also loads their latest plan.
+- Only clients with a Fact-Find (C-number) can be picked; pipeline-only clients need a Fact-Find first.
