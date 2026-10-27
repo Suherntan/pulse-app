@@ -7,6 +7,7 @@
  * Setup (once): Extensions > Apps Script > Libraries (+) > paste the
  * PULSE library Script ID > Look up > Version: latest > Identifier: PULSE > Add.
  * Then Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone).
+ * Finally choose pulseAuthorize > Run > Allow (this also switches on sheet edits).
  *
  * PULSE is provided under the PULSE trial / licence agreement. If access to
  * the library is removed, the automation and the app stop; this Sheet and
@@ -33,7 +34,21 @@ function pulseAuthorize() {
   ScriptApp.getProjectTriggers();                         // daily reminders, auto-post timer
   MailApp.getRemainingDailyQuota();                       // email reminders
   GmailApp.getAliases();                                  // birthday / client emails
+  installEditTrigger_();
   return 'PULSE permissions OK';
+}
+
+// A plain onEdit() can't run library code (Google runs it in a restricted
+// mode), so sheet edits -- date picker -> Week/Day, status -> move row,
+// nature -> follow-up date -- go through an installable trigger instead.
+function installEditTrigger_() {
+  var exists = ScriptApp.getProjectTriggers().some(function (t) {
+    return t.getHandlerFunction() === 'pulseOnEdit';
+  });
+  if (!exists) {
+    ScriptApp.newTrigger('pulseOnEdit')
+      .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet()).onEdit().create();
+  }
 }
 
 // The PULSE app (web link)
@@ -42,7 +57,7 @@ function doPost(e) { use_(); return PULSE.doPost(e); }
 
 // Sheet events
 function onOpen(e) { use_(); return PULSE.onOpen(e); }
-function onEdit(e) { use_(); return PULSE.onEdit(e); }
+function pulseOnEdit(e) { use_(); return PULSE.onEdit(e); } // installed by pulseAuthorize
 
 // Menu items and timers (names must match the library)
 function addOriginalDateColumnToAllTabs(e) { use_(); return PULSE.addOriginalDateColumnToAllTabs(e); }
