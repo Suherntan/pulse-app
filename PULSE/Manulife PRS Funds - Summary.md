@@ -95,3 +95,14 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
 - **Watch-outs:** 30% Account B early withdrawal = 8% tax penalty; fees (sales charge, management fee); returns not guaranteed; currency risk both ways.
 - **Compliance:** need a **PRS consultant licence** (FIMM) to recommend / sell PRS; give the PHS & disclosure document; no promises of returns.
 - **Check:** her Malaysian tax residency status, SGD/MYR rate on the day, and the current PPA withdrawal rules (e.g. leaving Malaysia permanently).
+
+## PRS returns & safety – client Q&A (27 Oct 2026)
+- **PIDM (not "PIDR")?** **No.** PIDM protects bank deposits and insurance / takaful benefits only. PRS, unit trusts, ETFs and shares are **not** covered by PIDM.
+- **So how is the money kept safe?**
+  - Regulated by the **Securities Commission (SC)**; the **PPA** (Private Pension Administrator) keeps each member's record across all providers.
+  - Fund assets are held by an **independent trustee**, separate from Manulife's own money → if the provider has problems, the fund's assets are not used to pay its debts; the fund can be moved to another provider / wound up and the value returned.
+  - Clear rules: disclosure document, PHS, yearly / semi-annual reports, investment limits.
+- **What is NOT protected:** **market risk** – the unit price goes up and down. Value can be lower than what was put in, especially in the short term.
+- **Returns:** not guaranteed. Example (Manulife, past): PRS-Growth A 9.11% (1 yr to Jan 2026), 40.82% (10 yrs); PRS-Moderate A 7.15% (1 yr to Feb 2026). Conservative = lower but steadier.
+- **Simple line for clients:** "Your money is ring-fenced with a trustee, not mixed with the company's – but the value moves with the market, so it's for long-term retirement, not short-term savings."
+- Check: SC / PPA websites for the latest wording.
