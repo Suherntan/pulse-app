@@ -1188,11 +1188,11 @@ function getWeekNumber_(d) {
  * ===================================================================
  * PART 3 — WHATSAPP BIRTHDAY & PREMIUM REMINDER LINKS (header-based)
  * ===================================================================
- * One reminder tier for premium due dates: fires from
- * PREMIUM_REMINDER_DAYS_BEFORE days out, through the due date itself,
- * through up to REMINDER_CATCHUP_DAYS overdue (so it keeps resurfacing
- * an unpaid premium each time you regenerate the list, e.g. on your
- * monthly refresh, until it's marked sent or rolls to the next cycle).
+ * One reminder for premium due dates, on the EXACT due date only (no
+ * early heads-up). PREMIUM_REMINDER_DAYS_BEFORE and PREMIUM_CATCHUP_DAYS
+ * are both 0; raise them if you ever want an earlier or a later window.
+ * A reminder that is generated but not yet ticked "Mark Sent" stays on
+ * the TODAY - SEND REMINDERS tab until you send it.
  *
  * PAYMENT MODE column (Monthly / Quarterly / Half-Yearly / Yearly):
  * once a due date is in the past, the script rolls it forward on its
@@ -1222,14 +1222,14 @@ var AGENT_SETTINGS_SHEET_NAME = "SETTINGS";
 var BIRTHDAY_MESSAGE_TEMPLATE =
   "Hi {name}! Wishing you a very Happy Birthday! Wishing you good health and happiness always. - {agent}";
 
-// Fires from PREMIUM_REMINDER_DAYS_BEFORE days before the due date,
-// through the due date, through REMINDER_CATCHUP_DAYS overdue.
+// Fires on the due date only (see PREMIUM_REMINDER_DAYS_BEFORE / PREMIUM_CATCHUP_DAYS).
 var PREMIUM_REMINDER_MESSAGE_TEMPLATE =
   "Hi {name}, a gentle reminder on your Manulife policy{policyLine} premium due on {dueDate}. Please disregard this message if payment had been made. Thank you!";
 
 var COUNTRY_CODE = "60"; // Default/fallback only -- overridden per-sheet by SETTINGS!B3 if you fill that in (see getAgentSettings_).
-var PREMIUM_REMINDER_DAYS_BEFORE = 7;
-var REMINDER_CATCHUP_DAYS = 7; // keep resurfacing an unsent close-up reminder for this many days after it's overdue
+var PREMIUM_REMINDER_DAYS_BEFORE = 0; // premium reminder starts this many days BEFORE the due date (0 = due date only)
+var PREMIUM_CATCHUP_DAYS = 0;         // ...and keeps appearing this many days AFTER it (0 = due date only)
+var REMINDER_CATCHUP_DAYS = 7;        // birthdays only: keep resurfacing an unsent greeting for this many days
 var TRACKING_SHEETS = ["APPROACH", "PRESENTATION", "CLOSING"];
 var REMINDER_SHEET_NAME = "TODAY - SEND REMINDERS";
 
@@ -1376,6 +1376,8 @@ function buildTodayReminders() {
   // a forgotten reminder stays put instead of vanishing on the next refresh.
   // New reminders just get appended alongside it.
   var reminderRows = readExistingReminderRows_(ss);
+  // The "advance notice" premium reminder no longer exists: clear any left over from before.
+  reminderRows = reminderRows.filter(function (r) { return r[0] !== "Premium Due (Advance Notice)"; });
   var seen = {};
   reminderRows.forEach(function (r) {
     seen[r[0] + "|" + r[4]] = true; // type + phone used for link
@@ -1442,12 +1444,12 @@ function buildTodayReminders() {
         var dueDateOnly = new Date(effectiveDue.getFullYear(), effectiveDue.getMonth(), effectiveDue.getDate());
         var diffDays = Math.round((dueDateOnly.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
 
-        // ---- Close-up tier: due today, within PREMIUM_REMINDER_DAYS_BEFORE days, or up to REMINDER_CATCHUP_DAYS overdue ----
+        // ---- Premium reminder: on the due date only (see PREMIUM_REMINDER_DAYS_BEFORE / PREMIUM_CATCHUP_DAYS) ----
         var alreadyReminded = cols.reminderSent > -1 &&
           row[cols.reminderSent] instanceof Date &&
           isSameCalendarDay_(row[cols.reminderSent], dueDateOnly);
 
-        if (diffDays >= -REMINDER_CATCHUP_DAYS && diffDays <= PREMIUM_REMINDER_DAYS_BEFORE && !alreadyReminded) {
+        if (diffDays >= -PREMIUM_CATCHUP_DAYS && diffDays <= PREMIUM_REMINDER_DAYS_BEFORE && !alreadyReminded) {
           var premiumKey = "Premium Due|" + phoneKey;
           if (phoneKey && !seen[premiumKey]) {
             seen[premiumKey] = true;
@@ -2246,7 +2248,7 @@ function debugRemindersCheck() {
         var reminderSentCell = cols.reminderSent > -1 ? row[cols.reminderSent] : null;
         var alreadyReminded = reminderSentCell instanceof Date && isSameCalendarDay_(reminderSentCell, dueDateOnly);
 
-        if (diffDays >= -REMINDER_CATCHUP_DAYS && diffDays <= PREMIUM_REMINDER_DAYS_BEFORE) {
+        if (diffDays >= -PREMIUM_CATCHUP_DAYS && diffDays <= PREMIUM_REMINDER_DAYS_BEFORE) {
           if (cols.reminderSent === -1) {
             report.push([tabName, rowNum, name, "Premium Due", "Would show today (due " + overdueText + "), and Mark Sent CANNOT persist -- no REMINDER SENT column on this tab yet."]);
           } else if (alreadyReminded) {
@@ -2254,8 +2256,8 @@ function debugRemindersCheck() {
           } else {
             report.push([tabName, rowNum, name, "Premium Due", "Would show today (due " + overdueText + ") -- not marked sent yet."]);
           }
-        } else if (diffDays < -REMINDER_CATCHUP_DAYS) {
-          report.push([tabName, rowNum, name, "Premium Due", "Due date is " + (-diffDays) + " day(s) overdue -- past the " + REMINDER_CATCHUP_DAYS + "-day catch-up window. If a PAYMENT MODE is set, the next refresh will roll it forward to the next cycle automatically."]);
+        } else if (diffDays < -PREMIUM_CATCHUP_DAYS) {
+          report.push([tabName, rowNum, name, "Premium Due", "Due date is " + (-diffDays) + " day(s) overdue -- reminders are sent on the due date only. If a PAYMENT MODE is set, the next refresh will roll it forward to the next cycle automatically."]);
         }
       }
     });
