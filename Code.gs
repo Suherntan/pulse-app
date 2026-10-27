@@ -752,6 +752,8 @@ function doPost(e) {
         return jsonResponse(addFinderLeads(data));
       case 'leadAction':
         return jsonResponse(leadAction(data));
+      case 'wa':
+        return jsonResponse(waHandle_(data));
       // A-N-T (see ANT.gs)
       case 'antSaveClient':
         return jsonResponse(antSaveClient(data));

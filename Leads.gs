@@ -160,6 +160,12 @@ function addWebLead(data) {
     lock.releaseLock();
   }
 
+  // Automatic welcome WhatsApp (WaBridge.gs): only if you switched it on in SETTINGS.
+  try {
+    var waTpl = getLeadTemplates_();
+    waQueueLeadWelcome_(name, phone, fillLeadTemplate_(waTpl.waPerson, { name: name, agent: waTpl.agent, guide: waTpl.guide }));
+  } catch (waErr) { /* the lead is already saved */ }
+
   // Automatic welcome email (only if they typed a valid email; they ticked consent).
   var theirEmail = leadClean_(data.email, 100);
   var welcomeNote = '';

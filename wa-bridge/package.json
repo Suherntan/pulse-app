@@ -1,0 +1,19 @@
+{
+  "name": "pulse-wa-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sends PULSE client reminders and form-lead welcomes from a separate WhatsApp number",
+  "scripts": {
+    "start": "node --env-file=.env index.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "pino": "^10.4.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

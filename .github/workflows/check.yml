@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Syntax check JS and Apps Script files
         run: |
           fail=0
@@ -27,3 +27,5 @@ jobs:
             node --check "/tmp/$f.js" || fail=1
           done
           exit $fail
+      - name: Test the WhatsApp bridge logic
+        run: node --test "wa-bridge/test/*.test.js"
