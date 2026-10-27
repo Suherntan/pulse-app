@@ -35,3 +35,5 @@
 - Shows: put in, sales charge paid, management fees (estimate), return after fees, Rule of 72, value at retirement, and the **same money in EPF (6.15%, 2025 dividend, no fees) and fixed deposit (3%)**, with a tip on how much the fund must make to beat EPF.
 - Saved with the plan → shown in the CLIENT FILE and on the TAX & INVEST PLAN page of the Analysis PDF.
 - Update EPF_RATE in the calculator each year when EPF declares the new dividend.
+
+- **Update 27 Oct 2026 (Su):** sales charge and management fee **removed** from the Unit Trust card. It now uses one yearly return per fund type (Equity 7%, Shariah equity 6.5%, Balanced 5.5%, Bond 4%, Money market 3% – editable) and compares with EPF and FD. The client file and Analysis PDF no longer show fees.

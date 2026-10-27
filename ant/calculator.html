@@ -149,9 +149,7 @@ td select{min-width:90px}
       <div><label for="utLump">Lump sum now (RM)</label><input id="utLump" inputmode="numeric" value="0"></div>
       <div><label for="utMonthly">Monthly (RM)</label><input id="utMonthly" inputmode="numeric" placeholder="from plan">
         <div class="hint">Empty = the unit trust amount in the plan above.</div></div>
-      <div><label for="utRet">Expected return % a year (before fees)</label><input id="utRet" inputmode="decimal" value="7"></div>
-      <div><label for="utSc">Sales charge % (each time you put in)</label><input id="utSc" inputmode="decimal" value="5"></div>
-      <div><label for="utMf">Management fee % a year</label><input id="utMf" inputmode="decimal" value="1.5"></div>
+      <div><label for="utRet">Expected return % a year</label><input id="utRet" inputmode="decimal" value="7"></div>
     </div>
     <div class="stats" id="utStats"></div>
     <div class="scroll"><table id="utCompare"></table></div>
@@ -215,9 +213,9 @@ let prsRet = store.get('ant-calc-prs-ret', 6);
 
 // Which client: opened from the CLIENT FILE (?id=…&name=…), else the last Fact-Find on this phone.
 const INPUTS = ['cname', 'age', 'retire', 'income', 'expense', 'otherRelief', 'prs', 'savings', 'pct',
-  'utType', 'utLump', 'utMonthly', 'utRet', 'utSc', 'utMf'];
-// Example figures per unit trust type: [return before fees, sales charge, management fee] – the advisor can change them.
-const UT_TYPES = {equity: [7, 5, 1.5], shariah: [6.5, 5, 1.5], balanced: [5.5, 5, 1.5], bond: [4, 2, 1], mm: [3, 0, 0.5]};
+  'utType', 'utLump', 'utMonthly', 'utRet'];
+// Example yearly return per unit trust type – the advisor can change it.
+const UT_TYPES = {equity: 7, shariah: 6.5, balanced: 5.5, bond: 4, mm: 3};
 const EPF_RATE = 6.15;   // EPF dividend for 2025 (declared Feb 2026)
 let clientId = '';
 try {
@@ -308,33 +306,27 @@ function render() {
     you put in <b>${rm(put)}</b> and it could grow to about <b>${rm(totV)}</b>${put ? ` (${(totV / put).toFixed(1)}× what you put in)` : ''}.
     ${gap ? `<br>⚠️ Emergency fund is still short by ${rm(gap)}: fill this first, or alongside the plan.` : ''}`;
 
-  // ---- Unit trust: fees taken off, compared with EPF and fixed deposit ----
+  // ---- Unit trust: compared with EPF and fixed deposit ----
   const utPlanMonthly = lines.slice(1).filter((l, i) => /unit trust/i.test(rows[i].name)).reduce((a, l) => a + l.m, 0);
   const utM = $('utMonthly').value.trim() === '' ? utPlanMonthly : num($('utMonthly').value);
   $('utMonthly').placeholder = 'from plan: ' + Math.round(utPlanMonthly).toLocaleString('en-US');
-  const utL = num($('utLump').value), sc = Math.min(num($('utSc').value), 100) / 100;
-  const gross = num($('utRet').value), net = gross - num($('utMf').value);
+  const utL = num($('utLump').value), utR = num($('utRet').value);
   const grow = (lump, m, ratePct) => lump * Math.pow(1 + ratePct / 100 / 12, years * 12) + fv(m, ratePct, years);
-  const utPut = utL + utM * 12 * years, utCharge = utPut * sc;
-  const utValue = grow(utL * (1 - sc), utM * (1 - sc), net);
-  const utNoMf = grow(utL * (1 - sc), utM * (1 - sc), gross), mfCost = utNoMf - utValue;
+  const utPut = utL + utM * 12 * years, utValue = grow(utL, utM, utR);
   const epfValue = grow(utL, utM, EPF_RATE), fdValue = grow(utL, utM, 3);
   $('utStats').innerHTML = `
     <div class="stat"><small>You put in (${years} yrs)</small><b>${rm(utPut)}</b></div>
-    <div class="stat bad"><small>Sales charge</small><b>${rm(utCharge)}</b></div>
-    <div class="stat bad"><small>Management fees (est.)</small><b>${rm(mfCost)}</b></div>
-    <div class="stat"><small>Return after fees</small><b>${net.toFixed(1)}%</b></div>
-    <div class="stat"><small>Doubles in</small><b>${net > 0 ? (72 / net).toFixed(1) + ' yrs' : '–'}</b></div>
+    <div class="stat"><small>Return a year</small><b>${utR}%</b></div>
+    <div class="stat"><small>Doubles in</small><b>${utR > 0 ? (72 / utR).toFixed(1) + ' yrs' : '–'}</b></div>
     <div class="stat good"><small>Value at ${retire}</small><b>${rm(utValue)}</b></div>`;
-  const cmp = [['Unit trust (after fees)', net, utValue], [`EPF voluntary (${EPF_RATE}% in 2025, no fees)`, EPF_RATE, epfValue], ['Fixed deposit (3%)', 3, fdValue]];
+  const cmp = [['Unit trust', utR, utValue], [`EPF voluntary (${EPF_RATE}% in 2025)`, EPF_RATE, epfValue], ['Fixed deposit (3%)', 3, fdValue]];
   const best = Math.max(...cmp.map(c => c[2]));
   $('utCompare').innerHTML = `<tr><th>Same money in</th><th>Return / yr</th><th>Value at ${retire}</th></tr>` +
     cmp.map(([n, r, v]) => `<tr><td>${n}</td><td>${r.toFixed(2)}%</td><td class="${v === best ? 'ok' : ''}">${rm(v)}</td></tr>`).join('');
-  $('utTip').innerHTML = utPut ? (net > EPF_RATE
-      ? `If the fund really makes ${gross}% a year, the unit trust ends about <b>${rm(utValue - epfValue)}</b> ahead of EPF, but this is <b>not guaranteed</b> and the value moves up and down.`
-      : `At ${gross}% before fees, the unit trust (${net.toFixed(1)}% after fees) ends <b>${rm(epfValue - utValue)}</b> behind EPF. It needs more than about <b>${(EPF_RATE + num($('utMf').value) + sc * 100 / Math.max(years, 1)).toFixed(1)}%</b> a year before fees to beat EPF.`)
-      + ` Fees matter: sales charge + management fee cost about <b>${rm(utCharge + mfCost)}</b> over ${years} years.`
-    : 'Put in a lump sum or monthly amount to see the unit trust result.';
+  $('utTip').innerHTML = !utPut ? 'Put in a lump sum or monthly amount to see the unit trust result.'
+    : utR > EPF_RATE
+      ? `If the fund makes ${utR}% a year, the unit trust ends about <b>${rm(utValue - epfValue)}</b> ahead of EPF. This is <b>not guaranteed</b>, and the value moves up and down.`
+      : `At ${utR}% a year, the unit trust ends <b>${rm(epfValue - utValue)}</b> behind EPF. It needs more than <b>${EPF_RATE}%</b> a year to beat EPF.`;
 
   // ---- % of income × return matrix ----
   const pcts = [5, 10, 15, 20, 25], rets = [3, 5, 7, 9], cur = num($('pct').value);
@@ -351,9 +343,8 @@ function render() {
     efNeed: need, efHave: have, efShort: gap, pct: num($('pct').value), monthly: monthlyInvest,
     risk, riskName: {100: 'Careful', 110: 'Middle', 120: 'Comfortable'}[risk], growthPct, safePct,
     total: totV, put,
-    ut: utPut ? {type: $('utType').selectedOptions[0].text, lump: utL, monthly: Math.round(utM), gross, net, sc: sc * 100,
-      mf: num($('utMf').value), put: Math.round(utPut), charge: Math.round(utCharge), mfCost: Math.round(mfCost),
-      value: Math.round(utValue), epf: Math.round(epfValue), fd: Math.round(fdValue), epfRate: EPF_RATE} : null,
+    ut: utPut ? {type: $('utType').selectedOptions[0].text, lump: utL, monthly: Math.round(utM), ret: utR,
+      put: Math.round(utPut), value: Math.round(utValue), epf: Math.round(epfValue), fd: Math.round(fdValue), epfRate: EPF_RATE} : null,
     rows: lines.map((l, i) => { const r = i ? rows[i - 1] : {name: pName + ' (tax relief)', type: pType, ret: prsRet};
       return {name: r.name, type: r.type, ret: r.ret, monthly: Math.round(l.m), value: Math.round(l.value)}; }),
     inputs: Object.assign({risk}, Object.fromEntries(INPUTS.map(k => [k, $(k).value])))
@@ -372,7 +363,7 @@ document.querySelector('main').addEventListener('input', e => {
   render();
 });
 document.querySelector('main').addEventListener('change', e => {
-  if (e.target.id === 'utType') { const [r, c, m] = UT_TYPES[e.target.value]; $('utRet').value = r; $('utSc').value = c; $('utMf').value = m; }
+  if (e.target.id === 'utType') $('utRet').value = UT_TYPES[e.target.value];
   if (e.target.dataset.k === 'type' || e.target.id === 'utType') render();
 });
 // Re-draw without losing the box being typed in.

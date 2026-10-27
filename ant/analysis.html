@@ -322,12 +322,12 @@ function renderPlan() {
         <p class="plan-note">Total put in: <b>${rm(p.put)}</b> → could grow to about <b>${rm(p.total)}</b>.</p>
       </section>
       ${p.ut ? `<section><h2>UNIT TRUST</h2>
-        <p class="plan-note"><b>${e(p.ut.type)}</b>: lump sum ${rm(p.ut.lump)} + ${rm(p.ut.monthly)}/month · ${e(p.ut.gross)}% a year before fees, sales charge ${e(p.ut.sc)}%, management fee ${e(p.ut.mf)}% a year.</p>
+        <p class="plan-note"><b>${e(p.ut.type)}</b>: lump sum ${rm(p.ut.lump)} + ${rm(p.ut.monthly)}/month at ${e(p.ut.ret ?? p.ut.gross)}% a year. You put in ${rm(p.ut.put)}.</p>
         <table style="margin-top:6px"><thead><tr><th>SAME MONEY IN</th><th>RETURN / YR</th><th>VALUE AT ${e(p.retire)}</th></tr></thead><tbody>
-          <tr><td>Unit trust (after fees)</td><td>${Number(p.ut.net).toFixed(1)}%</td><td>${fmt(p.ut.value)}</td></tr>
-          <tr><td>EPF voluntary (no fees)</td><td>${e(p.ut.epfRate)}%</td><td>${fmt(p.ut.epf)}</td></tr>
+          <tr><td>Unit trust</td><td>${e(p.ut.ret ?? p.ut.gross)}%</td><td>${fmt(p.ut.value)}</td></tr>
+          <tr><td>EPF voluntary</td><td>${e(p.ut.epfRate)}%</td><td>${fmt(p.ut.epf)}</td></tr>
           <tr><td>Fixed deposit</td><td>3%</td><td>${fmt(p.ut.fd)}</td></tr></tbody></table>
-        <p class="plan-note">Put in ${rm(p.ut.put)} · fees about ${rm(p.ut.charge + p.ut.mfCost)} (sales charge ${rm(p.ut.charge)}, management ${rm(p.ut.mfCost)}). Unit trust returns are not guaranteed.</p>
+        <p class="plan-note">Unit trust returns are not guaranteed.</p>
       </section>` : ''}
       <p class="plan-disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed. Tax uses Malaysian resident rates (YA 2023 onwards); check the latest rules with LHDN. PRS relief up to RM3,000 a year (shared with deferred annuity) until YA 2030.</p>
     </div>
