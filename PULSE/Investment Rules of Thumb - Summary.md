@@ -25,9 +25,9 @@
 ## C. Protection (L.I.F.E)
 | Rule | How it works | Fits ANT area |
 |---|---|---|
-| **Emergency fund 3–6 months** | Cash = 3–6 months of expenses (6+ if self-employed) | Before everything |
+| **Emergency fund 6 months** | Cash = 6 months of expenses (Su's standard) | Before everything |
 | **Life cover 10× income** | Death / TPD cover ≈ 10 × yearly income (MY sites; often 10–20×) | Death, Disability |
-| **Critical illness 3–5× income** | CI cover = 3–5 years of income (common industry guide) | Critical Illness |
+| **Critical illness 5–10× income** | CI cover = 5–10 years of income (Su's standard) | Critical Illness |
 | **Insurance cost ≈ 10% of income** | Total premiums around 10% of income (guides say 6–15%) | All protection |
 | **DIME** | Debt + Income (years) + Mortgage + Education = cover needed | Death |
 
@@ -41,12 +41,47 @@
 - BNM 2024 annual report (via CodeBlue): people who can't raise RM1,000 in an emergency went up from 47% (2021) to 61% (2024).
 - iMoney: over 50% of Malaysians have insurance, but up to 90% of them are under-insured.
 
-## Suggested picks for ANT (Claude's view – Su decides)
-1. **Rule of 72 (+ inflation 72)** – easiest "wow" for clients; fits Investment & Retirement pages.
-2. **Life 10× / CI 3–5× income** – matches the L.I.F.E gap idea (Goal column).
-3. **Emergency fund 3–6 months** – a quick check before the analysis.
-4. **4% rule (25× yearly spending)** – gives a retirement target number.
-5. **100 minus age** – shows a suggested growth vs safe split.
+## Chosen for ANT (Su, 27 Oct 2026)
+1. **Rule of 72 (+ inflation 72)** – years to double money / years for costs to double.
+2. **Life cover 10× yearly income, Critical illness 5–10× yearly income** – can fill the Goal amounts on the L.I.F.E page.
+3. **Emergency fund = 6 months of expenses** – a quick check before the analysis.
+4. ~~4% rule~~ – removed.
+5. **100 minus age** – suggested growth vs safe split (details below).
+
+## 100 minus age – in detail
+**The idea:** the younger you are, the more of your investment money can go into **growth** (it goes up and down, but has more time to recover). The older you are, the more should sit in **safe** places.
+- **Growth %** = 100 − age. **Safe %** = the rest (= your age).
+
+| Age | Growth | Safe |
+|---|---|---|
+| 25 | 75% | 25% |
+| 35 | 65% | 35% |
+| 45 | 55% | 45% |
+| 55 | 45% | 55% |
+| 65 | 35% | 65% |
+
+**Newer versions (people live longer, so money must grow for longer):**
+| Version | Who it suits | Age 35 → Growth / Safe |
+|---|---|---|
+| 100 − age | Careful (conservative) | 65 / 35 |
+| 110 − age | Middle (moderate) | 75 / 25 |
+| 120 − age | Comfortable with ups & downs (aggressive) | 85 / 15 |
+
+**What counts as what (Malaysia, simple):**
+- **Growth:** equity unit trusts, investment-linked (ILP) equity funds, shares, ETFs, REITs.
+- **Safe:** fixed deposits, savings, bond / fixed-income funds, money market funds, capital-guaranteed / fixed-price funds.
+- **Not counted here:** emergency fund (6 months – kept separate) and the house you live in. EPF can be shown on its own line (it is mostly a mix, decided by the EPF).
+
+**Good to know:**
+- Only a starting point: it looks at age only, not the goal, how soon the money is needed, income stability or how the client feels about losses.
+- Money needed within ~3–5 years (e.g. a child's university next year) should be mostly **safe**, whatever the age.
+- Review every 1–2 years: the split moves about 1% a year towards safe.
+- Always say: "a general guide, not advice; returns are not guaranteed."
+
+**How it could look in ANT:**
+- Fact-Find already has the age → the Investment page shows the **suggested split** bar (choose Careful / Middle / Comfortable).
+- Advisor types the client's **current** growth vs safe money → shows **current vs suggested** side by side, and the RM to move.
+- One line on the PDF: "Suggested mix for age 35 (Middle): 75% growth / 25% safe."
 
 ## Sources
 - https://mutualfund.adityabirlacapital.com/blog/the-most-universal-investing-thumb-rules
