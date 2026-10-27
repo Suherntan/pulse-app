@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tax &amp; Invest Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2545; --gold:#F3AF3D; --gold-dark:#A86F14;
+  --bg:#F4F2EC; --card:#fff; --text:#1B2433; --text-light:#5F6673; --border:#DAD6CC;
+  --red:#C9402B; --ok:#2E8B3E;
+  --head:'Oswald','Arial Narrow',sans-serif; --body:'Work Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
+header img{height:40px}
+header .home{color:#fff;text-decoration:none;font-size:30px;line-height:1;padding:0 4px 4px 0}
+header h1{font-family:var(--head);font-weight:600;font-size:20px;letter-spacing:.08em;white-space:nowrap}
+header button{margin-left:auto;border:1px solid rgba(255,255,255,.35);background:none;color:#fff;border-radius:999px;padding:6px 12px;font:600 12px var(--body);letter-spacing:.08em;cursor:pointer}
+main{max-width:760px;margin:0 auto;padding:16px 16px 60px}
+.card{background:var(--card);border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(11,37,69,.04),0 6px 18px rgba(11,37,69,.06)}
+.card h2{font-family:var(--head);font-weight:600;font-size:17px;letter-spacing:.1em;color:var(--navy);display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card h2 .n{width:28px;height:28px;border-radius:8px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:15px;box-shadow:0 3px 0 var(--gold-dark)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:600;color:var(--text-light);margin-bottom:6px}
+input,select{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;font:500 16px var(--body);color:var(--text);background:#fff}
+input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,175,61,.25)}
+.hint{font-size:12px;color:var(--text-light);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+.stat{background:#F7F1E3;border-radius:12px;padding:10px 12px}
+.stat small{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text-light);text-transform:uppercase}
+.stat b{font-family:var(--head);font-size:21px;color:var(--navy)}
+.stat.good{background:#E7F4EA}.stat.good b{color:var(--ok)}
+.stat.bad{background:#FBEAE7}.stat.bad b{color:var(--red)}
+.tip{margin-top:14px;padding:12px;border-left:4px solid var(--gold);background:#FBF6EA;border-radius:0 10px 10px 0;font-size:14px;line-height:1.5}
+.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:#fff;padding:10px 6px;font:600 13px var(--body);cursor:pointer;color:var(--text)}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.bar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin-top:12px;font:700 12px var(--body);color:#fff}
+.bar span{display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.bar .g{background:var(--navy)}.bar .s{background:var(--gold);color:var(--navy)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+th,td{padding:7px 5px;border-bottom:1px solid #EEF0F3;text-align:right;vertical-align:middle}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px;letter-spacing:.05em;color:var(--text-light);text-transform:uppercase}
+td input,td select{padding:6px;font-size:13px;border-radius:7px}
+td input.ret{width:64px;text-align:right}
+td .del{border:0;background:none;color:var(--red);font-size:18px;cursor:pointer}
+tfoot td{font-weight:700;border-top:2px solid var(--navy)}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px}
+.tag.g{background:#E3E9F2;color:var(--navy)}.tag.s{background:#FDEFD5;color:var(--gold-dark)}
+.add{margin-top:10px;border:1px dashed var(--gold-dark);background:#FFFBF2;color:var(--navy);border-radius:10px;padding:10px 14px;font:600 13px var(--body);cursor:pointer;width:100%}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll table{min-width:640px}
+td{white-space:nowrap}
+td input[data-k="name"]{min-width:170px}
+td select{min-width:90px}
+.mx td.hl{background:#E7F4EA;font-weight:700}
+.disc{font-size:12px;color:var(--text-light);line-height:1.5;margin-top:6px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+@media print{header button,.add,td .del{display:none}header{position:static}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../index.html#ant" class="home" aria-label="Back to PULSE">‹</a>
+  <img src="ant-assets/logo-light.png" alt="ANT Wealth System">
+  <h1>TAX &amp; INVEST</h1>
+  <button type="button" onclick="window.print()">SAVE PDF</button>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span class="n">1</span>CLIENT</h2>
+    <div class="grid">
+      <div class="full"><label for="cname">Client name</label><input id="cname" placeholder="Optional"></div>
+      <div><label for="age">Age</label><input id="age" inputmode="numeric" value="35"></div>
+      <div><label for="retire">Retire at age</label><input id="retire" inputmode="numeric" value="55"></div>
+      <div><label for="income">Monthly income (RM, before EPF)</label><input id="income" inputmode="numeric" value="6,000"></div>
+      <div><label for="expense">Monthly expenses (RM)</label><input id="expense" inputmode="numeric" value="3,500"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">2</span>TAX &amp; PRS</h2>
+    <div class="grid">
+      <div><label for="otherRelief">Other tax reliefs (RM / year)</label><input id="otherRelief" inputmode="numeric" value="3,000">
+        <div class="hint">Insurance, medical, lifestyle, children, etc. Individual RM9,000 and EPF are added for you.</div></div>
+      <div><label for="prs">PRS put in this year (RM)</label><input id="prs" inputmode="numeric" value="3,000">
+        <div class="hint">Relief is claimed up to RM3,000 a year.</div></div>
+    </div>
+    <div class="stats" id="taxStats"></div>
+    <div class="tip" id="prsTip"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">3</span>EMERGENCY FUND (6 MONTHS)</h2>
+    <div class="grid">
+      <div><label for="savings">Cash savings now (RM)</label><input id="savings" inputmode="numeric" value="10,000"></div>
+    </div>
+    <div class="stats" id="efStats"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">4</span>INVESTMENT PLAN</h2>
+    <div class="grid">
+      <div><label for="pct">Invest % of income</label><input id="pct" inputmode="decimal" value="15">
+        <div class="hint">A common guide is 10–20% (PRS included).</div></div>
+      <div><label>Risk level (100 / 110 / 120 minus age)</label>
+        <div class="seg" id="risk"><button type="button" data-v="100">Careful</button><button type="button" data-v="110" aria-pressed="true">Middle</button><button type="button" data-v="120">Comfortable</button></div></div>
+    </div>
+    <div class="bar" id="splitBar"></div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Where</th><th>Type</th><th>Return %/yr</th><th>RM / month</th><th>Doubles in</th><th>Value at retire</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot><tr id="totals"></tr></tfoot>
+      </table>
+    </div>
+    <button type="button" class="add" id="addRow">+ ADD INVESTMENT (ETF, unit trust, gold…)</button>
+    <div class="tip" id="planTip"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">5</span>HOW MUCH TO INVEST?</h2>
+    <p class="hint">Value at retirement if the client invests this % of income every month, at different yearly returns. The highlighted cell is the current plan.</p>
+    <div class="scroll"><table class="mx" id="matrix"></table></div>
+    <div class="tip" id="inflTip"></div>
+  </section>
+
+  <p class="disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed; past performance is not a guide to the future.
+  The tax figures use Malaysian resident rates from YA 2023 onwards and the RM400 rebate when taxable income is RM35,000 or less. Check the latest rules with LHDN.
+  The PRS relief (up to RM3,000 a year, shared with deferred annuity) runs until YA 2030. PRS: 70% is locked until 55, and 30% can be withdrawn early with an 8% tax penalty.</p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const num = v => { const n = Number(String(v ?? '').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; };
+const rm = v => 'RM ' + Math.round(v).toLocaleString('en-US');
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch (_) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+};
+
+// Malaysian resident tax, YA 2023 onwards: [upper limit of band, rate].
+const BANDS = [[5000, 0], [20000, .01], [35000, .03], [50000, .06], [70000, .11], [100000, .19],
+  [400000, .25], [600000, .26], [2000000, .28], [Infinity, .30]];
+function tax(ci) {
+  let t = 0, low = 0;
+  for (const [hi, r] of BANDS) { if (ci > low) t += (Math.min(ci, hi) - low) * r; low = hi; }
+  if (ci <= 35000) t -= 400;                          // rebate
+  return Math.max(0, t);
+}
+const topRate = ci => (BANDS.find(([hi]) => ci <= hi) || BANDS.at(-1))[1];
+function fv(monthly, ratePct, years) {
+  const n = Math.max(0, Math.round(years * 12)), r = ratePct / 100 / 12;
+  return r ? monthly * ((Math.pow(1 + r, n) - 1) / r) : monthly * n;
+}
+const prsFund = age => age < 45 ? ['PRS Growth fund', 'g'] : age < 55 ? ['PRS Moderate fund', 'g'] : ['PRS Conservative fund', 's'];
+
+// Investments besides PRS – the advisor can change returns, add or remove (saved on this phone).
+const DEFAULT_ROWS = [
+  {name: 'Unit trust (equity)', type: 'g', ret: 7},
+  {name: 'ETF (global shares)', type: 'g', ret: 7},
+  {name: 'Bond / money market fund', type: 's', ret: 4},
+  {name: 'Fixed deposit', type: 's', ret: 3}
+];
+let rows = store.get('ant-calc-rows', DEFAULT_ROWS);
+let risk = store.get('ant-calc-risk', 110);
+let prsRet = store.get('ant-calc-prs-ret', 6);
+
+// Client from the last Fact-Find, if any.
+try {
+  const ff = JSON.parse(localStorage.getItem('ant-factfind-current') || 'null');
+  if (ff) {
+    if (ff.name) $('cname').value = ff.name;
+    if (ff.age) $('age').value = ff.age;
+    if (ff.background && ff.background.income) $('income').value = Math.round(ff.background.income).toLocaleString('en-US');
+    if (ff.background && ff.background.retireAge) $('retire').value = ff.background.retireAge;
+  }
+} catch (_) {}
+
+function render() {
+  const age = num($('age').value), retire = Math.max(num($('retire').value), age + 1), years = retire - age;
+  const yearly = num($('income').value) * 12, expense = num($('expense').value);
+  const prs = num($('prs').value), prsRelief = Math.min(prs, 3000);
+
+  // ---- Tax & PRS ----
+  const epf = Math.min(yearly * 0.11, 4000);
+  const base = Math.max(0, yearly - 9000 - epf - num($('otherRelief').value));
+  const withPrs = Math.max(0, base - prsRelief);
+  const t0 = tax(base), t1 = tax(withPrs), saved = t0 - t1, rate = topRate(base);
+  $('taxStats').innerHTML = `
+    <div class="stat"><small>Yearly income</small><b>${rm(yearly)}</b></div>
+    <div class="stat"><small>Taxable income</small><b>${rm(base)}</b></div>
+    <div class="stat"><small>Top tax rate</small><b>${Math.round(rate * 100)}%</b></div>
+    <div class="stat"><small>Tax without PRS</small><b>${rm(t0)}</b></div>
+    <div class="stat"><small>Tax with PRS</small><b>${rm(t1)}</b></div>
+    <div class="stat good"><small>Tax saved</small><b>${rm(saved)}</b></div>`;
+  const full = Math.min(3000, base) ? 3000 : 0, fullSave = t0 - tax(Math.max(0, base - 3000));
+  const [fund] = prsFund(age);
+  $('prsTip').innerHTML = !t0
+    ? `<b>No income tax to pay</b> at this income, so PRS gives no tax saving. It can still be used for retirement savings.`
+    : rate <= .03
+      ? `Tax saving is small (<b>${rm(fullSave)}</b> on RM3,000). PRS is optional here, so build the emergency fund first.`
+      : `<b>Suggested: RM3,000 a year (RM250 a month)</b> into PRS saves about <b>${rm(fullSave)}</b> tax, an instant <b>${Math.round(fullSave / 30)}%</b> "return" from tax before any fund growth.
+         ${prs > 3000 ? `<br>Only RM3,000 is claimed. The extra ${rm(prs - 3000)} gives no more relief but still grows for retirement.` : ''}
+         <br>Default for age ${age}: <b>${fund}</b>. Put it in before <b>31 December</b>.`;
+
+  // ---- Emergency fund ----
+  const need = expense * 6, have = num($('savings').value), gap = Math.max(0, need - have);
+  $('efStats').innerHTML = `
+    <div class="stat"><small>Needed (6 × RM${Math.round(expense).toLocaleString('en-US')})</small><b>${rm(need)}</b></div>
+    <div class="stat"><small>Has now</small><b>${rm(have)}</b></div>
+    <div class="stat ${gap ? 'bad' : 'good'}"><small>${gap ? 'Still short' : 'Done ✓'}</small><b>${gap ? rm(gap) : 'Covered'}</b></div>`;
+
+  // ---- Investment plan ----
+  const monthlyInvest = yearly / 12 * num($('pct').value) / 100;
+  const growthPct = Math.max(0, Math.min(100, risk - age)), safePct = 100 - growthPct;
+  $('splitBar').innerHTML = `<span class="g" style="width:${growthPct}%">${growthPct ? 'Growth ' + growthPct + '%' : ''}</span><span class="s" style="width:${safePct}%">${safePct ? 'Safe ' + safePct + '%' : ''}</span>`;
+  const [pName, pType] = prsFund(age);
+  const prsMonthly = Math.min(prs / 12, monthlyInvest);
+  let left = monthlyInvest - prsMonthly;
+  // Share out what is left so the whole plan (PRS included) follows the growth / safe split.
+  const gWant = monthlyInvest * growthPct / 100 - (pType === 'g' ? prsMonthly : 0);
+  const sWant = monthlyInvest * safePct / 100 - (pType === 's' ? prsMonthly : 0);
+  let gMoney = Math.max(0, gWant), sMoney = Math.max(0, sWant);
+  const scale = gMoney + sMoney ? left / (gMoney + sMoney) : 0;
+  gMoney *= scale; sMoney *= scale;
+  const gCount = rows.filter(r => r.type === 'g').length || 1, sCount = rows.filter(r => r.type === 's').length || 1;
+  const line = (name, type, ret, m, i) => {
+    const value = fv(m, ret, years);
+    return {m, value, html: `<tr>
+      <td>${i == null ? esc(name) : `<input data-i="${i}" data-k="name" value="${esc(name)}">`}</td>
+      <td>${i == null ? `<span class="tag ${type}">${type === 'g' ? 'Growth' : 'Safe'}</span>` :
+        `<select data-i="${i}" data-k="type"><option value="g"${type === 'g' ? ' selected' : ''}>Growth</option><option value="s"${type === 's' ? ' selected' : ''}>Safe</option></select>`}</td>
+      <td><input class="ret" ${i == null ? 'id="prsRet"' : `data-i="${i}" data-k="ret"`} inputmode="decimal" value="${ret}"></td>
+      <td>${rm(m)}</td>
+      <td>${ret > 0 ? Math.round(72 / ret * 10) / 10 + ' yrs' : '–'}</td>
+      <td>${rm(value)}</td>
+      <td>${i == null ? '' : `<button type="button" class="del" data-del="${i}" aria-label="Remove">×</button>`}</td></tr>`};
+  };
+  const lines = [line(pName + ' (tax relief)', pType, prsRet, prsMonthly, null)]
+    .concat(rows.map((r, i) => line(r.name, r.type, r.ret, r.type === 'g' ? gMoney / gCount : sMoney / sCount, i)));
+  $('rows').innerHTML = lines.map(l => l.html).join('');
+  const totM = lines.reduce((a, l) => a + l.m, 0), totV = lines.reduce((a, l) => a + l.value, 0), put = totM * years * 12;
+  $('totals').innerHTML = `<td colspan="3">Total (${years} years)</td><td>${rm(totM)}</td><td></td><td>${rm(totV)}</td><td></td>`;
+  $('planTip').innerHTML = `Investing <b>${rm(monthlyInvest)}/month</b> (${num($('pct').value)}% of income) for ${years} years:
+    you put in <b>${rm(put)}</b> and it could grow to about <b>${rm(totV)}</b>${put ? ` (${(totV / put).toFixed(1)}× what you put in)` : ''}.
+    ${gap ? `<br>⚠️ Emergency fund is still short by ${rm(gap)}: fill this first, or alongside the plan.` : ''}`;
+
+  // ---- % of income × return matrix ----
+  const pcts = [5, 10, 15, 20, 25], rets = [3, 5, 7, 9], cur = num($('pct').value);
+  const blended = put ? rets.reduce((best, r) => Math.abs(fv(totM, r, years) - totV) < Math.abs(fv(totM, best, years) - totV) ? r : best, rets[0]) : null;
+  $('matrix').innerHTML = `<tr><th>% of income</th><th>RM/month</th>${rets.map(r => `<th>${r}% a year</th>`).join('')}</tr>` +
+    pcts.map(p => { const m = yearly / 12 * p / 100;
+      return `<tr><td>${p}%</td><td>${rm(m)}</td>${rets.map(r => `<td class="${p === cur && r === blended ? 'hl' : ''}">${rm(fv(m, r, years))}</td>`).join('')}</tr>`; }).join('');
+  $('inflTip').innerHTML = `Rule of 72: at <b>3% inflation</b>, today's ${rm(expense)} monthly expenses become about <b>${rm(expense * Math.pow(1.03, years))}</b> by age ${retire} (costs double every 24 years).`;
+
+  store.set('ant-calc-rows', rows); store.set('ant-calc-risk', risk); store.set('ant-calc-prs-ret', prsRet);
+}
+
+document.querySelector('main').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.i != null) {
+    const r = rows[+t.dataset.i];
+    r[t.dataset.k] = t.dataset.k === 'ret' ? num(t.value) : t.value;
+    if (t.dataset.k !== 'type') { clearTimeout(window._rt); window._rt = setTimeout(renderKeepFocus, 500); return; }
+  }
+  if (t.id === 'prsRet') { prsRet = num(t.value); clearTimeout(window._rt); window._rt = setTimeout(renderKeepFocus, 500); return; }
+  render();
+});
+document.querySelector('main').addEventListener('change', e => { if (e.target.dataset.k === 'type') render(); });
+// Re-draw without losing the box being typed in.
+function renderKeepFocus() {
+  const a = document.activeElement, key = a && (a.id || (a.dataset.i != null && a.dataset.i + a.dataset.k));
+  render();
+  const b = key && ($(key) || document.querySelector(`[data-i="${key.replace(/\D+$/, '')}"][data-k="${key.replace(/^\d+/, '')}"]`));
+  if (b) { b.focus(); const v = b.value; if (b.setSelectionRange && b.type !== 'number') b.setSelectionRange(v.length, v.length); }
+}
+$('rows').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (d) { rows.splice(+d.dataset.del, 1); render(); } });
+$('addRow').onclick = () => { rows.push({name: 'New investment', type: 'g', ret: 6}); render(); };
+$('risk').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  risk = +b.dataset.v;
+  $('risk').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  render();
+});
+$('risk').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === risk ? 'true' : 'false'));
+document.addEventListener('focusout', e => {
+  if (['income', 'expense', 'otherRelief', 'prs', 'savings'].includes(e.target.id) && e.target.value.trim())
+    e.target.value = Math.round(num(e.target.value)).toLocaleString('en-US');
+});
+render();
+</script>
+</body>
+</html>
