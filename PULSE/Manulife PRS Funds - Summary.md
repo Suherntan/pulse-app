@@ -106,3 +106,20 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
 - **Returns:** not guaranteed. Example (Manulife, past): PRS-Growth A 9.11% (1 yr to Jan 2026), 40.82% (10 yrs); PRS-Moderate A 7.15% (1 yr to Feb 2026). Conservative = lower but steadier.
 - **Simple line for clients:** "Your money is ring-fenced with a trustee, not mixed with the company's – but the value moves with the market, so it's for long-term retirement, not short-term savings."
 - Check: SC / PPA websites for the latest wording.
+
+## EPF vs PRS for a Malaysian working in Singapore (27 Oct 2026)
+- **Can she pay EPF?** Yes – **voluntary contribution** (e.g. i-Simpan / self top-up), monthly or lump sum, cap **RM100,000 a year** across voluntary channels. Earns the normal EPF dividend. (Maybank article "EPF for Malaysians working in SG".)
+- **Dividend:** 6.30% for 2024 (conventional & Shariah). 2025 rate – one site says 6.15%, **not verified** – check KWSP.
+
+| | EPF (voluntary) | PRS |
+|---|---|---|
+| Returns | Yearly dividend, historically ~5–6%; never a loss so far | Moves with market; can go up more or down |
+| Capital | Very low risk; government-backed fund (dividend not legally guaranteed above 2.5% min) | Market risk, no guarantee |
+| Choice | None – EPF decides | Pick Growth / Moderate / Conservative / Shariah |
+| Fees | No fees | Sales charge + management fee |
+| Tax relief (if paying MY tax) | Part of RM4,000 EPF relief (with life insurance RM7,000) | Up to RM3,000 (separate) |
+| Withdraw | Akaun Persaraan mostly at 55; Akaun Fleksibel any time | 70% at 55; 30% early with 8% penalty |
+| Max | RM100,000/yr voluntary | No max to put in (relief only RM3,000) |
+
+- **Suggestion for her (no MY tax):** **EPF first** for the safe, steady ringgit core (low risk, no fees, ~6% history). Add **PRS** only if she wants more growth and accepts ups & downs, or later when she pays Malaysian tax. Emergency fund (6 months) before both.
+- Check with KWSP: the voluntary channel she can use from abroad, i-Saraan eligibility (incentive for people without fixed income – likely not her), the 2.5% minimum dividend wording.
