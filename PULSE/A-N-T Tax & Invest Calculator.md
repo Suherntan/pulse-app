@@ -1,0 +1,23 @@
+# A-N-T Tax & Invest Calculator
+
+- **Created:** 27 Oct 2026
+- **Where:** PULSE app → **A-N-T** tab → **Tax & Invest Calculator** (page `ant/calculator.html`). **SAVE PDF** button prints it.
+- Fills in name, age, monthly income and retire age from the last **Fact-Find** saved on this phone.
+
+## What it shows
+1. **Tax & PRS** – yearly income, taxable income (minus RM9,000 individual + EPF 11% up to RM4,000 + "other reliefs" you type), top tax rate, tax with / without PRS, **tax saved**, and a suggestion:
+   - Top rate 6% or more → "RM3,000 a year (RM250/month)", tax saved, the instant "return" %, the default PRS fund for the age (below 45 Growth, 45–54 Moderate, 55+ Conservative), "before 31 December".
+   - Top rate 3% or less → saving is small, emergency fund first. No tax → no saving.
+2. **Emergency fund** – 6 × monthly expenses vs cash now → short by RM… .
+3. **Investment plan** – invest **% of income** (default 15%), risk level **Careful / Middle / Comfortable** (100 / 110 / 120 minus age) → growth vs safe bar. Table: PRS (RM250/month) + unit trust, ETF, bond fund, fixed deposit (example returns – edit them), **+ ADD INVESTMENT** for gold, other funds etc. Each row: RM/month, Rule of 72 "doubles in", value at retirement. Your list and returns are saved on this phone.
+4. **How much to invest?** – table of 5–25% of income × 3/5/7/9% a year → value at retirement (current plan highlighted).
+5. Inflation line: today's expenses at 3% a year by retirement age.
+
+## Rules used
+- Tax: Malaysian resident rates YA 2023 onwards, RM400 rebate if taxable income ≤ RM35,000. **Estimate only** – the real reliefs vary.
+- PRS relief up to RM3,000/yr (shared with deferred annuity), until YA 2030.
+- Returns are examples, not guaranteed. General illustration, not advice.
+
+## Later ideas
+- Save the calculator result into the client's CLIENT FILE / A-N-T Analysis PDF.
+- Add ETF / unit-trust fund lists with their real past returns.
