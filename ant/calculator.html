@@ -61,9 +61,16 @@ td{white-space:nowrap}
 td input[data-k="name"]{min-width:170px}
 td select{min-width:90px}
 .mx td.hl{background:#E7F4EA;font-weight:700}
+.who{max-width:760px;margin:12px auto 0;padding:0 16px;font-size:13px;color:var(--text-light)}
+.who b{color:var(--navy)}
+.save{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.save button{border:0;border-radius:12px;padding:14px 22px;font:700 15px var(--head);letter-spacing:.1em;cursor:pointer;background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark)}
+.save button:disabled{opacity:.6;cursor:wait}
+.save span{font-size:14px;color:var(--navy)}
+.save a{color:var(--navy);font-weight:700}
 .disc{font-size:12px;color:var(--text-light);line-height:1.5;margin-top:6px}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
-@media print{header button,.add,td .del{display:none}header{position:static}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
+@media print{header button,.add,td .del,.no-print{display:none}header{position:static}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
 </style>
 </head>
 <body>
@@ -74,6 +81,7 @@ td select{min-width:90px}
   <button type="button" onclick="window.print()">SAVE PDF</button>
 </header>
 
+<p class="who no-print" id="who"></p>
 <main>
   <section class="card">
     <h2><span class="n">1</span>CLIENT</h2>
@@ -133,11 +141,17 @@ td select{min-width:90px}
     <div class="tip" id="inflTip"></div>
   </section>
 
+  <section class="card no-print">
+    <div class="save"><button type="button" id="saveBtn">SAVE TO CLIENT FILE</button><span id="saveMsg"></span></div>
+    <p class="hint" style="margin-top:10px">Saves this plan in the client's CLIENT FILE (Google Sheet) and adds it as a page in the A-N-T Analysis PDF.</p>
+  </section>
+
   <p class="disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed; past performance is not a guide to the future.
   The tax figures use Malaysian resident rates from YA 2023 onwards and the RM400 rebate when taxable income is RM35,000 or less. Check the latest rules with LHDN.
   The PRS relief (up to RM3,000 a year, shared with deferred annuity) runs until YA 2030. PRS: 70% is locked until 55, and 30% can be withdrawn early with an 8% tax penalty.</p>
 </main>
 
+<script src="ant-api.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const num = v => { const n = Number(String(v ?? '').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; };
@@ -175,16 +189,27 @@ let rows = store.get('ant-calc-rows', DEFAULT_ROWS);
 let risk = store.get('ant-calc-risk', 110);
 let prsRet = store.get('ant-calc-prs-ret', 6);
 
-// Client from the last Fact-Find, if any.
+// Which client: opened from the CLIENT FILE (?id=…&name=…), else the last Fact-Find on this phone.
+const INPUTS = ['cname', 'age', 'retire', 'income', 'expense', 'otherRelief', 'prs', 'savings', 'pct'];
+let clientId = '';
 try {
-  const ff = JSON.parse(localStorage.getItem('ant-factfind-current') || 'null');
-  if (ff) {
-    if (ff.name) $('cname').value = ff.name;
-    if (ff.age) $('age').value = ff.age;
-    if (ff.background && ff.background.income) $('income').value = Math.round(ff.background.income).toLocaleString('en-US');
-    if (ff.background && ff.background.retireAge) $('retire').value = ff.background.retireAge;
+  const q = new URLSearchParams(location.search), ff = store.get('ant-factfind-current', null);
+  const c = q.get('id') ? {clientId: q.get('id'), name: q.get('name'), age: q.get('age'), income: q.get('income'), retire: q.get('retire')}
+    : ff ? {clientId: ff.clientId, name: ff.name, age: ff.age, income: ff.background && ff.background.income, retire: ff.background && ff.background.retireAge} : {};
+  clientId = /DEMO|0000/.test(c.clientId || '') ? '' : (c.clientId || '');
+  if (c.name) $('cname').value = c.name;
+  if (c.age) $('age').value = c.age;
+  if (num(c.income)) $('income').value = Math.round(num(c.income)).toLocaleString('en-US');
+  if (num(c.retire)) $('retire').value = c.retire;
+  // Same client as the last saved plan on this phone: bring back what was typed.
+  const last = store.get('ant-plan-current', null);
+  if (last && clientId && last.clientId === clientId && last.inputs) {
+    INPUTS.forEach(k => { if (last.inputs[k] != null) $(k).value = last.inputs[k]; });
+    if (last.inputs.risk) risk = last.inputs.risk;
   }
 } catch (_) {}
+$('who').innerHTML = clientId ? `For <b>${esc($('cname').value || clientId)}</b> (${esc(clientId)})`
+  : 'No saved client – save the client in Fact-Find first to keep this plan in the client file.';
 
 function render() {
   const age = num($('age').value), retire = Math.max(num($('retire').value), age + 1), years = retire - age;
@@ -264,7 +289,18 @@ function render() {
   $('inflTip').innerHTML = `Rule of 72: at <b>3% inflation</b>, today's ${rm(expense)} monthly expenses become about <b>${rm(expense * Math.pow(1.03, years))}</b> by age ${retire} (costs double every 24 years).`;
 
   store.set('ant-calc-rows', rows); store.set('ant-calc-risk', risk); store.set('ant-calc-prs-ret', prsRet);
+  plan = {
+    clientId, name: $('cname').value.trim(), date: new Date().toISOString(), age, retire, years,
+    yearly, taxable: base, rate, tax: t0, taxWithPrs: t1, prs, saved, fullSave, prsFund: fund,
+    efNeed: need, efHave: have, efShort: gap, pct: num($('pct').value), monthly: monthlyInvest,
+    risk, riskName: {100: 'Careful', 110: 'Middle', 120: 'Comfortable'}[risk], growthPct, safePct,
+    total: totV, put,
+    rows: lines.map((l, i) => { const r = i ? rows[i - 1] : {name: pName + ' (tax relief)', type: pType, ret: prsRet};
+      return {name: r.name, type: r.type, ret: r.ret, monthly: Math.round(l.m), value: Math.round(l.value)}; }),
+    inputs: Object.assign({risk}, Object.fromEntries(INPUTS.map(k => [k, $(k).value])))
+  };
 }
+let plan = null;
 
 document.querySelector('main').addEventListener('input', e => {
   const t = e.target;
@@ -298,6 +334,22 @@ document.addEventListener('focusout', e => {
     e.target.value = Math.round(num(e.target.value)).toLocaleString('en-US');
 });
 render();
+
+// ---- Save: this phone (for the Analysis PDF) + the client's file in the Google Sheet ----
+$('saveBtn').onclick = async () => {
+  const btn = $('saveBtn'), msg = $('saveMsg');
+  store.set('ant-plan-current', plan);
+  if (!clientId) { msg.textContent = 'Kept on this phone for the Analysis PDF. Save the client in Fact-Find to keep it in the client file.'; return; }
+  if (typeof AntApi === 'undefined' || !AntApi.connected()) { msg.textContent = 'Kept on this phone (demo – Google Sheet not connected).'; return; }
+  btn.disabled = true; btn.textContent = 'SAVING…';
+  try {
+    const r = await AntApi.post('antSavePlan', {clientId, plan});
+    msg.innerHTML = `✓ Saved (${esc(r.planId)}) to the client file${r.master === 'sent' ? ' · copied to Master' : ''}. It will also show in the <a href="analysis.html">A-N-T Analysis PDF</a>.`;
+    btn.textContent = 'SAVED ✓';
+  } catch (err) {
+    msg.textContent = 'Not saved: ' + err.message; btn.textContent = 'SAVE TO CLIENT FILE';
+  } finally { btn.disabled = false; }
+};
 </script>
 </body>
 </html>

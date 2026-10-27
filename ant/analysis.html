@@ -58,6 +58,16 @@ tfoot td{border-bottom:0;font-family:var(--head);font-size:14px;padding-top:12px
 .prio div:not(.pick) .n{background:#C9D2E0}
 .prio .ok{color:var(--ok,#1E8E3E)}
 body.capturing .prio.has-pick div:not(.pick){display:none}
+.plan-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.plan-stats div{background:#FBF6EA;border-radius:10px;padding:8px 12px}
+.plan-stats small{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text-light);text-transform:uppercase}
+.plan-stats b{font-family:var(--head);font-size:17px;color:var(--navy)}
+.plan-stats .good b{color:var(--ok)} .plan-stats .bad b{color:var(--red)}
+.plan-split{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:10px;font:700 11px var(--body);color:#fff}
+.plan-split span{display:flex;align-items:center;justify-content:center}
+.plan-note{font-size:12px;line-height:1.5;color:var(--text);margin-top:8px}
+.plan-disc{font-size:10px;line-height:1.4;color:var(--text-light);margin-top:auto}
+body.capturing .att-del{display:none}
 .pick-hint{margin:6px 0 0;font-size:12px;color:#6B7A90}
 body.capturing .pick-hint{display:none}
 tr.pick td{background:#F3AF3D22;font-weight:700}
@@ -149,6 +159,7 @@ body.capturing .att-del{display:none}
   </div>
   <div class="foot"><span id="prep">ANT Wealth System · Analyze. Navigate. Transform.</span><span id="ref"></span></div>
 </article>
+<div id="planPage"></div>
 <div id="atts"></div>
 
 <script src="ant-api.js"></script>
@@ -269,6 +280,51 @@ function renderAtts() {
     <div class="att-body"><img src="${a.src}" alt="Attachment ${i + 1}"></div>
     <div class="foot"><span>${$('prep').textContent}</span><span>${$('ref').textContent}</span></div></article>`).join('');
 }
+// ---- Tax & Invest plan from the calculator (same client only) as an extra page ----
+const plan = read('ant-plan-current');
+let showPlan = !!(plan && plan.clientId && plan.clientId === client.clientId);
+function renderPlan() {
+  if (!showPlan) { $('planPage').innerHTML = ''; return; }
+  const p = plan, rm = v => 'RM ' + fmt(v), e = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const on = new Date(p.date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+  $('planPage').innerHTML = `<article class="page plan">
+    <header class="band"><img src="ant-assets/logo-light.png" alt="ANT Wealth System"><h1>TAX &amp; <span>INVEST PLAN</span></h1>
+      <div class="date">Prepared on<b>${on}</b></div>
+      <button class="att-del" id="planDel" aria-label="Remove plan page">✕ Remove</button></header>
+    <div class="body">
+      <section><h2>TAX &amp; PRS</h2>
+        <div class="plan-stats">
+          <div><small>Yearly income</small><b>${rm(p.yearly)}</b></div>
+          <div><small>Taxable income (est.)</small><b>${rm(p.taxable)}</b></div>
+          <div><small>Top tax rate</small><b>${Math.round(p.rate * 100)}%</b></div>
+          <div><small>PRS this year</small><b>${rm(p.prs)}</b></div>
+          <div><small>Tax without → with PRS</small><b>${rm(p.tax)} → ${rm(p.taxWithPrs)}</b></div>
+          <div class="good"><small>Tax saved</small><b>${rm(p.saved)}</b></div>
+        </div>
+        <p class="plan-note">${p.fullSave > 0 && p.rate > .03 ? `RM3,000 a year (RM250/month) into PRS saves about <b>${rm(p.fullSave)}</b> tax. Default for age ${e(p.age)}: <b>${e(p.prsFund)}</b>. Contribute before 31 December.` : 'PRS tax saving is small at this income. Build the emergency fund first.'}</p>
+      </section>
+      <section><h2>EMERGENCY FUND (6 MONTHS)</h2>
+        <div class="plan-stats">
+          <div><small>Needed</small><b>${rm(p.efNeed)}</b></div>
+          <div><small>Has now</small><b>${rm(p.efHave)}</b></div>
+          <div class="${p.efShort > 0 ? 'bad' : 'good'}"><small>${p.efShort > 0 ? 'Still short' : 'Status'}</small><b>${p.efShort > 0 ? rm(p.efShort) : 'Covered ✓'}</b></div>
+        </div>
+      </section>
+      <section><h2>INVESTMENT PLAN</h2>
+        <p class="plan-note">Invest <b>${e(p.pct)}% of income = ${rm(p.monthly)} a month</b> for ${e(p.years)} years (to age ${e(p.retire)}). Risk level: <b>${e(p.riskName)}</b>.</p>
+        <div class="plan-split"><span style="width:${p.growthPct}%;background:#0B2545">${p.growthPct ? 'Growth ' + p.growthPct + '%' : ''}</span><span style="width:${p.safePct}%;background:#F3AF3D;color:#0B2545">${p.safePct ? 'Safe ' + p.safePct + '%' : ''}</span></div>
+        <table style="margin-top:10px"><thead><tr><th>WHERE</th><th>RETURN / YR</th><th>RM / MONTH</th><th>DOUBLES IN</th><th>VALUE AT ${e(p.retire)}</th></tr></thead>
+          <tbody>${(p.rows || []).map(r => `<tr><td>${e(r.name)}</td><td>${e(r.ret)}%</td><td>${fmt(r.monthly)}</td><td>${r.ret > 0 ? Math.round(72 / r.ret * 10) / 10 + ' yrs' : '–'}</td><td>${fmt(r.value)}</td></tr>`).join('')}</tbody>
+          <tfoot><tr><td>TOTAL</td><td></td><td>${fmt(p.monthly)}</td><td></td><td>${fmt(p.total)}</td></tr></tfoot></table>
+        <p class="plan-note">Total put in: <b>${rm(p.put)}</b> → could grow to about <b>${rm(p.total)}</b>.</p>
+      </section>
+      <p class="plan-disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed. Tax uses Malaysian resident rates (YA 2023 onwards); check the latest rules with LHDN. PRS relief up to RM3,000 a year (shared with deferred annuity) until YA 2030.</p>
+    </div>
+    <div class="foot"><span>${$('prep').textContent}</span><span>${$('ref').textContent}</span></div></article>`;
+  $('planDel').onclick = () => { showPlan = false; renderPlan(); };
+}
+renderPlan();
+
 $('atts').onclick = e => { const d = e.target.closest('[data-del]'); if (d) { atts.splice(+d.dataset.del, 1); renderAtts(); } };
 // Shrink big photos so the PDF stays small enough for Drive.
 function toJpeg(canvasOrImg, w, h) {
