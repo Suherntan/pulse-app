@@ -60,3 +60,24 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
 - https://www.kenanga.com.my/wp-content/uploads/kenwealth/MPGC%20FFS.pdf
 - https://www.kenanga.com.my/wp-content/uploads/kenwealth/MSPMC%20AR.pdf
 - https://thesun.my/news/manulife-investment-management-launches-new-fund-to-capture-growth-opportunities-in-china-india-af8878453/
+
+## PRS tax relief – explained (27 Oct 2026)
+- **RM3,000 = the most you can CLAIM a year**, not the most you can put in. You may put in more (e.g. RM5,000) – only RM3,000 is claimed.
+- The RM3,000 is **shared with deferred annuity** premiums, and is **separate** from the RM7,000 EPF + life insurance relief.
+- Extended to **YA 2030** (Budget 2025). Contribute by **31 Dec** to count for that year.
+- **Tax saved = RM3,000 × your top tax rate** (it lowers taxable income, it is not cash back):
+
+| Yearly taxable income (after reliefs) | Top rate | Tax saved on RM3,000 |
+|---|---|---|
+| RM20,001–35,000 | 3% | RM90 |
+| RM35,001–50,000 | 6% | RM180 |
+| RM50,001–70,000 | 11% | RM330 |
+| RM70,001–100,000 | 19% | RM570 |
+| RM100,001–400,000 | 25% | RM750 |
+| RM400,001–600,000 | 26% | RM780 |
+| RM600,001–2 million | 28% | RM840 |
+| Above RM2 million | 30% | RM900 |
+
+(Resident tax rates YA 2023 onwards – check LHDN for the current year.)
+- **Two sub-accounts:** 70% in A (locked until 55), 30% in B (can take out once a year before 55, but **8% tax penalty**). Check the latest PPA rules.
+- Sources: StashAway PRS guide, Malaymail Budget 2025, Malaysia4u PRS guide.
