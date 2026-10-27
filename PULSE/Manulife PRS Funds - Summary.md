@@ -81,3 +81,17 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
 (Resident tax rates YA 2023 onwards – check LHDN for the current year.)
 - **Two sub-accounts:** 70% in A (locked until 55), 30% in B (can take out once a year before 55, but **8% tax penalty**). Check the latest PPA rules.
 - Sources: StashAway PRS guide, Malaymail Budget 2025, Malaysia4u PRS guide.
+
+## Pitch: Malaysian working in Singapore, no Malaysian tax (27 Oct 2026)
+- **Be honest first:** no Malaysian tax → the RM3,000 tax relief gives her **RM0** saving now. Don't lead with tax.
+- **Lead with:** "a ringgit retirement pot for when you come home".
+  1. **Strong SGD:** each S$ buys more RM now. Example: S$300/month ≈ RM1,000/month (check the rate on the day).
+  2. **Home-currency retirement:** if she retires in Malaysia, her costs are in RM. CPF is in S$ and has its own rules.
+  3. **Forced discipline:** money is locked until 55 (70% Account A), so it is hard to spend.
+  4. **Choose a fund by risk:** Growth / Moderate / Conservative, Shariah options. Default by age.
+  5. **Tax later:** if she moves back and pays Malaysian tax, the relief (up to RM3,000/yr, until YA 2030) starts helping.
+- **Discovery questions:** plans to come back? when? where will she retire? CPF / SRS already? emergency fund (6 months)? what does she do with spare S$ now?
+- **Honest alternatives to mention:** Singapore **SRS** may give her real *Singapore* tax relief if she pays SG tax – she should check with IRAS. PRS is for the ringgit / come-home goal.
+- **Watch-outs:** 30% Account B early withdrawal = 8% tax penalty; fees (sales charge, management fee); returns not guaranteed; currency risk both ways.
+- **Compliance:** need a **PRS consultant licence** (FIMM) to recommend / sell PRS; give the PHS & disclosure document; no promises of returns.
+- **Check:** her Malaysian tax residency status, SGD/MYR rate on the day, and the current PPA withdrawal rules (e.g. leaving Malaysia permanently).
