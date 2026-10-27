@@ -66,6 +66,9 @@ body.capturing .prio.has-pick div:not(.pick){display:none}
 .plan-split{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:10px;font:700 11px var(--body);color:#fff}
 .plan-split span{display:flex;align-items:center;justify-content:center}
 .plan-note{font-size:12px;line-height:1.5;color:var(--text);margin-top:8px}
+.page.plan .body{gap:10px;padding-top:16px;padding-bottom:12px}
+.page.plan td{padding:6px 8px}
+.page.plan .plan-stats{margin-top:8px}
 .plan-disc{font-size:10px;line-height:1.4;color:var(--text-light);margin-top:auto}
 body.capturing .att-del{display:none}
 .pick-hint{margin:6px 0 0;font-size:12px;color:#6B7A90}
@@ -318,6 +321,14 @@ function renderPlan() {
           <tfoot><tr><td>TOTAL</td><td></td><td>${fmt(p.monthly)}</td><td></td><td>${fmt(p.total)}</td></tr></tfoot></table>
         <p class="plan-note">Total put in: <b>${rm(p.put)}</b> → could grow to about <b>${rm(p.total)}</b>.</p>
       </section>
+      ${p.ut ? `<section><h2>UNIT TRUST</h2>
+        <p class="plan-note"><b>${e(p.ut.type)}</b>: lump sum ${rm(p.ut.lump)} + ${rm(p.ut.monthly)}/month · ${e(p.ut.gross)}% a year before fees, sales charge ${e(p.ut.sc)}%, management fee ${e(p.ut.mf)}% a year.</p>
+        <table style="margin-top:6px"><thead><tr><th>SAME MONEY IN</th><th>RETURN / YR</th><th>VALUE AT ${e(p.retire)}</th></tr></thead><tbody>
+          <tr><td>Unit trust (after fees)</td><td>${Number(p.ut.net).toFixed(1)}%</td><td>${fmt(p.ut.value)}</td></tr>
+          <tr><td>EPF voluntary (no fees)</td><td>${e(p.ut.epfRate)}%</td><td>${fmt(p.ut.epf)}</td></tr>
+          <tr><td>Fixed deposit</td><td>3%</td><td>${fmt(p.ut.fd)}</td></tr></tbody></table>
+        <p class="plan-note">Put in ${rm(p.ut.put)} · fees about ${rm(p.ut.charge + p.ut.mfCost)} (sales charge ${rm(p.ut.charge)}, management ${rm(p.ut.mfCost)}). Unit trust returns are not guaranteed.</p>
+      </section>` : ''}
       <p class="plan-disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed. Tax uses Malaysian resident rates (YA 2023 onwards); check the latest rules with LHDN. PRS relief up to RM3,000 a year (shared with deferred annuity) until YA 2030.</p>
     </div>
     <div class="foot"><span>${$('prep').textContent}</span><span>${$('ref').textContent}</span></div></article>`;

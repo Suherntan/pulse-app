@@ -411,7 +411,8 @@ function renderHistory(c) {
         <tr><td>Emergency fund (6 months)</td><td>${num(p.efShort) > 0 ? `<span class="short">short RM ${money(p.efShort)}</span>` : '<span class="ok">✓ covered</span>'}</td></tr>
         <tr><td>Invest</td><td>${esc(p.pct)}% = RM ${money(p.monthly)}/month · ${esc(p.riskName || '')} ${esc(p.growthPct)}/${esc(p.safePct)}</td></tr>
         ${(p.rows || []).map(r => `<tr><td>&nbsp;· ${esc(r.name)} <small>(${esc(r.ret)}%)</small></td><td>RM ${money(r.monthly)}/month → RM ${money(r.value)}</td></tr>`).join('')}
-        <tr><td><b>Value at age ${esc(p.retire)}</b></td><td><b>RM ${money(p.total)}</b></td></tr></table></details>`).join('');
+        <tr><td><b>Value at age ${esc(p.retire)}</b></td><td><b>RM ${money(p.total)}</b></td></tr>
+        ${p.ut ? `<tr><td>Unit trust: ${esc(p.ut.type)}</td><td>RM ${money(p.ut.lump)} + RM ${money(p.ut.monthly)}/month → RM ${money(p.ut.value)} <small>(EPF: RM ${money(p.ut.epf)}, fees RM ${money(p.ut.charge + p.ut.mfCost)})</small></td></tr>` : ''}</table></details>`).join('');
   fileData = h; fileClient = c.clientId;
   const pulse = h.pulse && h.pulse.fields && h.pulse.fields.length ? `<h3>IN YOUR PULSE SHEET · ${esc(h.pulse.tab)}</h3>
     <div class="pol"><div class="kv">${h.pulse.fields.map(([k, v]) => `<span>${esc(k)}</span><span>${esc(v)}</span>`).join('')}</div></div>` : '';
