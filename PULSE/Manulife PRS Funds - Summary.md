@@ -123,3 +123,12 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
 
 - **Suggestion for her (no MY tax):** **EPF first** for the safe, steady ringgit core (low risk, no fees, ~6% history). Add **PRS** only if she wants more growth and accepts ups & downs, or later when she pays Malaysian tax. Emergency fund (6 months) before both.
 - Check with KWSP: the voluntary channel she can use from abroad, i-Saraan eligibility (incentive for people without fixed income – likely not her), the 2.5% minimum dividend wording.
+
+## 2025 returns: EPF vs Manulife PRS (27 Oct 2026)
+- **EPF 2025 dividend: 6.15%** (conventional & Shariah), declared 28 Feb 2026. 2024 was 6.30%. (Malay Mail / FMT / The Sun.)
+- **Manulife PRS – financial year to 31 Aug 2025** (annual reports):
+  - PRS-Growth: Class A **5.47%**, Class C **5.79%** (benchmark 6.97%)
+  - PRS-Moderate: Class A **4.36%**, Class C **4.62%** (beat benchmark)
+- **Best Manulife PRS figure found:** PRS-Growth Class A **9.11%** for 1 year to 31 Jan 2026 (factsheet table hard to read – check).
+- REIT and Golden Asia: no 2025 figures found → check the Manulife factsheets / FSMOne. So the "highest Manulife PRS" can't be confirmed for all 9 funds.
+- Takeaway: in FY2025 EPF (6.15%, no fees, low risk) did better than Manulife PRS-Growth (5.5–5.8%); PRS did better over 10 years (PRS-Growth A 40.82%).
