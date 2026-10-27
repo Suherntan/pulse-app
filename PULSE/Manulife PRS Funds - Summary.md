@@ -81,3 +81,54 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
 (Resident tax rates YA 2023 onwards – check LHDN for the current year.)
 - **Two sub-accounts:** 70% in A (locked until 55), 30% in B (can take out once a year before 55, but **8% tax penalty**). Check the latest PPA rules.
 - Sources: StashAway PRS guide, Malaymail Budget 2025, Malaysia4u PRS guide.
+
+## Pitch: Malaysian working in Singapore, no Malaysian tax (27 Oct 2026)
+- **Be honest first:** no Malaysian tax → the RM3,000 tax relief gives her **RM0** saving now. Don't lead with tax.
+- **Lead with:** "a ringgit retirement pot for when you come home".
+  1. **Strong SGD:** each S$ buys more RM now. Example: S$300/month ≈ RM1,000/month (check the rate on the day).
+  2. **Home-currency retirement:** if she retires in Malaysia, her costs are in RM. CPF is in S$ and has its own rules.
+  3. **Forced discipline:** money is locked until 55 (70% Account A), so it is hard to spend.
+  4. **Choose a fund by risk:** Growth / Moderate / Conservative, Shariah options. Default by age.
+  5. **Tax later:** if she moves back and pays Malaysian tax, the relief (up to RM3,000/yr, until YA 2030) starts helping.
+- **Discovery questions:** plans to come back? when? where will she retire? CPF / SRS already? emergency fund (6 months)? what does she do with spare S$ now?
+- **Honest alternatives to mention:** Singapore **SRS** may give her real *Singapore* tax relief if she pays SG tax – she should check with IRAS. PRS is for the ringgit / come-home goal.
+- **Watch-outs:** 30% Account B early withdrawal = 8% tax penalty; fees (sales charge, management fee); returns not guaranteed; currency risk both ways.
+- **Compliance:** need a **PRS consultant licence** (FIMM) to recommend / sell PRS; give the PHS & disclosure document; no promises of returns.
+- **Check:** her Malaysian tax residency status, SGD/MYR rate on the day, and the current PPA withdrawal rules (e.g. leaving Malaysia permanently).
+
+## PRS returns & safety – client Q&A (27 Oct 2026)
+- **PIDM (not "PIDR")?** **No.** PIDM protects bank deposits and insurance / takaful benefits only. PRS, unit trusts, ETFs and shares are **not** covered by PIDM.
+- **So how is the money kept safe?**
+  - Regulated by the **Securities Commission (SC)**; the **PPA** (Private Pension Administrator) keeps each member's record across all providers.
+  - Fund assets are held by an **independent trustee**, separate from Manulife's own money → if the provider has problems, the fund's assets are not used to pay its debts; the fund can be moved to another provider / wound up and the value returned.
+  - Clear rules: disclosure document, PHS, yearly / semi-annual reports, investment limits.
+- **What is NOT protected:** **market risk** – the unit price goes up and down. Value can be lower than what was put in, especially in the short term.
+- **Returns:** not guaranteed. Example (Manulife, past): PRS-Growth A 9.11% (1 yr to Jan 2026), 40.82% (10 yrs); PRS-Moderate A 7.15% (1 yr to Feb 2026). Conservative = lower but steadier.
+- **Simple line for clients:** "Your money is ring-fenced with a trustee, not mixed with the company's – but the value moves with the market, so it's for long-term retirement, not short-term savings."
+- Check: SC / PPA websites for the latest wording.
+
+## EPF vs PRS for a Malaysian working in Singapore (27 Oct 2026)
+- **Can she pay EPF?** Yes – **voluntary contribution** (e.g. i-Simpan / self top-up), monthly or lump sum, cap **RM100,000 a year** across voluntary channels. Earns the normal EPF dividend. (Maybank article "EPF for Malaysians working in SG".)
+- **Dividend:** 6.30% for 2024 (conventional & Shariah). 2025 rate – one site says 6.15%, **not verified** – check KWSP.
+
+| | EPF (voluntary) | PRS |
+|---|---|---|
+| Returns | Yearly dividend, historically ~5–6%; never a loss so far | Moves with market; can go up more or down |
+| Capital | Very low risk; government-backed fund (dividend not legally guaranteed above 2.5% min) | Market risk, no guarantee |
+| Choice | None – EPF decides | Pick Growth / Moderate / Conservative / Shariah |
+| Fees | No fees | Sales charge + management fee |
+| Tax relief (if paying MY tax) | Part of RM4,000 EPF relief (with life insurance RM7,000) | Up to RM3,000 (separate) |
+| Withdraw | Akaun Persaraan mostly at 55; Akaun Fleksibel any time | 70% at 55; 30% early with 8% penalty |
+| Max | RM100,000/yr voluntary | No max to put in (relief only RM3,000) |
+
+- **Suggestion for her (no MY tax):** **EPF first** for the safe, steady ringgit core (low risk, no fees, ~6% history). Add **PRS** only if she wants more growth and accepts ups & downs, or later when she pays Malaysian tax. Emergency fund (6 months) before both.
+- Check with KWSP: the voluntary channel she can use from abroad, i-Saraan eligibility (incentive for people without fixed income – likely not her), the 2.5% minimum dividend wording.
+
+## 2025 returns: EPF vs Manulife PRS (27 Oct 2026)
+- **EPF 2025 dividend: 6.15%** (conventional & Shariah), declared 28 Feb 2026. 2024 was 6.30%. (Malay Mail / FMT / The Sun.)
+- **Manulife PRS – financial year to 31 Aug 2025** (annual reports):
+  - PRS-Growth: Class A **5.47%**, Class C **5.79%** (benchmark 6.97%)
+  - PRS-Moderate: Class A **4.36%**, Class C **4.62%** (beat benchmark)
+- **Best Manulife PRS figure found:** PRS-Growth Class A **9.11%** for 1 year to 31 Jan 2026 (factsheet table hard to read – check).
+- REIT and Golden Asia: no 2025 figures found → check the Manulife factsheets / FSMOne. So the "highest Manulife PRS" can't be confirmed for all 9 funds.
+- Takeaway: in FY2025 EPF (6.15%, no fees, low risk) did better than Manulife PRS-Growth (5.5–5.8%). Over 10 years PRS-Growth A made 40.82% (≈3.5% a year) – it beat its own benchmark, but **EPF's yearly dividends (about 5–7% a year) add up to roughly +70–80% over the same 10 years** (my estimate from past dividends – check). So PRS is not "higher return than EPF"; its case is choice, extra growth potential and the tax relief.

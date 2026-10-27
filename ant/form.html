@@ -402,7 +402,17 @@ function renderHistory(c) {
   const offers = h.offers.map((o, i) => `<details${i ? '' : ' open'}><summary>${day(o.date)} <small>· ${esc(o.id)}</small></summary>
       <table><tr><th></th><th>PLAN</th><th>BASIC LIFE</th><th>ANNUAL</th></tr>${o.slots.map(x =>
         `<tr><td>${esc(x.label)}</td><td>${esc(x.plan || '–')}</td><td>${money(x.basicLife)}</td><td>${money(x.annual)}</td></tr>`).join('')}</table>${pdf(o.pdf)}</details>`).join('');
-  h.policies = h.policies || []; h.notes = h.notes || [];
+  h.policies = h.policies || []; h.notes = h.notes || []; h.plans = h.plans || [];
+  const plans = h.plans.map((p, i) => `<details${i ? '' : ' open'}><summary>${day(p.date)} <small>· ${esc(p.id)} · invest RM ${money(p.monthly)}/month</small></summary>
+      <table><tr><th></th><th></th></tr>
+        <tr><td>Yearly income</td><td>RM ${money(p.yearly)}</td></tr>
+        <tr><td>Top tax rate</td><td>${p.rate != null ? Math.round(p.rate * 100) + '%' : '–'}</td></tr>
+        <tr><td>PRS · tax saved</td><td>RM ${money(p.prs)} · <span class="ok">RM ${money(p.saved)}</span></td></tr>
+        <tr><td>Emergency fund (6 months)</td><td>${num(p.efShort) > 0 ? `<span class="short">short RM ${money(p.efShort)}</span>` : '<span class="ok">✓ covered</span>'}</td></tr>
+        <tr><td>Invest</td><td>${esc(p.pct)}% = RM ${money(p.monthly)}/month · ${esc(p.riskName || '')} ${esc(p.growthPct)}/${esc(p.safePct)}</td></tr>
+        ${(p.rows || []).map(r => `<tr><td>&nbsp;· ${esc(r.name)} <small>(${esc(r.ret)}%)</small></td><td>RM ${money(r.monthly)}/month → RM ${money(r.value)}</td></tr>`).join('')}
+        <tr><td><b>Value at age ${esc(p.retire)}</b></td><td><b>RM ${money(p.total)}</b></td></tr>
+        ${p.ut ? `<tr><td>Unit trust: ${esc(p.ut.type)}</td><td>RM ${money(p.ut.lump)} + RM ${money(p.ut.monthly)}/month → RM ${money(p.ut.value)} <small>(EPF: RM ${money(p.ut.epf)})</small></td></tr>` : ''}</table></details>`).join('');
   fileData = h; fileClient = c.clientId;
   const pulse = h.pulse && h.pulse.fields && h.pulse.fields.length ? `<h3>IN YOUR PULSE SHEET · ${esc(h.pulse.tab)}</h3>
     <div class="pol"><div class="kv">${h.pulse.fields.map(([k, v]) => `<span>${esc(k)}</span><span>${esc(v)}</span>`).join('')}</div></div>` : '';
@@ -412,6 +422,8 @@ function renderHistory(c) {
     <h3>NOTES / MEETING LOG (${h.notes.length})</h3>
     <div class="note-add"><textarea id="noteIn" placeholder="e.g. Met today – wants to review medical card next month"></textarea><button type="button" class="mini gold" data-act="addNote">ADD</button></div>
     ${h.notes.map(n => `<div class="nt"><div><small>${day(n.date)}</small>${esc(n.note).replace(/\n/g, '<br>')}</div><button type="button" data-act="delNote" data-id="${esc(n.id)}" aria-label="Delete note">×</button></div>`).join('')}
+    <h3>TAX &amp; INVEST PLAN (${h.plans.length})</h3>${plans || '<p class="none">No plan saved yet.</p>'}
+    <button type="button" class="mini gold" data-act="newPlan">+ NEW PLAN (CALCULATOR)</button>
     ${pulse}
     <h3>A-N-T ANALYSIS (${h.analyses.length})</h3>${analyses || '<p class="none">No analysis saved yet.</p>'}
     <h3>OFFER DOCUMENTS (${h.offers.length})</h3>${offers || '<p class="none">No offer document saved yet.</p>'}`;
@@ -453,6 +465,11 @@ $('history').addEventListener('click', async e => {
   const b = e.target.closest('button[data-act]'); if (!b) return;
   const act = b.dataset.act, id = b.dataset.id;
   try {
+    if (act === 'newPlan') {
+      const q = new URLSearchParams({id: fileClient, name: $('name').value.trim(), age: calcAge(dobIso()) ?? '',
+        income: toNum($('income').value) ?? '', retire: toNum($('retireAge').value) ?? ''});
+      location.href = 'calculator.html?' + q; return;
+    }
     if (act === 'addPol') { $('pols').innerHTML = policiesHtml('new'); return; }
     if (act === 'editPol') { $('pols').innerHTML = policiesHtml(id); return; }
     if (act === 'cancelPol') { $('pols').innerHTML = policiesHtml(); return; }

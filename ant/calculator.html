@@ -50,6 +50,7 @@ th:first-child,td:first-child{text-align:left}
 th{font-size:11px;letter-spacing:.05em;color:var(--text-light);text-transform:uppercase}
 td input,td select{padding:6px;font-size:13px;border-radius:7px}
 td input.ret{width:64px;text-align:right}
+td.ok{color:var(--ok);font-weight:700}
 td .del{border:0;background:none;color:var(--red);font-size:18px;cursor:pointer}
 tfoot td{font-weight:700;border-top:2px solid var(--navy)}
 .tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px}
@@ -61,9 +62,16 @@ td{white-space:nowrap}
 td input[data-k="name"]{min-width:170px}
 td select{min-width:90px}
 .mx td.hl{background:#E7F4EA;font-weight:700}
+.who{max-width:760px;margin:12px auto 0;padding:0 16px;font-size:13px;color:var(--text-light)}
+.who b{color:var(--navy)}
+.save{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.save button{border:0;border-radius:12px;padding:14px 22px;font:700 15px var(--head);letter-spacing:.1em;cursor:pointer;background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark)}
+.save button:disabled{opacity:.6;cursor:wait}
+.save span{font-size:14px;color:var(--navy)}
+.save a{color:var(--navy);font-weight:700}
 .disc{font-size:12px;color:var(--text-light);line-height:1.5;margin-top:6px}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
-@media print{header button,.add,td .del{display:none}header{position:static}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
+@media print{header button,.add,td .del,.no-print{display:none}header{position:static}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
 </style>
 </head>
 <body>
@@ -74,6 +82,7 @@ td select{min-width:90px}
   <button type="button" onclick="window.print()">SAVE PDF</button>
 </header>
 
+<p class="who no-print" id="who"></p>
 <main>
   <section class="card">
     <h2><span class="n">1</span>CLIENT</h2>
@@ -127,10 +136,36 @@ td select{min-width:90px}
   </section>
 
   <section class="card">
-    <h2><span class="n">5</span>HOW MUCH TO INVEST?</h2>
+    <h2><span class="n">5</span>UNIT TRUST</h2>
+    <div class="grid">
+      <div class="full"><label for="utType">Fund type</label>
+        <select id="utType">
+          <option value="equity">Equity fund (shares)</option>
+          <option value="shariah">Shariah equity fund</option>
+          <option value="balanced">Balanced fund (shares + bonds)</option>
+          <option value="bond">Bond / fixed income fund</option>
+          <option value="mm">Money market fund</option>
+        </select></div>
+      <div><label for="utLump">Lump sum now (RM)</label><input id="utLump" inputmode="numeric" value="0"></div>
+      <div><label for="utMonthly">Monthly (RM)</label><input id="utMonthly" inputmode="numeric" placeholder="from plan">
+        <div class="hint">Empty = the unit trust amount in the plan above.</div></div>
+      <div><label for="utRet">Expected return % a year</label><input id="utRet" inputmode="decimal" value="7"></div>
+    </div>
+    <div class="stats" id="utStats"></div>
+    <div class="scroll"><table id="utCompare"></table></div>
+    <div class="tip" id="utTip"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">6</span>HOW MUCH TO INVEST?</h2>
     <p class="hint">Value at retirement if the client invests this % of income every month, at different yearly returns. The highlighted cell is the current plan.</p>
     <div class="scroll"><table class="mx" id="matrix"></table></div>
     <div class="tip" id="inflTip"></div>
+  </section>
+
+  <section class="card no-print">
+    <div class="save"><button type="button" id="saveBtn">SAVE TO CLIENT FILE</button><span id="saveMsg"></span></div>
+    <p class="hint" style="margin-top:10px">Saves this plan in the client's CLIENT FILE (Google Sheet) and adds it as a page in the A-N-T Analysis PDF.</p>
   </section>
 
   <p class="disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed; past performance is not a guide to the future.
@@ -138,6 +173,7 @@ td select{min-width:90px}
   The PRS relief (up to RM3,000 a year, shared with deferred annuity) runs until YA 2030. PRS: 70% is locked until 55, and 30% can be withdrawn early with an 8% tax penalty.</p>
 </main>
 
+<script src="ant-api.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const num = v => { const n = Number(String(v ?? '').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; };
@@ -175,16 +211,31 @@ let rows = store.get('ant-calc-rows', DEFAULT_ROWS);
 let risk = store.get('ant-calc-risk', 110);
 let prsRet = store.get('ant-calc-prs-ret', 6);
 
-// Client from the last Fact-Find, if any.
+// Which client: opened from the CLIENT FILE (?id=…&name=…), else the last Fact-Find on this phone.
+const INPUTS = ['cname', 'age', 'retire', 'income', 'expense', 'otherRelief', 'prs', 'savings', 'pct',
+  'utType', 'utLump', 'utMonthly', 'utRet'];
+// Example yearly return per unit trust type – the advisor can change it.
+const UT_TYPES = {equity: 7, shariah: 6.5, balanced: 5.5, bond: 4, mm: 3};
+const EPF_RATE = 6.15;   // EPF dividend for 2025 (declared Feb 2026)
+let clientId = '';
 try {
-  const ff = JSON.parse(localStorage.getItem('ant-factfind-current') || 'null');
-  if (ff) {
-    if (ff.name) $('cname').value = ff.name;
-    if (ff.age) $('age').value = ff.age;
-    if (ff.background && ff.background.income) $('income').value = Math.round(ff.background.income).toLocaleString('en-US');
-    if (ff.background && ff.background.retireAge) $('retire').value = ff.background.retireAge;
+  const q = new URLSearchParams(location.search), ff = store.get('ant-factfind-current', null);
+  const c = q.get('id') ? {clientId: q.get('id'), name: q.get('name'), age: q.get('age'), income: q.get('income'), retire: q.get('retire')}
+    : ff ? {clientId: ff.clientId, name: ff.name, age: ff.age, income: ff.background && ff.background.income, retire: ff.background && ff.background.retireAge} : {};
+  clientId = /DEMO|0000/.test(c.clientId || '') ? '' : (c.clientId || '');
+  if (c.name) $('cname').value = c.name;
+  if (c.age) $('age').value = c.age;
+  if (num(c.income)) $('income').value = Math.round(num(c.income)).toLocaleString('en-US');
+  if (num(c.retire)) $('retire').value = c.retire;
+  // Same client as the last saved plan on this phone: bring back what was typed.
+  const last = store.get('ant-plan-current', null);
+  if (last && clientId && last.clientId === clientId && last.inputs) {
+    INPUTS.forEach(k => { if (last.inputs[k] != null) $(k).value = last.inputs[k]; });
+    if (last.inputs.risk) risk = last.inputs.risk;
   }
 } catch (_) {}
+$('who').innerHTML = clientId ? `For <b>${esc($('cname').value || clientId)}</b> (${esc(clientId)})`
+  : 'No saved client – save the client in Fact-Find first to keep this plan in the client file.';
 
 function render() {
   const age = num($('age').value), retire = Math.max(num($('retire').value), age + 1), years = retire - age;
@@ -255,6 +306,28 @@ function render() {
     you put in <b>${rm(put)}</b> and it could grow to about <b>${rm(totV)}</b>${put ? ` (${(totV / put).toFixed(1)}× what you put in)` : ''}.
     ${gap ? `<br>⚠️ Emergency fund is still short by ${rm(gap)}: fill this first, or alongside the plan.` : ''}`;
 
+  // ---- Unit trust: compared with EPF and fixed deposit ----
+  const utPlanMonthly = lines.slice(1).filter((l, i) => /unit trust/i.test(rows[i].name)).reduce((a, l) => a + l.m, 0);
+  const utM = $('utMonthly').value.trim() === '' ? utPlanMonthly : num($('utMonthly').value);
+  $('utMonthly').placeholder = 'from plan: ' + Math.round(utPlanMonthly).toLocaleString('en-US');
+  const utL = num($('utLump').value), utR = num($('utRet').value);
+  const grow = (lump, m, ratePct) => lump * Math.pow(1 + ratePct / 100 / 12, years * 12) + fv(m, ratePct, years);
+  const utPut = utL + utM * 12 * years, utValue = grow(utL, utM, utR);
+  const epfValue = grow(utL, utM, EPF_RATE), fdValue = grow(utL, utM, 3);
+  $('utStats').innerHTML = `
+    <div class="stat"><small>You put in (${years} yrs)</small><b>${rm(utPut)}</b></div>
+    <div class="stat"><small>Return a year</small><b>${utR}%</b></div>
+    <div class="stat"><small>Doubles in</small><b>${utR > 0 ? (72 / utR).toFixed(1) + ' yrs' : '–'}</b></div>
+    <div class="stat good"><small>Value at ${retire}</small><b>${rm(utValue)}</b></div>`;
+  const cmp = [['Unit trust', utR, utValue], [`EPF voluntary (${EPF_RATE}% in 2025)`, EPF_RATE, epfValue], ['Fixed deposit (3%)', 3, fdValue]];
+  const best = Math.max(...cmp.map(c => c[2]));
+  $('utCompare').innerHTML = `<tr><th>Same money in</th><th>Return / yr</th><th>Value at ${retire}</th></tr>` +
+    cmp.map(([n, r, v]) => `<tr><td>${n}</td><td>${r.toFixed(2)}%</td><td class="${v === best ? 'ok' : ''}">${rm(v)}</td></tr>`).join('');
+  $('utTip').innerHTML = !utPut ? 'Put in a lump sum or monthly amount to see the unit trust result.'
+    : utR > EPF_RATE
+      ? `If the fund makes ${utR}% a year, the unit trust ends about <b>${rm(utValue - epfValue)}</b> ahead of EPF. This is <b>not guaranteed</b>, and the value moves up and down.`
+      : `At ${utR}% a year, the unit trust ends <b>${rm(epfValue - utValue)}</b> behind EPF. It needs more than <b>${EPF_RATE}%</b> a year to beat EPF.`;
+
   // ---- % of income × return matrix ----
   const pcts = [5, 10, 15, 20, 25], rets = [3, 5, 7, 9], cur = num($('pct').value);
   const blended = put ? rets.reduce((best, r) => Math.abs(fv(totM, r, years) - totV) < Math.abs(fv(totM, best, years) - totV) ? r : best, rets[0]) : null;
@@ -264,7 +337,20 @@ function render() {
   $('inflTip').innerHTML = `Rule of 72: at <b>3% inflation</b>, today's ${rm(expense)} monthly expenses become about <b>${rm(expense * Math.pow(1.03, years))}</b> by age ${retire} (costs double every 24 years).`;
 
   store.set('ant-calc-rows', rows); store.set('ant-calc-risk', risk); store.set('ant-calc-prs-ret', prsRet);
+  plan = {
+    clientId, name: $('cname').value.trim(), date: new Date().toISOString(), age, retire, years,
+    yearly, taxable: base, rate, tax: t0, taxWithPrs: t1, prs, saved, fullSave, prsFund: fund,
+    efNeed: need, efHave: have, efShort: gap, pct: num($('pct').value), monthly: monthlyInvest,
+    risk, riskName: {100: 'Careful', 110: 'Middle', 120: 'Comfortable'}[risk], growthPct, safePct,
+    total: totV, put,
+    ut: utPut ? {type: $('utType').selectedOptions[0].text, lump: utL, monthly: Math.round(utM), ret: utR,
+      put: Math.round(utPut), value: Math.round(utValue), epf: Math.round(epfValue), fd: Math.round(fdValue), epfRate: EPF_RATE} : null,
+    rows: lines.map((l, i) => { const r = i ? rows[i - 1] : {name: pName + ' (tax relief)', type: pType, ret: prsRet};
+      return {name: r.name, type: r.type, ret: r.ret, monthly: Math.round(l.m), value: Math.round(l.value)}; }),
+    inputs: Object.assign({risk}, Object.fromEntries(INPUTS.map(k => [k, $(k).value])))
+  };
 }
+let plan = null;
 
 document.querySelector('main').addEventListener('input', e => {
   const t = e.target;
@@ -276,7 +362,10 @@ document.querySelector('main').addEventListener('input', e => {
   if (t.id === 'prsRet') { prsRet = num(t.value); clearTimeout(window._rt); window._rt = setTimeout(renderKeepFocus, 500); return; }
   render();
 });
-document.querySelector('main').addEventListener('change', e => { if (e.target.dataset.k === 'type') render(); });
+document.querySelector('main').addEventListener('change', e => {
+  if (e.target.id === 'utType') $('utRet').value = UT_TYPES[e.target.value];
+  if (e.target.dataset.k === 'type' || e.target.id === 'utType') render();
+});
 // Re-draw without losing the box being typed in.
 function renderKeepFocus() {
   const a = document.activeElement, key = a && (a.id || (a.dataset.i != null && a.dataset.i + a.dataset.k));
@@ -294,10 +383,26 @@ $('risk').addEventListener('click', e => {
 });
 $('risk').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === risk ? 'true' : 'false'));
 document.addEventListener('focusout', e => {
-  if (['income', 'expense', 'otherRelief', 'prs', 'savings'].includes(e.target.id) && e.target.value.trim())
+  if (['income', 'expense', 'otherRelief', 'prs', 'savings', 'utLump', 'utMonthly'].includes(e.target.id) && e.target.value.trim())
     e.target.value = Math.round(num(e.target.value)).toLocaleString('en-US');
 });
 render();
+
+// ---- Save: this phone (for the Analysis PDF) + the client's file in the Google Sheet ----
+$('saveBtn').onclick = async () => {
+  const btn = $('saveBtn'), msg = $('saveMsg');
+  store.set('ant-plan-current', plan);
+  if (!clientId) { msg.textContent = 'Kept on this phone for the Analysis PDF. Save the client in Fact-Find to keep it in the client file.'; return; }
+  if (typeof AntApi === 'undefined' || !AntApi.connected()) { msg.textContent = 'Kept on this phone (demo – Google Sheet not connected).'; return; }
+  btn.disabled = true; btn.textContent = 'SAVING…';
+  try {
+    const r = await AntApi.post('antSavePlan', {clientId, plan});
+    msg.innerHTML = `✓ Saved (${esc(r.planId)}) to the client file${r.master === 'sent' ? ' · copied to Master' : ''}. It will also show in the <a href="analysis.html">A-N-T Analysis PDF</a>.`;
+    btn.textContent = 'SAVED ✓';
+  } catch (err) {
+    msg.textContent = 'Not saved: ' + err.message; btn.textContent = 'SAVE TO CLIENT FILE';
+  } finally { btn.disabled = false; }
+};
 </script>
 </body>
 </html>
