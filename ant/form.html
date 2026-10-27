@@ -101,6 +101,13 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
 .btn:active{transform:translateY(2px)}
 .btn.primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark);flex:1;max-width:340px}
 .btn.ghost{background:#EEF1F6;color:var(--navy)}
+.pmodal{position:fixed;inset:0;z-index:60;background:#F4F2EC;display:flex;flex-direction:column}
+.pmodal[hidden]{display:none}
+.pmodal .ptop{background:var(--navy);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.pmodal .ptop b{font-family:var(--head);font-weight:600;letter-spacing:.08em;font-size:17px}
+.pmodal .ptop span{font-size:13px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmodal .ptop button{margin-left:auto;border:1px solid rgba(255,255,255,.4);background:none;color:#fff;border-radius:999px;padding:7px 14px;font:600 13px var(--body);cursor:pointer;white-space:nowrap}
+.pmodal iframe{flex:1;border:0;width:100%;background:#F4F2EC}
 .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:all .35s var(--ease);max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .saved{display:none}
@@ -226,6 +233,10 @@ main{max-width:720px;margin:0 auto;padding:16px 16px 120px}
   <button type="submit" form="ff" class="btn primary">SAVE CLIENT</button>
 </div>
 <div class="toast" id="toast"></div>
+<div class="pmodal" id="planModal" hidden>
+  <div class="ptop"><b>TAX &amp; INVEST PLAN</b><span id="planFor"></span><button type="button" id="planClose">✕ CLOSE</button></div>
+  <iframe id="planFrame" title="Tax & Invest Calculator"></iframe>
+</div>
 
 <script src="ant-api.js"></script>
 <script>
@@ -468,7 +479,11 @@ $('history').addEventListener('click', async e => {
     if (act === 'newPlan') {
       const q = new URLSearchParams({id: fileClient, name: $('name').value.trim(), age: calcAge(dobIso()) ?? '',
         income: toNum($('income').value) ?? '', retire: toNum($('retireAge').value) ?? ''});
-      location.href = 'calculator.html?' + q; return;
+      q.set('embed', '1');
+      $('planFor').textContent = $('name').value.trim() + ' · ' + fileClient;
+      $('planFrame').src = 'calculator.html?' + q;
+      $('planModal').hidden = false; document.body.style.overflow = 'hidden';
+      return;
     }
     if (act === 'addPol') { $('pols').innerHTML = policiesHtml('new'); return; }
     if (act === 'editPol') { $('pols').innerHTML = policiesHtml(id); return; }
@@ -511,6 +526,18 @@ $('history').addEventListener('click', async e => {
     }
   } catch (err) { toast(err.message); b.disabled = false; }
 });
+// ---- Calculator opened inside this page: a saved plan comes back here and shows at once ----
+function closePlan() { $('planModal').hidden = true; $('planFrame').src = 'about:blank'; document.body.style.overflow = ''; }
+$('planClose').onclick = closePlan;
+window.addEventListener('message', e => {
+  const d = e.data || {};
+  if (e.source !== $('planFrame').contentWindow || d.type !== 'ant-plan-saved' || d.clientId !== fileClient || !fileData) return;
+  fileData.plans = [Object.assign({}, d.plan, {id: d.planId, date: new Date().toISOString()})].concat(fileData.plans || []);
+  renderHistory({clientId: fileClient, history: fileData});
+  setTimeout(closePlan, 900);
+  toast('Plan ' + d.planId + ' saved to the client file');
+});
+
 // Date boxes in the policy form: slashes added while typing.
 $('history').addEventListener('input', e => {
   const i = e.target;

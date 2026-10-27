@@ -43,3 +43,4 @@
 - Line under the search: "For Name (C-0001) · **Open client file ›**" (goes to Fact-Find with that client).
 - From the CLIENT FILE, **+ NEW PLAN** opens the calculator for that client and also loads their latest plan.
 - Only clients with a Fact-Find (C-number) can be picked; pipeline-only clients need a Fact-Find first.
+- **Inside the client file (27 Oct 2026):** **+ NEW PLAN (CALCULATOR)** now opens the calculator as a **full-screen pop-up over the client profile** (same page). Fill in → **SAVE TO CLIENT FILE** → the pop-up closes by itself and the new plan shows at once in TAX & INVEST PLAN. **✕ CLOSE** leaves without saving.

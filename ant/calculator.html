@@ -79,6 +79,7 @@ td select{min-width:90px}
 .save a{color:var(--navy);font-weight:700}
 .disc{font-size:12px;color:var(--text-light);line-height:1.5;margin-top:6px}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
+body.embed header,body.embed .cbar,body.embed .who a{display:none}
 @media print{header button,.add,td .del,.no-print{display:none}header{position:static}.card{box-shadow:none;break-inside:avoid}body{background:#fff}}
 </style>
 </head>
@@ -188,6 +189,9 @@ td select{min-width:90px}
 
 <script src="ant-api.js"></script>
 <script>
+// Opened inside the client file (pop-up): no header / client search here.
+const EMBED = new URLSearchParams(location.search).get('embed') === '1';
+if (EMBED) document.body.classList.add('embed');
 const $ = id => document.getElementById(id);
 const num = v => { const n = Number(String(v ?? '').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; };
 const rm = v => 'RM ' + Math.round(v).toLocaleString('en-US');
@@ -465,6 +469,7 @@ $('saveBtn').onclick = async () => {
   btn.disabled = true; btn.textContent = 'SAVING…';
   try {
     const r = await AntApi.post('antSavePlan', {clientId, plan});
+    if (EMBED) window.parent.postMessage({type: 'ant-plan-saved', clientId, planId: r.planId, plan}, '*');
     msg.innerHTML = `✓ Saved (${esc(r.planId)}) to the client file${r.master === 'sent' ? ' · copied to Master' : ''}. It will also show in the <a href="analysis.html">A-N-T Analysis PDF</a>.`;
     btn.textContent = 'SAVED ✓';
   } catch (err) {
