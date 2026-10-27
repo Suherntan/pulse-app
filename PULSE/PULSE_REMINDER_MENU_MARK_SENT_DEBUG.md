@@ -16,7 +16,7 @@ Related: [[ANT_CLIENT_REGISTRATION_FORM]] (separate project — the ANT client f
 
 | Piece | Where |
 |---|---|
-| Source of truth (mirror) | `C:\Users\User\OneDrive\Documents\PULSE\Code.gs` (also a twin in `PULSE-StevernPhong\Code.gs`) |
+| Source of truth (mirror) | `C:\Users\User\OneDrive\Documents\PULSE\Code.gs` |
 | Live script | Apps Script project **bound to the PULSE Google Sheet** — open it from the Sheet: **Extensions → Apps Script** (NOT by picking from script.google.com's "recent projects" list — easy to open the wrong project) |
 | Sync | **None.** No clasp, no `appsscript.json` in the repo. `auto-backup.bat` only does `git add/commit/push` on a timer. Pushing to GitHub changes nothing in the live script — Code.gs must be **pasted by hand** into the editor. |
 | Web dashboard | Same script also exposes `doGet`/`doPost` (JSON API); static frontend (`index.html`, `js/`, `css/`) auto-deploys to Vercel on push. Web-app changes also need Deploy → Manage deployments → Edit → New version. |

@@ -19,7 +19,7 @@ jobs:
       - name: Syntax check JS and Apps Script files
         run: |
           fail=0
-          for f in js/*.js ant/ant-api.js PULSE-StevernPhong/js/*.js; do
+          for f in js/*.js ant/ant-api.js; do
             node --check "$f" || fail=1
           done
           for f in *.gs; do
