@@ -31,10 +31,11 @@ var ANT_PROP_MASTER_URL = 'ANT_MASTER_URL';
 var ANT_PROP_MASTER_KEY = 'ANT_MASTER_KEY';
 var ANT_POLICIES_SHEET = 'ANT_POLICIES';
 var ANT_NOTES_SHEET = 'ANT_NOTES';
+var ANT_PLANS_SHEET = 'ANT_PLANS';
 var ANT_OUTBOX_SHEET = 'ANT_OUTBOX';
 var ANT_OUTBOX_HEADERS = ['Time', 'Type', 'Record', 'Last Error'];
 // Only on the agent's side – the manager's master gets data, not file links.
-var ANT_LOCAL_ONLY = ['Folder Link', 'PDF Link', 'IC No', 'Address'];   // IC and address stay with the advisor
+var ANT_LOCAL_ONLY = ['Folder Link', 'PDF Link', 'IC No', 'Address', 'Details'];   // IC and address stay with the advisor
 // The PULSE pipeline tabs, in the order a match is preferred
 // (an existing client's CLOSING row wins over an old APPROACH row).
 var ANT_PIPELINE_TABS = ['CLOSING', 'PRESENTATION', 'APPROACH', 'SR'];
@@ -63,6 +64,12 @@ var ANT_POLICY_FIELDS = {       // app field → column
   policyNo: 'Policy No', insurer: 'Insurer', plan: 'Plan', sumAssured: 'Sum Assured', premium: 'Premium',
   mode: 'Payment Mode', startDate: 'Start Date', nextDue: 'Next Due', nominee: 'Nominee', status: 'Status', notes: 'Notes'
 };
+// Tax & Invest Calculator results saved for a client (Details = the full plan as JSON).
+var ANT_PLAN_HEADERS = [
+  'Plan ID', 'Client ID', 'Advisor ID', 'Client Name', 'Date', 'Yearly Income', 'Taxable Income', 'Top Tax Rate',
+  'PRS', 'Tax Saved', 'Emergency Need', 'Emergency Short', 'Invest %', 'Invest / Month', 'Risk', 'Growth %',
+  'Retire Age', 'Value at Retire', 'Details'
+];
 // Dated notes / meeting log for a client. Kept in the advisor's Sheet only.
 var ANT_NOTE_HEADERS = ['Note ID', 'Client ID', 'Advisor ID', 'Date', 'Note'];
 
@@ -280,8 +287,14 @@ function antClientHistory_(id) {
   var notes = antRows_(ANT_NOTES_SHEET, ANT_NOTE_HEADERS).filter(mine).map(function (r) {
     return { id: r['Note ID'], date: when(r), note: r['Note'] };
   });
+  var plans = antRows_(ANT_PLANS_SHEET, ANT_PLAN_HEADERS).filter(mine).map(function (r) {
+    var p = {};
+    try { p = JSON.parse(r['Details'] || '{}'); } catch (e) { /* old or edited row */ }
+    p.id = r['Plan ID']; p.date = when(r);
+    return p;
+  });
   return { analyses: analyses.sort(newest), offers: offers.sort(newest), policies: policies,
-           notes: notes.sort(newest), pulse: antPulseRow_(id) };
+           notes: notes.sort(newest), plans: plans.sort(newest), pulse: antPulseRow_(id) };
 }
 
 // The client's own row in the PULSE tabs (CLOSING / SR …): every filled-in column,
@@ -565,6 +578,34 @@ function antSavePolicy(data) {
   }
 }
 
+/** POST ?action=antSavePlan { clientId, plan } – one Tax & Invest Calculator result, copied to the Master. */
+function antSavePlan(data) {
+  var p = (data && data.plan) || {};
+  if (!data || !data.clientId) return { ok: false, error: 'Save the client first' };
+  var client = antFindRow_(ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS, 'Client ID', data.clientId);
+  if (!client) return { ok: false, error: 'Client not found: ' + data.clientId };
+  var lock = pulseLock_();
+  lock.waitLock(20000);
+  try {
+    var sheet = antSheet_(ANT_PLANS_SHEET, ANT_PLAN_HEADERS);
+    var agentId = antProfile().agentId, id = antNextId_(sheet, 'T-');
+    var n = function (v) { return antNum_(v) == null ? '' : Math.round(antNum_(v)); };
+    var values = {
+      'Plan ID': id, 'Client ID': data.clientId, 'Advisor ID': agentId, 'Client Name': client.row['Name'], 'Date': new Date(),
+      'Yearly Income': n(p.yearly), 'Taxable Income': n(p.taxable), 'Top Tax Rate': p.rate != null ? Math.round(p.rate * 100) + '%' : '',
+      'PRS': n(p.prs), 'Tax Saved': n(p.saved), 'Emergency Need': n(p.efNeed), 'Emergency Short': n(p.efShort),
+      'Invest %': p.pct != null ? p.pct + '%' : '', 'Invest / Month': n(p.monthly), 'Risk': p.riskName || '',
+      'Growth %': p.growthPct != null ? p.growthPct + '%' : '', 'Retire Age': p.retire || '', 'Value at Retire': n(p.total),
+      'Details': JSON.stringify(p).slice(0, 45000)            // a cell holds up to 50,000 characters
+    };
+    sheet.appendRow(antHeaderOrder_(sheet, ANT_PLAN_HEADERS).map(function (h) { return values[h] !== undefined ? values[h] : ''; }));
+    antLog_(agentId, data.clientId, 'Tax & Invest plan', id);
+    return { ok: true, planId: id, master: antSendToMaster_('plan', values) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /** POST ?action=antSaveNote { clientId, note } adds a dated note; { clientId, id, remove:true } deletes one. */
 function antSaveNote(data) {
   if (!data || !data.clientId) return { ok: false, error: 'Save the client first' };
@@ -822,7 +863,8 @@ function antSendAllToMaster() {
   if (!pulseProps_().getProperty(ANT_PROP_MASTER_URL)) { ui.alert('Connect to Master first.'); return; }
   var counts = { sent: 0, queued: 0 };
   [['client', ANT_CLIENTS_SHEET, ANT_CLIENT_HEADERS], ['analysis', ANT_ANALYSIS_SHEET, ANT_ANALYSIS_HEADERS],
-   ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS], ['policy', ANT_POLICIES_SHEET, ANT_POLICY_HEADERS]].forEach(function (t) {
+   ['offer', ANT_OFFERS_SHEET, ANT_OFFER_HEADERS], ['policy', ANT_POLICIES_SHEET, ANT_POLICY_HEADERS],
+   ['plan', ANT_PLANS_SHEET, ANT_PLAN_HEADERS]].forEach(function (t) {
     antRows_(t[1], t[2]).forEach(function (row) { counts[antSendToMaster_(t[0], row)]++; });
   });
   var pipe = antPipelineToMaster_();
