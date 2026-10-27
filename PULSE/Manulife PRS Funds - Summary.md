@@ -131,4 +131,4 @@ So: **short term** behind benchmark, **long term (10 yrs)** PRS-Growth well ahea
   - PRS-Moderate: Class A **4.36%**, Class C **4.62%** (beat benchmark)
 - **Best Manulife PRS figure found:** PRS-Growth Class A **9.11%** for 1 year to 31 Jan 2026 (factsheet table hard to read – check).
 - REIT and Golden Asia: no 2025 figures found → check the Manulife factsheets / FSMOne. So the "highest Manulife PRS" can't be confirmed for all 9 funds.
-- Takeaway: in FY2025 EPF (6.15%, no fees, low risk) did better than Manulife PRS-Growth (5.5–5.8%); PRS did better over 10 years (PRS-Growth A 40.82%).
+- Takeaway: in FY2025 EPF (6.15%, no fees, low risk) did better than Manulife PRS-Growth (5.5–5.8%). Over 10 years PRS-Growth A made 40.82% (≈3.5% a year) – it beat its own benchmark, but **EPF's yearly dividends (about 5–7% a year) add up to roughly +70–80% over the same 10 years** (my estimate from past dividends – check). So PRS is not "higher return than EPF"; its case is choice, extra growth potential and the tax relief.
