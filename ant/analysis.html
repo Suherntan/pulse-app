@@ -363,7 +363,7 @@ function renderPlan() {
         </div>
       </section>
       <section><h2>INVESTMENT PLAN</h2>
-        <p class="plan-note">Invest <b>${e(p.pct)}% of income = ${rm(p.monthly)} a month</b> for ${e(p.years)} years (to age ${e(p.retire)}). Risk level: <b>${e(p.riskName)}</b>.</p>
+        <p class="plan-note">Invest <b>${e(p.pct)}% of income = ${rm(p.monthly)} a month</b> for ${e(p.years)} years (to age ${e(p.retire)}). Risk level: <b>${e({Careful: 'Low risk', Middle: 'Middle risk', Comfortable: 'High risk'}[p.riskName] || p.riskName)}</b>.</p>
         <div class="plan-split"><span style="width:${p.growthPct}%;background:#0B2545">${p.growthPct ? 'Growth ' + p.growthPct + '%' : ''}</span><span style="width:${p.safePct}%;background:#F3AF3D;color:#0B2545">${p.safePct ? 'Safe ' + p.safePct + '%' : ''}</span></div>
         <table style="margin-top:10px"><thead><tr><th>WHERE</th><th>RETURN / YR</th><th>RM / MONTH</th><th>DOUBLES IN</th><th>VALUE AT ${e(p.retire)}</th></tr></thead>
           <tbody>${(p.rows || []).map(r => `<tr><td>${e(r.name)}</td><td>${e(r.ret)}%</td><td>${fmt(r.monthly)}</td><td>${r.ret > 0 ? Math.round(72 / r.ret * 10) / 10 + ' yrs' : '–'}</td><td>${fmt(r.value)}</td></tr>`).join('')}</tbody>
@@ -371,7 +371,7 @@ function renderPlan() {
         <p class="plan-note">Total put in: <b>${rm(p.put)}</b> → could grow to about <b>${rm(p.total)}</b>.</p>
       </section>
       ${p.ut ? `<section><h2>UNIT TRUST</h2>
-        <p class="plan-note"><b>${e(p.ut.type)}</b>: lump sum ${rm(p.ut.lump)} + ${rm(p.ut.monthly)}/month at ${e(p.ut.ret ?? p.ut.gross)}% a year. You put in ${rm(p.ut.put)}.</p>
+        <p class="plan-note"><b>${e(p.ut.type)}</b>: lump sum ${rm(p.ut.lump)} + ${rm(p.ut.monthly)}/month at ${e(p.ut.ret ?? p.ut.gross)}% a year. You put in ${rm(p.ut.put)}.${p.ut.basis ? ` Return used: ${e(p.ut.basis)} figure from the Manulife website${p.ut.asOf ? ' (as of ' + e(p.ut.asOf) + ')' : ''}.` : ''}</p>
         <table style="margin-top:6px"><thead><tr><th>SAME MONEY IN</th><th>RETURN / YR</th><th>VALUE AT ${e(p.retire)}</th></tr></thead><tbody>
           <tr><td>Unit trust</td><td>${e(p.ut.ret ?? p.ut.gross)}%</td><td>${fmt(p.ut.value)}</td></tr>
           <tr><td>EPF voluntary</td><td>${e(p.ut.epfRate)}%</td><td>${fmt(p.ut.epf)}</td></tr>

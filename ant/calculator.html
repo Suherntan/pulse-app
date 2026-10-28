@@ -137,7 +137,7 @@ body.embed header,body.embed .cbar,body.embed .who a{display:none}
       <div><label for="pct">Invest % of income</label><input id="pct" inputmode="decimal" value="15">
         <div class="hint">A common guide is 10–20% (PRS included).</div></div>
       <div><label>Risk level (100 / 110 / 120 minus age)</label>
-        <div class="seg" id="risk"><button type="button" data-v="100">Careful</button><button type="button" data-v="110" aria-pressed="true">Middle</button><button type="button" data-v="120">Comfortable</button></div></div>
+        <div class="seg" id="risk"><button type="button" data-v="100">Low risk</button><button type="button" data-v="110" aria-pressed="true">Middle risk</button><button type="button" data-v="120">High risk</button></div></div>
     </div>
     <div class="bar" id="splitBar"></div>
     <div class="scroll">
@@ -154,18 +154,20 @@ body.embed header,body.embed .cbar,body.embed .who a{display:none}
   <section class="card">
     <h2><span class="n">5</span>UNIT TRUST</h2>
     <div class="grid">
-      <div class="full"><label for="utType">Fund type</label>
-        <select id="utType">
-          <option value="equity">Equity fund (shares)</option>
-          <option value="shariah">Shariah equity fund</option>
-          <option value="balanced">Balanced fund (shares + bonds)</option>
-          <option value="bond">Bond / fixed income fund</option>
-          <option value="mm">Money market fund</option>
+      <div class="full"><label for="utFund">Fund (from your PULSE fund list, returns from the Manulife website)</label>
+        <select id="utFund"><option value="">Type my own return</option></select>
+        <div class="hint" id="utFundInfo">Loading funds…</div></div>
+      <div><label for="utBasis">Return based on</label>
+        <select id="utBasis">
+          <option value="y5">5-year, average a year</option>
+          <option value="y3">3-year, average a year</option>
+          <option value="y10">10-year, average a year</option>
+          <option value="y1">Last 1 year</option>
         </select></div>
+      <div><label for="utRet">Expected return % a year</label><input id="utRet" inputmode="decimal" value="7"></div>
       <div><label for="utLump">Lump sum now (RM)</label><input id="utLump" inputmode="numeric" value="0"></div>
       <div><label for="utMonthly">Monthly (RM)</label><input id="utMonthly" inputmode="numeric" placeholder="from plan">
         <div class="hint">Empty = the unit trust amount in the plan above.</div></div>
-      <div><label for="utRet">Expected return % a year</label><input id="utRet" inputmode="decimal" value="7"></div>
     </div>
     <div class="stats" id="utStats"></div>
     <div class="scroll"><table id="utCompare"></table></div>
@@ -228,13 +230,12 @@ const DEFAULT_ROWS = [
 ];
 let rows = store.get('ant-calc-rows', DEFAULT_ROWS);
 let risk = store.get('ant-calc-risk', 110);
+let utFunds = [];   // the exact funds (name, type, category, cumulative returns) from the PULSE fund list
 let prsRet = store.get('ant-calc-prs-ret', 6);
 
 // Which client: opened from the CLIENT FILE (?id=…&name=…), else the last Fact-Find on this phone.
 const INPUTS = ['cname', 'age', 'retire', 'income', 'expense', 'otherRelief', 'prs', 'savings', 'pct',
-  'utType', 'utLump', 'utMonthly', 'utRet'];
-// Example yearly return per unit trust type – the advisor can change it.
-const UT_TYPES = {equity: 7, shariah: 6.5, balanced: 5.5, bond: 4, mm: 3};
+  'utFund', 'utBasis', 'utLump', 'utMonthly', 'utRet'];
 const EPF_RATE = 6.15;   // EPF dividend for 2025 (declared Feb 2026)
 let clientId = '';
 try {
@@ -251,6 +252,7 @@ try {
   if (last && clientId && last.clientId === clientId && last.inputs) {
     INPUTS.forEach(k => { if (last.inputs[k] != null) $(k).value = last.inputs[k]; });
     if (last.inputs.risk) risk = last.inputs.risk;
+    $('utFund').dataset.want = last.inputs.utFund || ''; $('utBasis').dataset.want = last.inputs.utBasis || '';
   }
 } catch (_) {}
 function showWho() {
@@ -278,6 +280,8 @@ async function loadClient(id, quiet) {
     if (last && last.inputs) {                       // the latest plan saved for this client (any device)
       INPUTS.filter(k => !['cname', 'age'].includes(k)).forEach(k => { if (last.inputs[k] != null) $(k).value = last.inputs[k]; });
       if (last.inputs.risk) risk = last.inputs.risk;
+      $('utFund').dataset.want = last.inputs.utFund || ''; $('utBasis').dataset.want = last.inputs.utBasis || '';
+      applyUtWanted();
       setRiskButtons();
     }
     $('saveBtn').textContent = 'SAVE TO CLIENT FILE'; $('saveMsg').textContent = '';
@@ -382,6 +386,7 @@ function render() {
   const utM = $('utMonthly').value.trim() === '' ? utPlanMonthly : num($('utMonthly').value);
   $('utMonthly').placeholder = 'from plan: ' + Math.round(utPlanMonthly).toLocaleString('en-US');
   const utL = num($('utLump').value), utR = num($('utRet').value);
+  const utFundNow = utFunds.find(f => f.name === $('utFund').value) || null;
   const grow = (lump, m, ratePct) => lump * Math.pow(1 + ratePct / 100 / 12, years * 12) + fv(m, ratePct, years);
   const utPut = utL + utM * 12 * years, utValue = grow(utL, utM, utR);
   const epfValue = grow(utL, utM, EPF_RATE), fdValue = grow(utL, utM, 3);
@@ -412,9 +417,10 @@ function render() {
     clientId, name: $('cname').value.trim(), date: new Date().toISOString(), age, retire, years,
     yearly, taxable: base, rate, tax: t0, taxWithPrs: t1, prs, saved, fullSave, prsFund: fund,
     efNeed: need, efHave: have, efShort: gap, pct: num($('pct').value), monthly: monthlyInvest,
-    risk, riskName: {100: 'Careful', 110: 'Middle', 120: 'Comfortable'}[risk], growthPct, safePct,
+    risk, riskName: {100: 'Low risk', 110: 'Middle risk', 120: 'High risk'}[risk], growthPct, safePct,
     total: totV, put,
-    ut: utPut ? {type: $('utType').selectedOptions[0].text, lump: utL, monthly: Math.round(utM), ret: utR,
+    ut: utPut ? {type: utFundNow ? utFundNow.name : 'Own return figure', fund: utFundNow ? utFundNow.name : '', basis: utFundNow ? $('utBasis').selectedOptions[0].text : '',
+      asOf: utFundNow && utFundNow.asOf ? utFundNow.asOf : '', lump: utL, monthly: Math.round(utM), ret: utR,
       put: Math.round(utPut), value: Math.round(utValue), epf: Math.round(epfValue), fd: Math.round(fdValue), epfRate: EPF_RATE} : null,
     rows: lines.map((l, i) => { const r = i ? rows[i - 1] : {name: pName + ' (tax relief)', type: pType, ret: prsRet};
       return {name: r.name, type: r.type, ret: r.ret, monthly: Math.round(l.m), value: Math.round(l.value)}; }),
@@ -434,8 +440,8 @@ document.querySelector('main').addEventListener('input', e => {
   render();
 });
 document.querySelector('main').addEventListener('change', e => {
-  if (e.target.id === 'utType') $('utRet').value = UT_TYPES[e.target.value];
-  if (e.target.dataset.k === 'type' || e.target.id === 'utType') render();
+  if (e.target.id === 'utFund' || e.target.id === 'utBasis') fillUtReturn();
+  if (e.target.dataset.k === 'type' || e.target.id === 'utFund' || e.target.id === 'utBasis') render();
 });
 // Re-draw without losing the box being typed in.
 function renderKeepFocus() {
@@ -461,6 +467,62 @@ document.addEventListener('focusout', e => {
 render();
 // Opened from the CLIENT FILE: also bring the latest saved plan from the Google Sheet.
 if (new URLSearchParams(location.search).get('id') && clientId) loadClient(clientId, true);
+
+// ---- Unit trust: exact funds from the PULSE fund list. The list holds the figures imported from the
+// Manulife fund page, as TOTAL returns over 1/3/5/10 years; here they are turned into a yearly average.
+const UT_BASIS = {y1: ['Last 1 year', 1, 'ret1y'], y3: ['3-year', 3, 'ret3y'], y5: ['5-year', 5, 'ret5y'], y10: ['10-year', 10, 'ret10y']};
+const yearlyFrom = (totalPct, years) => (Math.pow(1 + totalPct / 100, 1 / years) - 1) * 100;
+const r2 = v => Math.round(v * 100) / 100;
+function utFundInfoText(f) {
+  const part = (label, key, years) => f[key] ? `${label} ${r2(f[key])}%` + (years > 1 ? ` (about ${r2(yearlyFrom(f[key], years))}% a year)` : '') : '';
+  const figures = [part('1Y', 'ret1y', 1), part('3Y', 'ret3y', 3), part('5Y', 'ret5y', 5), part('10Y', 'ret10y', 10)].filter(Boolean).join(' · ');
+  return [f.type, f.category].filter(Boolean).join(' · ') + (figures ? ' — Manulife website' + (f.asOf ? ' (as of ' + f.asOf + ')' : '') + ': ' + figures : '')
+    + '. Past returns are not a guarantee.';
+}
+// keepReturn = true when restoring a saved plan: show the fund but keep the return that was typed.
+function fillUtReturn(keepReturn) {
+  const f = utFunds.find(x => x.name === $('utFund').value), basis = $('utBasis');
+  [...basis.options].forEach(o => { o.disabled = !!f && !f[UT_BASIS[o.value][2]]; });
+  if (!f) { $('utFundInfo').textContent = utFunds.length ? 'No fund picked: type your own expected return below.' : $('utFundInfo').textContent; return; }
+  if (basis.selectedOptions[0] && basis.selectedOptions[0].disabled) {
+    const next = ['y5', 'y3', 'y10', 'y1'].find(k => f[UT_BASIS[k][2]]);
+    if (next) basis.value = next;
+  }
+  const [, years, key] = UT_BASIS[basis.value];
+  if (!keepReturn && f[key]) $('utRet').value = r2(years > 1 ? yearlyFrom(f[key], years) : f[key]);
+  $('utFundInfo').textContent = utFundInfoText(f);
+}
+function applyUtWanted() {
+  const want = $('utFund').dataset.want;
+  if (want && utFunds.some(f => f.name === want)) {
+    $('utFund').value = want;
+    if ($('utBasis').dataset.want) $('utBasis').value = $('utBasis').dataset.want;
+    fillUtReturn(true);
+  }
+}
+async function loadUtFunds() {
+  let funds = [];
+  try { funds = JSON.parse(localStorage.getItem('ant-funds-cache') || '[]'); } catch (_) {}
+  if (LIVE) {
+    try {
+      const fresh = ((await AntApi.get('fetchFundData')).funds || []).filter(f => f && f.name);
+      if (fresh.length) { funds = fresh; try { localStorage.setItem('ant-funds-cache', JSON.stringify(fresh)); } catch (_) {} }
+    } catch (_) { /* offline: use the copy kept on this phone */ }
+  }
+  utFunds = funds.filter(f => f.ret1y || f.ret3y || f.ret5y || f.ret10y);
+  const sel = $('utFund'), keep = sel.value;
+  const optionFor = f => `<option value="${esc(f.name)}">${esc(f.name)}${f.category ? ' – ' + esc(f.category) : ''}</option>`;
+  const group = t => { const l = utFunds.filter(f => (f.type || '') === t); return l.length ? `<optgroup label="${t}">${l.map(optionFor).join('')}</optgroup>` : ''; };
+  const others = utFunds.filter(f => !['Shariah', 'Conventional'].includes(f.type || '')).map(optionFor).join('');
+  sel.innerHTML = '<option value="">Type my own return</option>' + group('Conventional') + group('Shariah') + others;
+  if (keep && utFunds.some(f => f.name === keep)) sel.value = keep;
+  $('utFundInfo').textContent = utFunds.length
+    ? 'Pick a fund and its return from the Manulife website fills in. You can still change the return.'
+    : 'No funds yet. Add them in PULSE → Funds (import from the Manulife fund page), or type the return yourself.';
+  applyUtWanted();
+  render();
+}
+loadUtFunds();
 
 // ---- Save: this phone (for the Analysis PDF) + the client's file in the Google Sheet ----
 // Going to the report keeps this plan on the phone first, so it joins the report as an extra page.
