@@ -77,6 +77,8 @@ td select{min-width:90px}
 .save button:disabled{opacity:.6;cursor:wait}
 .save span{font-size:14px;color:var(--navy)}
 .save a{color:var(--navy);font-weight:700}
+.save .to-report{margin-left:auto;font-family:var(--head);letter-spacing:.08em}
+body.embed .to-report{display:none}
 .disc{font-size:12px;color:var(--text-light);line-height:1.5;margin-top:6px}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
 body.embed header,body.embed .cbar,body.embed .who a{display:none}
@@ -178,7 +180,7 @@ body.embed header,body.embed .cbar,body.embed .who a{display:none}
   </section>
 
   <section class="card no-print">
-    <div class="save"><button type="button" id="saveBtn">SAVE TO CLIENT FILE</button><span id="saveMsg"></span></div>
+    <div class="save"><button type="button" id="saveBtn">SAVE TO CLIENT FILE</button><span id="saveMsg"></span><a class="to-report" id="toReport" href="analysis.html">A-N-T ANALYSIS REPORT ›</a></div>
     <p class="hint" style="margin-top:10px">Saves this plan in the client's CLIENT FILE (Google Sheet) and adds it as a page in the A-N-T Analysis PDF.</p>
   </section>
 
@@ -461,6 +463,8 @@ render();
 if (new URLSearchParams(location.search).get('id') && clientId) loadClient(clientId, true);
 
 // ---- Save: this phone (for the Analysis PDF) + the client's file in the Google Sheet ----
+// Going to the report keeps this plan on the phone first, so it joins the report as an extra page.
+$('toReport').onclick = () => { if (plan) store.set('ant-plan-current', plan); };
 $('saveBtn').onclick = async () => {
   const btn = $('saveBtn'), msg = $('saveMsg');
   store.set('ant-plan-current', plan);

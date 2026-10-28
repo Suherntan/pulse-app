@@ -111,11 +111,13 @@ body.capturing .att-del{display:none}
   <a class="ghost" href="../index.html">PULSE</a>
   <a class="ghost" href="slides.html">← SLIDES</a>
   <label class="ghost" style="cursor:pointer">+ PHOTO / PDF<input type="file" id="attIn" accept="image/*,application/pdf" multiple hidden></label>
+  <a class="ghost" id="planBtn" href="calculator.html">+ TAX &amp; INVEST</a>
   <button class="ghost" id="printBtn">DOWNLOAD PDF</button>
   <button class="primary" id="driveBtn" style="display:none">SAVE TO DRIVE</button>
   <a class="ghost" href="offer.html">OFFER →</a>
 </div>
 <div class="status" id="status"></div>
+<div class="status" id="planHint" style="font-size:13px"></div>
 
 <article class="page">
   <header class="band">
@@ -178,6 +180,16 @@ const AREAS = [
   {k:'hospitalization', name:'HOSPITALIZATION',  c:'#8E1B2C'}
 ];
 const $ = id => document.getElementById(id);
+// After SAVE TO DRIVE, any later change (photo, plan page, notes, priority) turns the button back
+// on as UPDATE DRIVE COPY: same-day saves replace the earlier PDF in Drive.
+let saved = false, dirtyShown = false;
+function markDirty() {
+  if (!saved) return;
+  const btn = $('driveBtn');
+  if (!btn.disabled) return;
+  btn.disabled = false; btn.textContent = 'UPDATE DRIVE COPY';
+  if (!dirtyShown) { dirtyShown = true; $('status').insertAdjacentHTML('beforeend', ($('status').textContent.trim() ? ' · ' : '') + '<b>changed since saving – tap UPDATE DRIVE COPY to replace the PDF in Drive</b>'); }
+}
 const fmt = n => n === null || n === undefined ? '–' : Math.round(n).toLocaleString('en-US');
 const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
 
@@ -267,8 +279,10 @@ $('prio').onclick = e => {
   analysis.priority = picks;
   try { const cur = read('ant-analysis-current'); if (cur) { cur.priority = picks; localStorage.setItem('ant-analysis-current', JSON.stringify(cur)); } } catch (_) {}
   renderPrio();
+  markDirty();
 };
 renderPrio();
+$('notes').addEventListener('input', markDirty);
 
 // ---- Save: download on this device, or into the client's Drive folder ----
 document.getElementById('printBtn').onclick = () => window.print();
@@ -282,11 +296,39 @@ function renderAtts() {
       <button class="att-del" data-del="${i}" aria-label="Remove attachment ${i + 1}">✕ Remove</button></header>
     <div class="att-body"><img src="${a.src}" alt="Attachment ${i + 1}"></div>
     <div class="foot"><span>${$('prep').textContent}</span><span>${$('ref').textContent}</span></div></article>`).join('');
+  markDirty();
 }
 // ---- Tax & Invest plan from the calculator (same client only) as an extra page ----
-const plan = read('ant-plan-current');
-let showPlan = !!(plan && plan.clientId && plan.clientId === client.clientId);
+let plan = read('ant-plan-current');
+const realClient = !!client.clientId && !/DEMO|0000/.test(client.clientId);
+const planIsForClient = () => !!(plan && plan.clientId && plan.clientId === client.clientId);
+let showPlan = planIsForClient(), planDismissed = false;
+function calcHref() {
+  if (!realClient) return 'calculator.html';
+  const q = new URLSearchParams({id: client.clientId, name: client.name || '', age: client.age ?? ''});
+  return 'calculator.html?' + q;
+}
+// Button label + the hint that says why the plan page is (not) in this report.
+function updatePlanUi() {
+  const has = planIsForClient();
+  $('planBtn').href = calcHref();
+  $('planBtn').textContent = has && !showPlan ? '+ ADD TAX & INVEST PAGE' : has ? 'EDIT TAX & INVEST' : '+ TAX & INVEST';
+  $('planHint').textContent = has ? ''
+    : realClient ? 'No Tax & Invest plan for this client yet. Tap + TAX & INVEST, make the plan, press SAVE, then tap A-N-T ANALYSIS REPORT – it joins this report as an extra page.'
+    : 'Save the client in the Fact-Find form first, then the Tax & Invest plan can join this report.';
+}
+$('planBtn').onclick = e => {
+  if (planIsForClient() && !showPlan) { e.preventDefault(); showPlan = true; planDismissed = false; renderPlan(); updatePlanUi(); }
+};
+// Coming back from the calculator (Back button or link): pick up the newest plan.
+function refreshPlan() {
+  plan = read('ant-plan-current');
+  if (planIsForClient()) { if (!planDismissed) showPlan = true; } else showPlan = false;
+  renderPlan(); updatePlanUi();
+}
+window.addEventListener('pageshow', e => { if (e.persisted) refreshPlan(); });
 function renderPlan() {
+  markDirty();
   if (!showPlan) { $('planPage').innerHTML = ''; return; }
   const p = plan, rm = v => 'RM ' + fmt(v), e = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const on = new Date(p.date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
@@ -332,9 +374,10 @@ function renderPlan() {
       <p class="plan-disc">General illustration only, not financial or tax advice. Returns are examples and not guaranteed. Tax uses Malaysian resident rates (YA 2023 onwards); check the latest rules with LHDN. PRS relief up to RM3,000 a year (shared with deferred annuity) until YA 2030.</p>
     </div>
     <div class="foot"><span>${$('prep').textContent}</span><span>${$('ref').textContent}</span></div></article>`;
-  $('planDel').onclick = () => { showPlan = false; renderPlan(); };
+  $('planDel').onclick = () => { showPlan = false; planDismissed = true; renderPlan(); updatePlanUi(); };
 }
 renderPlan();
+updatePlanUi();
 
 $('atts').onclick = e => { const d = e.target.closest('[data-del]'); if (d) { atts.splice(+d.dataset.del, 1); renderAtts(); } };
 // Shrink big photos so the PDF stays small enough for Drive.
@@ -417,6 +460,7 @@ driveBtn.onclick = async () => {
     status.innerHTML = (r.replaced ? '✓ Updated today\'s analysis (' : '✓ Saved (') + r.analysisId + ')' + (r.pipeline ? ' · ' + r.pipeline : '') + (r.master === 'sent' ? ' · copied to Master' : r.master === 'queued' ? ' · Master copy will retry tonight' : '') + '. <a target="_blank" rel="noopener">Open PDF in Drive ↗</a>';
     status.querySelector('a').href = r.pdfUrl;
     driveBtn.textContent = 'SAVED ✓';
+    saved = true; dirtyShown = false;
   } catch (err) {
     status.textContent = 'Not saved: ' + err.message;
     driveBtn.disabled = false; driveBtn.textContent = 'SAVE TO DRIVE';
