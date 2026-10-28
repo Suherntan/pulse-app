@@ -25,7 +25,7 @@ export const Hook: React.FC = () => {
             background: "rgba(255,255,255,0.07)",
             border: `3px solid ${fall > 0 ? C.red : C.gold}`,
             transform: `scale(${card}) translateY(${fall * 900}px) rotate(${fall * 24}deg)`,
-            opacity: 1 - fall * 0.6,
+            opacity: 1 - fall,
           }}
         >
           <Text size={44} color={C.dim}>Salary credited ✓</Text>
