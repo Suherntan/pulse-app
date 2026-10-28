@@ -97,10 +97,14 @@ tr.pick td{background:#F3AF3D22;font-weight:700}
 .att-body img{max-width:100%;max-height:250mm;object-fit:contain;border:1px solid var(--line)}
 .att-del{margin-left:auto;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer}
 body.capturing .att-del{display:none}
+.next{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:6px 16px 48px}
+.next a{border-radius:12px;padding:14px 22px;font:700 15px var(--head);letter-spacing:.1em;text-decoration:none}
+.next .primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 0 var(--gold-dark)}
+.next .ghost{background:#fff;color:var(--navy)}
 @page{size:A4;margin:0}
 @media print{
   body{background:#fff}
-  .tools,.att-del{display:none}
+  .tools,.att-del,.next{display:none}
   .page{box-shadow:none;margin:0;width:210mm;height:297mm}
   .notes:empty::before{content:''}
 }
@@ -166,6 +170,7 @@ body.capturing .att-del{display:none}
 </article>
 <div id="planPage"></div>
 <div id="atts"></div>
+<div class="next" id="nextBar"><a class="primary" id="nextCalc" href="calculator.html">NEXT: TAX &amp; INVEST CALCULATOR →</a><a class="ghost" href="offer.html">OFFER →</a></div>
 
 <script src="ant-api.js"></script>
 <script>
@@ -312,6 +317,8 @@ function calcHref() {
 function updatePlanUi() {
   const has = planIsForClient();
   $('planBtn').href = calcHref();
+  $('nextCalc').href = calcHref();
+  $('nextCalc').textContent = has ? 'CONTINUE: TAX & INVEST PLAN →' : 'NEXT: TAX & INVEST CALCULATOR →';
   $('planBtn').textContent = has && !showPlan ? '+ ADD TAX & INVEST PAGE' : has ? 'EDIT TAX & INVEST' : '+ TAX & INVEST';
   $('planHint').textContent = has ? ''
     : realClient ? 'No Tax & Invest plan for this client yet. Tap + TAX & INVEST, make the plan, press SAVE, then tap A-N-T ANALYSIS REPORT – it joins this report as an extra page.'
@@ -461,6 +468,7 @@ driveBtn.onclick = async () => {
     status.querySelector('a').href = r.pdfUrl;
     driveBtn.textContent = 'SAVED ✓';
     saved = true; dirtyShown = false;
+    status.insertAdjacentHTML('beforeend', ` · <a href="${calcHref()}">Continue to Tax &amp; Invest ›</a>`);
   } catch (err) {
     status.textContent = 'Not saved: ' + err.message;
     driveBtn.disabled = false; driveBtn.textContent = 'SAVE TO DRIVE';
