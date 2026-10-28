@@ -1,0 +1,17 @@
+{
+  "name": "7fbs-reel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "voice": "node scripts/voice.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts FBSReel out/7FBS-reel.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.539",
+    "kokoro-js": "^1.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.539"
+  }
+}
